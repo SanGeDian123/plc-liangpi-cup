@@ -4,12 +4,16 @@ const fs = require("fs-extra");
 const path = require("path");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 const DB_PATH = path.join(__dirname, "db.json");
 
 app.use(cors());
 app.use(express.json());
+
+app.get("/", (req, res) => {
+  res.send("PLC凉皮杯后端运行中");
+});
 
 function readDB() {
   return fs.readJsonSync(DB_PATH);
