@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PLC凉皮杯 - 海选排行榜</title>
+
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+
+<div class="overlay"></div>
+
+<canvas id="particles"></canvas>
+
+<header class="hero">
+  <h1>PLC凉皮杯</h1>
+  <p>海选排行榜</p>
+</header>
+
+<section class="top3" id="top3"></section>
+
+<section class="ranking">
+  <div class="ranking-header">
+    <span>排名</span>
+    <span>选手</span>
+    <span>编号</span>
+    <span>成绩</span>
+  </div>
+
+  <div id="rankingList"></div>
+</section>
+
+<footer>
+  <div id="updateTime"></div>
+  <div class="tip">数据实时同步中...</div>
+  <div class="copyright">
+    © 2026 PLC凉皮杯赛事委员会
+  </div>
+</footer>
+
+<script src="./js/api.js"></script>
+<script src="./js/particles.js"></script>
+<script src="./js/app.js"></script>
+
+</body>
+</html>

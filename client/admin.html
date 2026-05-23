@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>PLC凉皮杯后台</title>
+
+  <link rel="stylesheet" href="./css/admin.css">
+</head>
+<body>
+
+<div class="panel">
+
+  <h1>排行榜后台管理</h1>
+
+  <input id="nickname" placeholder="昵称">
+  <input id="number" placeholder="编号">
+  <input id="score" placeholder="成绩">
+
+  <button onclick="addPlayer()">
+    新增选手
+  </button>
+
+  <div id="adminList"></div>
+
+</div>
+
+<script src="./js/api.js"></script>
+<script src="./js/admin.js"></script>
+
+</body>
+</html>
