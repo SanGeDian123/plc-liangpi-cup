@@ -1,77 +1,97 @@
 const express = require("express");
 const cors = require("cors");
-const fs = require("fs-extra");
-const path = require("path");
+const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
+
 const PORT = process.env.PORT || 3000;
 
-const DB_PATH = path.join(__dirname, "db.json");
+const supabase = createClient(
+  "https://kpjuerikmmajqyxcocos.supabase.co",
+  "sb_publishable_Jkj-377OvvQXVtiR-Vdikw_FJbPQ_zs"
+);
 
-app.use(cors());
+app.use(cors({
+  origin: "*"
+}));
+
 app.use(express.json());
 
 app.get("/", (req, res) => {
   res.send("PLC凉皮杯后端运行中");
 });
 
-function readDB() {
-  return fs.readJsonSync(DB_PATH);
-}
+app.get("/players", async (req, res) => {
+  const { data, error } = await supabase
+    .from("players")
+    .select("*")
+    .order("score", { ascending: false });
 
-function writeDB(data) {
-  fs.writeJsonSync(DB_PATH, data, { spaces: 2 });
-}
+  if (error) {
+    return res.status(500).json(error);
+  }
 
-app.get("/players", (req, res) => {
-  const db = readDB();
-
-  const sorted = db.players.sort((a, b) => b.score - a.score);
-
-  res.json(sorted);
+  res.json(data);
 });
 
-app.post("/players", (req, res) => {
-  const db = readDB();
+app.post("/players", async (req, res) => {
+  const { nickname, score, number } = req.body;
 
-  const player = {
-    id: Date.now(),
-    ...req.body
-  };
+  const { data, error } = await supabase
+    .from("players")
+    .insert([
+      {
+        nickname,
+        score: Number(score),
+        number
+      }
+    ])
+    .select();
 
-  db.players.push(player);
+  if (error) {
+    return res.status(500).json(error);
+  }
 
-  writeDB(db);
-
-  res.json(player);
+  res.json(data);
 });
 
-app.put("/players/:id", (req, res) => {
-  const db = readDB();
-
+app.put("/players/:id", async (req, res) => {
   const id = Number(req.params.id);
 
-  db.players = db.players.map((p) =>
-    p.id === id ? { ...p, ...req.body } : p
-  );
+  const { nickname, score, number } = req.body;
 
-  writeDB(db);
+  const { data, error } = await supabase
+    .from("players")
+    .update({
+      nickname,
+      score: Number(score),
+      number
+    })
+    .eq("id", id)
+    .select();
 
-  res.json({ success: true });
+  if (error) {
+    return res.status(500).json(error);
+  }
+
+  res.json(data);
 });
 
-app.delete("/players/:id", (req, res) => {
-  const db = readDB();
-
+app.delete("/players/:id", async (req, res) => {
   const id = Number(req.params.id);
 
-  db.players = db.players.filter((p) => p.id !== id);
+  const { error } = await supabase
+    .from("players")
+    .delete()
+    .eq("id", id);
 
-  writeDB(db);
+  if (error) {
+    return res.status(500).json(error);
+  }
 
   res.json({ success: true });
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running: http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
