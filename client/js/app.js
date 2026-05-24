@@ -62,4 +62,3 @@ function renderRanking(players){
 
 loadPlayers();
 
-setInterval(loadPlayers, 5000);
