@@ -1,34 +1,150 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
 body{
-  background:#08111f;
+  min-height:100vh;
+  padding:30px;
+
+  font-family:"Segoe UI", "Microsoft YaHei", sans-serif;
+
   color:white;
-  font-family:sans-serif;
-  padding:40px;
+
+  background:
+    radial-gradient(circle at top, rgba(40,120,255,.35), transparent 35%),
+    linear-gradient(to bottom, #061429, #02050d);
 }
 
 .panel{
-  max-width:700px;
+  width:100%;
+  max-width:980px;
   margin:auto;
+}
+
+.admin-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+
+  margin-bottom:24px;
+}
+
+h1{
+  font-size:32px;
+  text-shadow:
+    0 0 18px rgba(80,180,255,.75);
+}
+
+h2{
+  margin:28px 0 16px;
+  font-size:22px;
+  opacity:.9;
+}
+
+.form-card{
+  padding:20px;
+  border-radius:22px;
+
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.12);
+
+  backdrop-filter:blur(12px);
+
+  box-shadow:
+    0 0 28px rgba(40,140,255,.16);
 }
 
 input{
   width:100%;
-  padding:14px;
-  margin:10px 0;
+  margin:8px 0;
+  padding:14px 16px;
 
-  border:none;
-  border-radius:10px;
+  color:white;
+  font-size:15px;
+
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.15);
+  border-radius:14px;
+
+  outline:none;
+}
+
+input:focus{
+  border-color:rgba(80,220,255,.75);
+  box-shadow:
+    0 0 16px rgba(80,220,255,.25);
 }
 
 button{
-  padding:12px 20px;
+  margin-top:10px;
+  padding:12px 18px;
 
   border:none;
-
-  background:#1e90ff;
+  border-radius:14px;
 
   color:white;
+  font-weight:600;
 
-  border-radius:10px;
+  background:linear-gradient(135deg, #168fff, #4fdcff);
 
   cursor:pointer;
+
+  transition:.25s;
+}
+
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:
+    0 0 20px rgba(80,220,255,.45);
+}
+
+.logout-btn{
+  background:rgba(255,255,255,.1);
+}
+
+.admin-item{
+  display:grid;
+  grid-template-columns:1.4fr 1fr 120px 80px 80px;
+  gap:10px;
+  align-items:center;
+
+  margin-bottom:12px;
+  padding:14px;
+
+  border-radius:18px;
+
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);
+
+  backdrop-filter:blur(10px);
+}
+
+.admin-item button{
+  margin-top:0;
+}
+
+.danger{
+  background:linear-gradient(135deg, #ff3b5c, #ff7a7a);
+}
+
+@media(max-width:768px){
+  body{
+    padding:18px;
+  }
+
+  .admin-top{
+    flex-direction:column;
+    align-items:flex-start;
+  }
+
+  .admin-item{
+    grid-template-columns:1fr;
+  }
+
+  h1{
+    font-size:26px;
+  }
 }
