@@ -1,4 +1,5 @@
 let currentCommentPlayerId = null;
+let commentRequestId = 0;
 
 async function loadPlayers() {
   const res = await fetch(`${API_URL}/players`);
@@ -13,16 +14,12 @@ async function loadPlayers() {
 
 function renderTop3(players) {
   const container = document.getElementById("top3");
-
   container.innerHTML = "";
 
   players.forEach((p, index) => {
     const div = document.createElement("div");
 
-    div.className =
-      "top-card " +
-      (index === 0 ? "first" : "");
-
+    div.className = "top-card " + (index === 0 ? "first" : "");
     div.onclick = () => openComments(p.id, p.nickname);
 
     div.innerHTML = `
@@ -37,7 +34,6 @@ function renderTop3(players) {
 
 function renderRanking(players) {
   const list = document.getElementById("rankingList");
-
   list.innerHTML = "";
 
   players.forEach((p, index) => {
@@ -58,25 +54,39 @@ function renderRanking(players) {
 
 async function openComments(playerId, nickname) {
   currentCommentPlayerId = playerId;
+  commentRequestId++;
+
+  const requestId = commentRequestId;
 
   document.getElementById("commentTitle").innerText =
     `${nickname} 的成绩排行评论`;
 
+  document.getElementById("commentList").innerHTML =
+    `<div class="empty-comment">评论加载中...</div>`;
+
+  document.getElementById("commentContent").value = "";
+
   document.getElementById("commentModal").style.display = "flex";
 
-  await loadComments(playerId);
+  await loadComments(playerId, requestId);
 }
 
 function closeComments() {
+  commentRequestId++;
+  currentCommentPlayerId = null;
   document.getElementById("commentModal").style.display = "none";
+  document.getElementById("commentList").innerHTML = "";
 }
 
-async function loadComments(playerId) {
+async function loadComments(playerId, requestId = commentRequestId) {
   const res = await fetch(`${API_URL}/players/${playerId}/comments`);
   const comments = await res.json();
 
-  const list = document.getElementById("commentList");
+  if (requestId !== commentRequestId || playerId !== currentCommentPlayerId) {
+    return;
+  }
 
+  const list = document.getElementById("commentList");
   list.innerHTML = "";
 
   if (!Array.isArray(comments) || comments.length === 0) {
@@ -86,7 +96,6 @@ async function loadComments(playerId) {
 
   comments.forEach((c) => {
     const div = document.createElement("div");
-
     div.className = "comment-item";
 
     div.innerHTML = `
@@ -108,7 +117,12 @@ async function submitComment() {
     return;
   }
 
-  const res = await fetch(`${API_URL}/players/${currentCommentPlayerId}/comments`, {
+  const playerId = currentCommentPlayerId;
+
+  document.getElementById("commentList").innerHTML =
+    `<div class="empty-comment">评论发布中...</div>`;
+
+  const res = await fetch(`${API_URL}/players/${playerId}/comments`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -126,7 +140,7 @@ async function submitComment() {
 
   document.getElementById("commentContent").value = "";
 
-  await loadComments(currentCommentPlayerId);
+  await loadComments(playerId);
 }
 
 function escapeHtml(text) {
