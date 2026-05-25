@@ -2,7 +2,8 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>PLC凉皮杯后台</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PLC凉皮杯后台管理</title>
 
   <link rel="stylesheet" href="./css/admin.css">
 </head>
@@ -10,15 +11,20 @@
 
 <div class="panel">
 
-  <h1>排行榜后台管理</h1>
+  <div class="admin-top">
+    <h1>排行榜后台管理</h1>
+    <button class="logout-btn" onclick="logoutAdmin()">退出登录</button>
+  </div>
 
-  <input id="nickname" placeholder="昵称">
-  <input id="number" placeholder="编号">
-  <input id="score" placeholder="成绩">
+  <div class="form-card">
+    <input id="nickname" placeholder="昵称">
+    <input id="number" placeholder="编号">
+    <input id="score" placeholder="成绩" type="number">
 
-  <button onclick="addPlayer()">
-    新增选手
-  </button>
+    <button onclick="addPlayer()">新增选手</button>
+  </div>
+
+  <h2>选手列表</h2>
 
   <div id="adminList"></div>
 
