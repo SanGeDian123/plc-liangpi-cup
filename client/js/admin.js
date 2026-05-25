@@ -1,10 +1,23 @@
 let adminToken = localStorage.getItem("adminToken");
 
+function showLogin() {
+  document.getElementById("loginPanel").style.display = "block";
+  document.getElementById("adminPanel").style.display = "none";
+}
+
+function showAdmin() {
+  document.getElementById("loginPanel").style.display = "none";
+  document.getElementById("adminPanel").style.display = "block";
+}
+
 async function adminLogin() {
-  const password = prompt("请输入管理员密码");
+  const password = document.getElementById("adminPassword").value.trim();
+  const msg = document.getElementById("loginMsg");
+
+  msg.innerText = "";
 
   if (!password) {
-    document.body.innerHTML = "<h1>未输入密码，无法访问后台</h1>";
+    msg.innerText = "请输入管理员密码";
     return;
   }
 
@@ -19,9 +32,8 @@ async function adminLogin() {
   });
 
   if (!res.ok) {
-    alert("管理员密码错误");
+    msg.innerText = "密码错误，请重试";
     localStorage.removeItem("adminToken");
-    document.body.innerHTML = "<h1>无权限访问</h1>";
     return;
   }
 
@@ -30,13 +42,17 @@ async function adminLogin() {
   adminToken = data.token;
   localStorage.setItem("adminToken", adminToken);
 
+  showAdmin();
   loadAdmin();
 }
 
 async function loadAdmin() {
   if (!adminToken) {
-    return adminLogin();
+    showLogin();
+    return;
   }
+
+  showAdmin();
 
   const res = await fetch(`${API_URL}/players`);
   const players = await res.json();
@@ -87,7 +103,8 @@ async function addPlayer() {
   if (!res.ok) {
     alert("新增失败，请重新登录后台");
     localStorage.removeItem("adminToken");
-    return adminLogin();
+    showLogin();
+    return;
   }
 
   document.getElementById("nickname").value = "";
@@ -123,7 +140,8 @@ async function updatePlayer(id) {
   if (!res.ok) {
     alert("保存失败，请重新登录后台");
     localStorage.removeItem("adminToken");
-    return adminLogin();
+    showLogin();
+    return;
   }
 
   loadAdmin();
@@ -144,7 +162,8 @@ async function deletePlayer(id) {
   if (!res.ok) {
     alert("删除失败，请重新登录后台");
     localStorage.removeItem("adminToken");
-    return adminLogin();
+    showLogin();
+    return;
   }
 
   loadAdmin();
@@ -152,7 +171,8 @@ async function deletePlayer(id) {
 
 function logoutAdmin() {
   localStorage.removeItem("adminToken");
-  location.reload();
+  adminToken = null;
+  showLogin();
 }
 
 function escapeHtml(text) {
