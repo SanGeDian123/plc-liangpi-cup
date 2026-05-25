@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>PLC凉皮杯 - 海选排行榜</title>
 
   <link rel="stylesheet" href="./css/style.css" />
@@ -24,7 +25,6 @@
   <div class="ranking-header">
     <span>排名</span>
     <span>选手</span>
-    <span>编号</span>
     <span>成绩</span>
   </div>
 
@@ -33,11 +33,26 @@
 
 <footer>
   <div id="updateTime"></div>
-  <div class="tip">数据实时同步中...</div>
+  <div class="tip">点击单条成绩即可查看或发布评论</div>
   <div class="copyright">
     © 2026 PLC凉皮杯赛事委员会
   </div>
 </footer>
+
+<div class="comment-modal" id="commentModal">
+  <div class="comment-box">
+    <button class="close-btn" onclick="closeComments()">×</button>
+
+    <h2 id="commentTitle">成绩排行评论</h2>
+
+    <div id="commentList"></div>
+
+    <input id="commentNickname" placeholder="请输入昵称">
+    <textarea id="commentContent" placeholder="写下你的评论"></textarea>
+
+    <button class="submit-comment-btn" onclick="submitComment()">发布评论</button>
+  </div>
+</div>
 
 <script src="./js/api.js"></script>
 <script src="./js/particles.js"></script>
