@@ -1,7 +1,17 @@
+@font-face{
+  font-family:"PLCFont";
+  src:url("../assets/fonts/Phi.ttf") format("truetype");
+  font-weight:normal;
+  font-style:normal;
+  font-display:swap;
+}
+
 *{
   margin:0;
   padding:0;
   box-sizing:border-box;
+
+  font-family:"PLCFont", "Microsoft YaHei", sans-serif;
 }
 
 html{
@@ -9,7 +19,6 @@ html{
 }
 
 body{
-  font-family:"Segoe UI", "Microsoft YaHei", sans-serif;
   min-height:100vh;
 
   background:url("../assets/bg.png") center/cover fixed;
@@ -118,6 +127,7 @@ body{
   position:absolute;
   width:300px;
   height:300px;
+
   background:radial-gradient(
     rgba(255,215,0,.35),
     transparent 70%
@@ -303,13 +313,6 @@ footer{
 #commentContent{
   min-height:90px;
   resize:vertical;
-}
-
-#commentNickname:focus,
-#commentContent:focus{
-  border-color:rgba(80,220,255,.8);
-  box-shadow:
-    0 0 14px rgba(80,220,255,.25);
 }
 
 .submit-comment-btn{
