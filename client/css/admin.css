@@ -1,14 +1,22 @@
+@font-face{
+  font-family:"PLCFont";
+  src:url("../assets/fonts/Phi.ttf") format("truetype");
+  font-weight:normal;
+  font-style:normal;
+  font-display:swap;
+}
+
 *{
   margin:0;
   padding:0;
   box-sizing:border-box;
+
+  font-family:"PLCFont", "Microsoft YaHei", sans-serif;
 }
 
 body{
   min-height:100vh;
   padding:30px;
-
-  font-family:"Segoe UI", "Microsoft YaHei", sans-serif;
 
   color:white;
 
@@ -74,6 +82,7 @@ input{
 
 input:focus{
   border-color:rgba(80,220,255,.75);
+
   box-shadow:
     0 0 16px rgba(80,220,255,.25);
 }
@@ -97,6 +106,7 @@ button{
 
 button:hover{
   transform:translateY(-2px);
+
   box-shadow:
     0 0 20px rgba(80,220,255,.45);
 }
@@ -131,6 +141,7 @@ button:hover{
 }
 
 @media(max-width:768px){
+
   body{
     padding:18px;
   }
