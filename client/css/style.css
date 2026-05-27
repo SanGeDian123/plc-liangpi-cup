@@ -77,6 +77,19 @@ body{
   opacity:.85;
 }
 
+.countdown{
+  margin-top:14px;
+
+  font-size:18px;
+
+  color:#4fdcff;
+
+  text-shadow:
+    0 0 10px rgba(79,220,255,.45);
+
+  animation:fadeIn 2s ease;
+}
+
 .top3{
   display:flex;
   justify-content:center;
@@ -393,6 +406,10 @@ footer{
 
   .hero h1{
     font-size:38px;
+  }
+
+  .countdown{
+    font-size:16px;
   }
 
   .ranking-header,
