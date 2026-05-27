@@ -16,7 +16,12 @@
 
 <header class="hero">
   <h1>PLC凉皮杯</h1>
+
   <p>海选排行榜</p>
+
+  <div id="countdown" class="countdown">
+    距离海选截止：计算中...
+  </div>
 </header>
 
 <section class="top3" id="top3"></section>
@@ -33,7 +38,11 @@
 
 <footer>
   <div id="updateTime"></div>
-  <div class="tip">点击单条成绩即可查看或发布评论</div>
+
+  <div class="tip">
+    点击单条成绩即可查看或发布评论
+  </div>
+
   <div class="copyright">
     © 2026 PLC凉皮杯赛事委员会
   </div>
@@ -41,6 +50,7 @@
 
 <div class="comment-modal" id="commentModal">
   <div class="comment-box">
+
     <button class="close-btn" onclick="closeComments()">×</button>
 
     <h2 id="commentTitle">成绩排行评论</h2>
@@ -48,9 +58,19 @@
     <div id="commentList"></div>
 
     <input id="commentNickname" placeholder="请输入昵称">
-    <textarea id="commentContent" placeholder="写下你的评论"></textarea>
 
-    <button class="submit-comment-btn" onclick="submitComment()">发布评论</button>
+    <textarea
+      id="commentContent"
+      placeholder="写下你的评论"
+    ></textarea>
+
+    <button
+      class="submit-comment-btn"
+      onclick="submitComment()"
+    >
+      发布评论
+    </button>
+
   </div>
 </div>
 
