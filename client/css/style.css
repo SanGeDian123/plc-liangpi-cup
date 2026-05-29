@@ -190,6 +190,59 @@ body{
   border-radius:18px;
 }
 
+.group-divider{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  gap:16px;
+
+  margin:
+    26px 0
+    18px;
+
+  animation:fadeIn 1s ease;
+}
+
+.group-line{
+  flex:1;
+  height:1px;
+
+  background:
+    linear-gradient(
+      to right,
+      transparent,
+      rgba(79,220,255,.75),
+      transparent
+    );
+
+  box-shadow:
+    0 0 12px rgba(79,220,255,.35);
+}
+
+.group-text{
+  padding:
+    8px 18px;
+
+  border-radius:999px;
+
+  background:
+    rgba(79,220,255,.08);
+
+  border:
+    1px solid rgba(79,220,255,.28);
+
+  color:#4fdcff;
+
+  font-size:15px;
+  letter-spacing:2px;
+
+  backdrop-filter:blur(10px);
+
+  box-shadow:
+    0 0 18px rgba(79,220,255,.15);
+}
+
 .ranking-header{
   background:rgba(255,255,255,.08);
   margin-bottom:12px;
@@ -420,6 +473,21 @@ footer{
       80px;
 
     font-size:14px;
+  }
+
+  .group-divider{
+    gap:10px;
+
+    margin:
+      20px 0
+      14px;
+  }
+
+  .group-text{
+    font-size:13px;
+
+    padding:
+      6px 14px;
   }
 
   .top-card{
