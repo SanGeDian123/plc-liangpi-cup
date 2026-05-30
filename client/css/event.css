@@ -1034,27 +1034,51 @@ main{
 
   .site-header{
     margin-top:10px;
-    padding:10px;
+    padding:8px 10px;
+    align-items:center;
+    flex-direction:row;
+    gap:10px;
+    overflow:hidden;
   }
 
   .brand{
-    font-size:16px;
+    gap:6px;
+    font-size:0;
   }
 
   .brand span{
-    width:36px;
-    height:26px;
+    width:34px;
+    height:24px;
+    font-size:13px;
+  }
+
+  .brand strong{
+    display:none;
   }
 
   .site-nav{
-    gap:6px;
-    font-size:12px;
+    flex:1 1 auto;
+    width:auto;
+    min-width:0;
+    justify-content:flex-start;
+    flex-wrap:nowrap;
+    gap:4px;
+    overflow-x:auto;
+    overflow-y:hidden;
+    scrollbar-width:none;
+    font-size:11px;
+    white-space:nowrap;
+  }
+
+  .site-nav::-webkit-scrollbar{
+    display:none;
   }
 
   .site-nav a{
-    padding:6px 8px;
+    flex:0 0 auto;
+    padding:5px 6px;
     border:1px solid rgba(255,255,255,.1);
-    border-radius:7px;
+    border-radius:6px;
     background:rgba(255,255,255,.05);
   }
 
