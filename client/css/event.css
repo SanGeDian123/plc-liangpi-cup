@@ -914,42 +914,82 @@ main{
   .site-header,
   main,
   .site-footer{
-    width:min(100% - 24px, 1180px);
+    width:min(100% - 20px, 1180px);
   }
 
   .site-header{
-    margin-top:12px;
-    padding:12px;
+    margin-top:10px;
+    padding:10px;
+  }
+
+  .brand{
+    font-size:16px;
+  }
+
+  .brand span{
+    width:36px;
+    height:26px;
   }
 
   .site-nav{
-    gap:8px;
-    font-size:13px;
+    gap:6px;
+    font-size:12px;
   }
 
   .site-nav a{
-    padding:7px 9px;
+    padding:6px 8px;
     border:1px solid rgba(255,255,255,.1);
     border-radius:7px;
     background:rgba(255,255,255,.05);
   }
 
   .hero{
-    gap:22px;
-    padding:30px 0 22px;
+    gap:18px;
+    padding:24px 0 18px;
   }
 
   .hero h1{
-    font-size:clamp(52px, 18vw, 72px);
+    font-size:clamp(42px, 15vw, 58px);
   }
 
   .hero-lead{
-    font-size:17px;
+    margin-top:14px;
+    font-size:15px;
+    line-height:1.65;
   }
 
   .hero-actions,
   .button{
     width:100%;
+  }
+
+  .hero-actions{
+    margin-top:18px;
+    gap:10px;
+  }
+
+  .button{
+    min-height:40px;
+    font-size:14px;
+  }
+
+  .hero-card,
+  .intro-panel,
+  .timeline-item,
+  .rule-card,
+  .format-panel,
+  .requirement-list{
+    padding:18px;
+  }
+
+  .event-facts div{
+    min-height:78px;
+    padding:13px;
+  }
+
+  .event-facts dd{
+    margin-top:10px;
+    font-size:17px;
   }
 
   .event-facts,
@@ -973,7 +1013,7 @@ main{
   }
 
   .section{
-    padding-top:64px;
+    padding-top:48px;
   }
 
   .section-title{
@@ -987,7 +1027,7 @@ main{
   .site-footer{
     align-items:flex-start;
     flex-direction:column;
-    margin-top:64px;
+    margin-top:48px;
   }
 
   .modal{
