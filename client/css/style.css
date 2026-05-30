@@ -280,6 +280,12 @@ footer{
   color:#4fdcff;
 }
 
+.loading-note{
+  margin-top:10px;
+  font-size:14px;
+  opacity:.85;
+}
+
 .comment-modal{
   display:none;
   position:fixed;

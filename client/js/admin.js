@@ -103,6 +103,7 @@ async function addPlayer() {
   if (!res.ok) {
     alert("新增失败，请重新登录后台");
     localStorage.removeItem("adminToken");
+    adminToken = null;
     showLogin();
     return;
   }
@@ -140,6 +141,7 @@ async function updatePlayer(id) {
   if (!res.ok) {
     alert("保存失败，请重新登录后台");
     localStorage.removeItem("adminToken");
+    adminToken = null;
     showLogin();
     return;
   }
@@ -162,6 +164,7 @@ async function deletePlayer(id) {
   if (!res.ok) {
     alert("删除失败，请重新登录后台");
     localStorage.removeItem("adminToken");
+    adminToken = null;
     showLogin();
     return;
   }
