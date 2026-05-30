@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description" content="PLC凉皮杯，Phigros线上赛事主页框架。" />
 
-  <title>PLC凉皮杯 - Phigros线上赛事</title>
+  <title>PLC凉皮杯 - 赛事主页</title>
 
   <link rel="stylesheet" href="./css/event.css" />
 </head>
@@ -21,6 +21,7 @@
       <a href="#schedule">赛程安排</a>
       <a href="#format">赛事规则</a>
       <a href="#requirements">注意事项</a>
+      <a href="#rankingPreview">海选排行榜</a>
     </nav>
   </header>
 
@@ -30,7 +31,7 @@
         <p class="eyebrow">Phigros Liangpi Cup</p>
         <h1>PLC凉皮杯</h1>
         <p class="hero-lead">
-          PLC凉皮杯是由凉皮clefairable举办的Phigros民间赛事，预计7月正式进行，敬请期待。
+          PLC凉皮杯是由凉皮clefairable举办的Phigros民间赛事，海选赛正在进行中......
         </p>
 
         <div class="hero-actions">
@@ -71,6 +72,15 @@
       </button>
       <a
         class="notice-card notice-card-action"
+        href="https://docs.qq.com/form/page/DS0ZSb3NPeUFuT0ZN"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span>海选成绩上传</span>
+        <strong>点击上传</strong>
+      </a>
+      <a
+        class="notice-card notice-card-action"
         href="https://docs.qq.com/doc/DS0pVYXdORVBVS1hN#"
         target="_blank"
         rel="noopener noreferrer"
@@ -89,7 +99,10 @@
       <div class="intro-grid single">
         <article class="intro-panel wide intro-panel-full">
           <h3>PLC凉皮杯</h3>
-          <p>这里写啥...(抓耳挠腮)</p>
+          <p>PLC凉皮杯（Phigros LiangPi Cup，简称PLC），是由凉皮clefairable主办的全网Phigros民间线上专属音游赛事，目前海选赛正在火热进行。
+本届赛事全程采用Phigros课程模式进行对局，以±40判定标准衡量每位选手的真实实力，保证比赛的公平与纯粹。
+这里是所有Phigros爱好者共同的舞台。无论你是久经沙场的老牌玩家，还是怀揣热爱的新人选手，都能在这里尽情发挥实力，享受节奏带来的纯粹快乐。
+</p>
         </article>
       </div>
     </section>
@@ -177,7 +190,7 @@
     <section class="section requirements-section" id="requirements">
       <div class="section-title">
         <p class="eyebrow">NOTICE</p>
-        <h2>注意事项与设备要求</h2>
+        <h2>注意事项&设备要求</h2>
       </div>
 
       <ol class="requirement-list">
@@ -186,11 +199,31 @@
         <li>本次比赛预计在暑期进行，时间将于之后对此文档进行编辑发布。</li>
       </ol>
     </section>
+
+    <section class="section ranking-preview-section" id="rankingPreview">
+      <div class="section-title">
+        <p class="eyebrow">QUALIFIER RANKING</p>
+        <h2>海选排行榜</h2>
+      </div>
+
+      <div class="ranking-preview-list" id="rankingPreviewList">
+        <div class="ranking-preview-empty">海选排行榜加载中...</div>
+      </div>
+
+      <a
+        class="ranking-link"
+        href="https://plc-liangpi-cup.xyz"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span>查看完整排名</span>
+      </a>
+    </section>
   </main>
 
   <footer class="site-footer">
     <span>PLC凉皮杯</span>
-    <span>Phigros线上赛事主页框架</span>
+    <span>Powered By ... & 凉皮clefairable</span>
   </footer>
 
   <div class="modal" id="tracksModal" aria-hidden="true">
@@ -229,6 +262,7 @@
   </div>
 
   <script src="./js/tips-data.js"></script>
+  <script src="./js/api.js"></script>
   <script src="./js/event.js"></script>
 </body>
 </html>

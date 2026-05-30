@@ -2,6 +2,7 @@ const tracksModal = document.getElementById("tracksModal");
 const openTracksButton = document.getElementById("openTracksModal");
 const selectionCountdown = document.getElementById("selectionCountdown");
 const tipsRoller = document.getElementById("tipsRoller");
+const rankingPreviewList = document.getElementById("rankingPreviewList");
 const modalCloseTargets = document.querySelectorAll("[data-close-tracks-modal]");
 
 let modalCloseTimer = null;
@@ -118,6 +119,52 @@ function showNextTip() {
   }, 340);
 }
 
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function renderRankingPreview(players) {
+  if (!rankingPreviewList) {
+    return;
+  }
+
+  if (!Array.isArray(players) || players.length === 0) {
+    rankingPreviewList.innerHTML = '<div class="ranking-preview-empty">暂无海选成绩</div>';
+    return;
+  }
+
+  rankingPreviewList.innerHTML = players.slice(0, 3).map((player, index) => `
+    <article class="ranking-preview-item">
+      <span class="ranking-preview-rank">#${index + 1}</span>
+      <strong class="ranking-preview-name">${escapeHtml(player.nickname)}</strong>
+      <span class="ranking-preview-score">${escapeHtml(player.score)}</span>
+    </article>
+  `).join("");
+}
+
+async function loadRankingPreview() {
+  if (!rankingPreviewList || typeof API_URL === "undefined") {
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_URL}/players`);
+
+    if (!response.ok) {
+      throw new Error("Ranking request failed");
+    }
+
+    renderRankingPreview(await response.json());
+  } catch (error) {
+    rankingPreviewList.innerHTML = '<div class="ranking-preview-empty">排行榜加载失败，请稍后重试</div>';
+  }
+}
+
 async function loadTips() {
   if (!tipsRoller) {
     return;
@@ -170,3 +217,5 @@ setInterval(updateSelectionCountdown, 1000 * 60);
 
 loadTips();
 setInterval(showNextTip, 5000);
+
+loadRankingPreview();
