@@ -92,6 +92,17 @@ function renderRanking(players) {
       `;
       list.appendChild(groupBottom);
     }
+
+    if (index === 31) {
+      const groupOverflow = document.createElement("div");
+      groupOverflow.className = "group-divider";
+      groupOverflow.innerHTML = `
+        <div class="group-line"></div>
+        <div class="group-text">OVER FLOW</div>
+        <div class="group-line"></div>
+      `;
+      list.appendChild(groupOverflow);
+    }
   });
 }
 
