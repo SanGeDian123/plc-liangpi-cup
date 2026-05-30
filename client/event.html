@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PLC凉皮杯，Phigros线上赛事主页框架。" />
+
+  <title>PLC凉皮杯 - Phigros线上赛事</title>
+
+  <link rel="stylesheet" href="./css/event.css" />
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="PLC凉皮杯首页">
+      <span>PLC</span>
+      <strong>凉皮杯</strong>
+    </a>
+
+    <nav class="site-nav" aria-label="赛事页面导航">
+      <a href="#intro">赛事介绍</a>
+      <a href="#schedule">赛程安排</a>
+      <a href="#format">赛事规则</a>
+      <a href="#requirements">注意事项</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="hero-content">
+        <p class="eyebrow">Phigros Liangpi Cup</p>
+        <h1>PLC凉皮杯</h1>
+        <p class="hero-lead">
+          PLC凉皮杯是由凉皮clefairable举办的Phigros民间赛事，预计7月正式进行，敬请期待。
+        </p>
+
+        <div class="hero-actions">
+          <a class="button primary" href="#schedule">查看赛程</a>
+          <a class="button secondary" href="#format">赛事规则</a>
+        </div>
+      </div>
+
+      <aside class="hero-card" aria-label="赛事速览">
+        <div class="card-label">EVENT OVERVIEW</div>
+        <dl class="event-facts">
+          <div>
+            <dt>开赛日期</dt>
+            <dd>07月11日</dd>
+          </div>
+          <div>
+            <dt>赛程</dt>
+            <dd>海选进行中...</dd>
+          </div>
+          <div class="tips-fact">
+            <dt>Tips</dt>
+            <dd>
+              <span class="tips-roller" id="tipsRoller">咕咕咕！</span>
+            </dd>
+          </div>
+        </dl>
+      </aside>
+    </section>
+
+    <section class="notice-band" aria-label="重要信息">
+      <article class="notice-card">
+        <span>QQ交流群</span>
+        <strong>1103859571</strong>
+      </article>
+      <button class="notice-card notice-card-action" id="openTracksModal" type="button">
+        <span>海选曲目</span>
+        <strong>点击查看</strong>
+      </button>
+      <a
+        class="notice-card notice-card-action"
+        href="https://docs.qq.com/doc/DS0pVYXdORVBVS1hN#"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <span>详细公告</span>
+        <strong>查看公告</strong>
+      </a>
+    </section>
+
+    <section class="section intro-section" id="intro">
+      <div class="section-title">
+        <p class="eyebrow">INTRO</p>
+        <h2>赛事介绍</h2>
+      </div>
+
+      <div class="intro-grid single">
+        <article class="intro-panel wide intro-panel-full">
+          <h3>PLC凉皮杯</h3>
+          <p>这里写啥...(抓耳挠腮)</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="schedule">
+      <div class="section-title">
+        <p class="eyebrow">SCHEDULE</p>
+        <h2>赛程安排</h2>
+      </div>
+
+      <div class="timeline">
+        <article class="timeline-item">
+          <span>01</span>
+          <h3>16进8</h3>
+          <p>本次共计16名选手随机两两分组进行首轮对决，对局胜者累计1个胜场，对局负者累计1个负场。
+首轮结束分出8名胜者组选手与8名负者组选手，8名胜者组选手再次两两对战，拿到2个胜场的选手直接晋级八强，落败选手战绩为1胜1负，暂时保留参赛资格。
+所有负者组选手一旦落败直接淘汰，负者组突围胜出选手，将与1胜1负的留存选手进行补位对决。
+本阶段全部对局结束后，最终确定8名晋级选手。
+</p>
+        </article>
+        <article class="timeline-item">
+          <span>02</span>
+          <h3>8强梯队赛</h3>
+          <p>8名选手随机分为4组1v1对决，4名取胜选手直升M2梯队，4名落败选手归入M1梯队。
+4名M1梯队选手内部两两对决，2名突围胜者晋级M3梯队，剩余2名选手止步淘汰。
+此时4名直升M2的选手先行两两比拼，2名胜出选手晋级M3梯队，2名落败选手归入M3梯队。
+4名M3梯队选手完成对决后，汇总决出最终4名四强选手。
+</p>
+        </article>
+        <article class="timeline-item">
+          <span>03</span>
+          <h3>4强决赛</h3>
+          <p>4名四强选手开展两场半决赛角逐
+，两场半决赛的落败选手进行季军争夺战
+，两场半决赛的胜出选手会师总决赛并决出冠军
+</p>
+        </article>
+        <article class="timeline-item">
+          <span>04</span>
+          <h3>比赛结束</h3>
+          <p>全部比赛结束，结果公布。</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" id="format">
+      <div class="section-title">
+        <p class="eyebrow">FORMAT</p>
+        <h2>选曲规则&比赛方式</h2>
+      </div>
+
+      <div class="format-layout">
+        <article class="format-panel">
+          <div class="format-panel-heading">
+            <span>01</span>
+            <h3>选曲规则</h3>
+          </div>
+
+          <div class="format-subgrid">
+            <section class="rule-card">
+              <h4>16进8阶段</h4>
+              <p>图池范围为近4年所有曲目（Lanota精选集2.3.0~本次PMT2026决赛版本3.20.0）的IN+AT难度，以及近2年所有曲目（SHINOBI SLASH精选集3.7.0~本次PMT2026决赛版本3.20.0）的全部难度。
+</p>
+            </section>
+            <section class="rule-card">
+              <h4>8强赛阶段</h4>
+              <p>图池范围为近3年所有曲目（凌日潮汐3.0.0~本次PMT2026决赛版本3.20.0）的IN+AT难度，以及近1年所有曲目（音击精选集3.14.0~本次PMT2026决赛版本3.20.0）的全部难度。
+</p>
+            </section>
+          </div>
+        </article>
+
+        <article class="format-panel">
+          <div class="format-panel-heading">
+            <span>02</span>
+            <h3>比赛方式</h3>
+          </div>
+
+          <p>对局双方先各自ban两首位于图池内的谱面，再各自选定1张谱面，合计选出2张对局谱面。剩余的第3张谱面将由本场比赛的裁判在图池中的IN&AT难度中随机抽取。
+</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section requirements-section" id="requirements">
+      <div class="section-title">
+        <p class="eyebrow">NOTICE</p>
+        <h2>注意事项与设备要求</h2>
+      </div>
+
+      <ol class="requirement-list">
+        <li>本次比赛全程采用腾讯会议进行比赛，若参赛者时间与比赛时间有冲突，可以与赛制组进行协商，支持24小时以内进行时间协调。</li>
+        <li>录制设备的要求首选在腾讯会议内录制手元（同PMT）若参赛者没有录制设备，可以关闭音频并进行腾讯会议的屏幕共享。</li>
+        <li>本次比赛预计在暑期进行，时间将于之后对此文档进行编辑发布。</li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <span>PLC凉皮杯</span>
+    <span>Phigros线上赛事主页框架</span>
+  </footer>
+
+  <div class="modal" id="tracksModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-tracks-modal></div>
+    <section
+      class="modal-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="tracksModalTitle"
+    >
+      <button class="modal-close" type="button" data-close-tracks-modal aria-label="关闭海选曲目">×</button>
+
+      <img class="modal-image" src="./assets/hxqm.png" alt="海选曲目总览" />
+
+      <div class="modal-content">
+        <h2 id="tracksModalTitle">海选曲目总览</h2>
+
+        <div class="song-list">
+          <div class="song-row difficulty-in">
+            <span>opia(IN)</span>
+            <strong>15.6</strong>
+          </div>
+          <div class="song-row difficulty-at">
+            <span>Ark(AT)</span>
+            <strong>16.5</strong>
+          </div>
+          <div class="song-row difficulty-in">
+            <span>白と黒のバケモノ(IN)</span>
+            <strong>15.9</strong>
+          </div>
+        </div>
+
+        <p class="modal-countdown" id="selectionCountdown">海选倒计时：计算中...</p>
+      </div>
+    </section>
+  </div>
+
+  <script src="./js/tips-data.js"></script>
+  <script src="./js/event.js"></script>
+</body>
+</html>
