@@ -116,14 +116,12 @@ main,
   font-size:18px;
 }
 
-.brand span{
-  display:grid;
-  place-items:center;
+.brand-logo{
+  display:block;
   width:42px;
-  height:30px;
-  border-radius:6px;
-  color:#07111a;
-  background:linear-gradient(135deg, var(--cyan), var(--green));
+  height:42px;
+  object-fit:contain;
+  flex:0 0 auto;
 }
 
 .site-nav{
@@ -1046,10 +1044,9 @@ main{
     font-size:0;
   }
 
-  .brand span{
+  .brand-logo{
     width:34px;
-    height:24px;
-    font-size:13px;
+    height:34px;
   }
 
   .brand strong{
