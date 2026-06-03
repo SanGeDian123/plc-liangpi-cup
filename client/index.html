@@ -6,6 +6,10 @@
 
   <title>PLC凉皮杯 - 海选排行榜</title>
 
+  <link rel="preconnect" href="https://plc-liangpi-cup.onrender.com" crossorigin />
+  <link rel="preload" href="./assets/players-snapshot.json" as="fetch" type="application/json" crossorigin />
+  <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="./assets/bg.png" as="image" />
   <link rel="icon" type="image/png" href="./assets/logo1.png" />
   <link rel="stylesheet" href="./css/style.css" />
 </head>
@@ -48,9 +52,6 @@
     © 2026 PLC凉皮杯赛事委员会
   </div>
 
-  <div class="loading-note">
-    加载排行数据需要10秒左右时间，首次进入请耐心等待。
-  </div>
 </footer>
 
 <div class="comment-modal" id="commentModal">
@@ -80,8 +81,9 @@
 </div>
 
 <script src="./js/api.js"></script>
-<script src="./js/particles.js"></script>
+<script src="./js/players-cache.js"></script>
 <script src="./js/app.js"></script>
+<script src="./js/particles.js"></script>
 
 </body>
 </html>

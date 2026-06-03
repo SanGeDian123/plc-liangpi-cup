@@ -269,6 +269,16 @@ body{
     0 0 20px rgba(62,166,255,.25);
 }
 
+.ranking-empty{
+  width:100%;
+  padding:18px 20px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:18px;
+  background:rgba(255,255,255,.06);
+  color:rgba(255,255,255,.75);
+  text-align:center;
+}
+
 footer{
   padding:40px 20px;
   text-align:center;

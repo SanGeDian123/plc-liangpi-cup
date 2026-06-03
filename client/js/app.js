@@ -22,15 +22,68 @@ function updateCountdown() {
 setInterval(updateCountdown, 1000 * 60);
 updateCountdown();
 
-async function loadPlayers() {
-  const res = await fetch(`${API_URL}/players`);
-  const players = await res.json();
-
+function renderPlayers(players, meta = {}) {
   renderTop3(players.slice(0, 3));
   renderRanking(players);
 
-  document.getElementById("updateTime").innerHTML =
-    "最后更新：" + new Date().toLocaleString();
+  const updateTime = document.getElementById("updateTime");
+
+  if (updateTime) {
+    const updatedAt = meta.updatedAt ? new Date(meta.updatedAt) : new Date();
+    const sourceLabel =
+      meta.source && meta.source !== "api" ? "\uff08\u5feb\u7167\uff09" : "";
+
+    updateTime.textContent =
+      "\u6700\u540e\u66f4\u65b0\uff1a" +
+      updatedAt.toLocaleString() +
+      sourceLabel;
+  }
+}
+
+function renderPlayersError() {
+  const top3 = document.getElementById("top3");
+  const list = document.getElementById("rankingList");
+  const updateTime = document.getElementById("updateTime");
+
+  if (top3 && top3.children.length === 0) {
+    top3.innerHTML =
+      '<div class="ranking-empty">\u6392\u884c\u699c\u52a0\u8f7d\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u5237\u65b0</div>';
+  }
+
+  if (list && list.children.length === 0) {
+    list.innerHTML =
+      '<div class="ranking-empty">\u6392\u884c\u699c\u52a0\u8f7d\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u5237\u65b0</div>';
+  }
+
+  if (updateTime) {
+    updateTime.textContent =
+      "\u6392\u884c\u699c\u52a0\u8f7d\u5931\u8d25\uff0c\u8bf7\u7a0d\u540e\u5237\u65b0";
+  }
+}
+
+async function loadPlayers() {
+  if (window.PLCPlayersCache?.hydrate) {
+    window.PLCPlayersCache.hydrate({
+      onUpdate: renderPlayers,
+      onError: renderPlayersError
+    });
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API_URL}/players`);
+
+    if (!res.ok) {
+      throw new Error("Players request failed");
+    }
+
+    renderPlayers(await res.json(), {
+      source: "api",
+      updatedAt: Date.now()
+    });
+  } catch (error) {
+    renderPlayersError();
+  }
 }
 
 function renderTop3(players) {

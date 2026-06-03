@@ -148,7 +148,23 @@ function renderRankingPreview(players) {
 }
 
 async function loadRankingPreview() {
-  if (!rankingPreviewList || typeof API_URL === "undefined") {
+  if (!rankingPreviewList) {
+    return;
+  }
+
+  if (window.PLCPlayersCache?.hydrate) {
+    window.PLCPlayersCache.hydrate({
+      onUpdate: renderRankingPreview,
+      onError: () => {
+        if (!rankingPreviewList.querySelector(".ranking-preview-item")) {
+          rankingPreviewList.innerHTML = '<div class="ranking-preview-empty">排行榜加载失败，请稍后重试</div>';
+        }
+      }
+    });
+    return;
+  }
+
+  if (typeof API_URL === "undefined") {
     return;
   }
 
