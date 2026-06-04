@@ -3,14 +3,28 @@ const openTracksButton = document.getElementById("openTracksModal");
 const selectionCountdown = document.getElementById("selectionCountdown");
 const tipsRoller = document.getElementById("tipsRoller");
 const rankingPreviewList = document.getElementById("rankingPreviewList");
+const signalRift = document.getElementById("signalRift");
+const openSignalRiftButton = document.getElementById("openSignalRift");
+const finalSignalSection = document.getElementById("finalSignal");
+const signalGatePanel = document.querySelector(".signal-gate-panel");
+const signalGateStatus = document.getElementById("signalGateStatus");
+const resetSignalGateButton = document.getElementById("resetSignalGate");
 const modalCloseTargets = document.querySelectorAll("[data-close-tracks-modal]");
+const signalRiftCloseTargets = document.querySelectorAll("[data-close-signal-rift]");
+const signalGateButtons = document.querySelectorAll("[data-signal-key]");
+const signalGateDots = document.querySelectorAll("[data-gate-dot]");
 
 let modalCloseTimer = null;
+let signalRiftCloseTimer = null;
 let lastFocusedElement = null;
+let signalRiftLastFocusedElement = null;
 let tips = Array.isArray(window.PLC_TIPS) && window.PLC_TIPS.length > 0
   ? window.PLC_TIPS
   : ["咕咕咕！"];
 let tipIndex = 0;
+const signalGateSequence = ["07", "11", "87"];
+let signalGateInput = [];
+let signalGateLocked = false;
 
 function formatSelectionCountdown() {
   const endTime = new Date(2026, 6, 3, 23, 59, 0);
@@ -73,6 +87,172 @@ function closeTracksModal() {
       lastFocusedElement.focus();
     }
   }, 560);
+}
+
+function openSignalRift() {
+  if (!signalRift) {
+    return;
+  }
+
+  clearTimeout(signalRiftCloseTimer);
+  signalRiftLastFocusedElement = document.activeElement;
+
+  signalRift.classList.remove("is-closing");
+  signalRift.classList.add("is-open");
+  signalRift.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  const closeButton = signalRift.querySelector(".signal-rift-close");
+  if (closeButton) {
+    closeButton.focus();
+  }
+}
+
+function closeSignalRift() {
+  if (!signalRift || !signalRift.classList.contains("is-open")) {
+    return;
+  }
+
+  signalRift.classList.add("is-closing");
+  signalRift.classList.remove("is-open");
+  signalRift.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+
+  signalRiftCloseTimer = setTimeout(() => {
+    signalRift.classList.remove("is-closing");
+
+    if (
+      signalRiftLastFocusedElement &&
+      typeof signalRiftLastFocusedElement.focus === "function"
+    ) {
+      signalRiftLastFocusedElement.focus();
+    }
+  }, 340);
+}
+
+function updateSignalGateProgress(state = "input") {
+  if (signalGateStatus) {
+    const inputText = signalGateInput
+      .concat(Array(Math.max(signalGateSequence.length - signalGateInput.length, 0)).fill("--"))
+      .slice(0, signalGateSequence.length)
+      .join(" / ");
+
+    if (state === "failed") {
+      signalGateStatus.textContent = "解析失败：噪声矩阵已回卷";
+    } else if (state === "complete") {
+      signalGateStatus.textContent = "校验通过：频段同步中";
+    } else {
+      signalGateStatus.textContent = `等待频点输入：${inputText}`;
+    }
+    signalGateStatus.classList.toggle("is-failed", state === "failed");
+    signalGateStatus.classList.toggle("is-complete", state === "complete");
+  }
+
+  signalGateDots.forEach((dot, index) => {
+    dot.classList.toggle("is-active", index < signalGateInput.length);
+    dot.classList.toggle("is-failed", state === "failed");
+    dot.classList.toggle("is-complete", state === "complete");
+  });
+}
+
+function resetSignalGate() {
+  signalGateInput = [];
+  signalGateLocked = false;
+  signalGatePanel?.classList.remove("is-failed", "is-resolving");
+  signalGateButtons.forEach((button) => {
+    button.classList.remove("is-used", "is-rejected", "is-accepted");
+    button.disabled = false;
+  });
+  updateSignalGateProgress();
+}
+
+function unlockSignalGate() {
+  signalGatePanel?.classList.add("is-resolving");
+
+  if (signalGateStatus) {
+    signalGateStatus.textContent = "校验通过：频段同步中";
+    signalGateStatus.classList.remove("is-failed");
+    signalGateStatus.classList.add("is-complete");
+  }
+
+  signalGateButtons.forEach((button) => {
+    if (button.classList.contains("is-used")) {
+      button.classList.add("is-accepted");
+    }
+    button.disabled = true;
+  });
+
+  if (resetSignalGateButton) {
+    resetSignalGateButton.disabled = true;
+  }
+
+  updateSignalGateProgress("complete");
+
+  setTimeout(() => {
+    signalGatePanel?.classList.remove("is-resolving");
+    signalGatePanel?.classList.add("is-unlocked");
+
+    if (signalGateStatus) {
+      signalGateStatus.textContent = "握手完成：静默频段已展开";
+    }
+
+    if (finalSignalSection) {
+      finalSignalSection.classList.remove("is-locked");
+      finalSignalSection.classList.add("is-revealed");
+      finalSignalSection.setAttribute("aria-hidden", "false");
+      finalSignalSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
+    }
+  }, 920);
+}
+
+function failSignalGate() {
+  signalGateLocked = true;
+  signalGatePanel?.classList.add("is-failed");
+
+  if (signalGateStatus) {
+    signalGateStatus.textContent = "解析失败：噪声矩阵已回卷";
+    signalGateStatus.classList.remove("is-complete");
+    signalGateStatus.classList.add("is-failed");
+  }
+
+  signalGateButtons.forEach((button) => {
+    if (button.classList.contains("is-used")) {
+      button.classList.add("is-rejected");
+    }
+    button.disabled = true;
+  });
+
+  updateSignalGateProgress("failed");
+
+  setTimeout(() => {
+    resetSignalGate();
+  }, 1150);
+}
+
+function handleSignalGateInput(button) {
+  if (signalGateLocked || button.disabled) {
+    return;
+  }
+
+  const value = button.dataset.signalKey;
+
+  signalGateInput.push(value);
+  button.classList.add("is-used");
+  button.disabled = true;
+  updateSignalGateProgress();
+
+  if (signalGateInput.length === signalGateSequence.length) {
+    signalGateLocked = true;
+
+    if (signalGateInput.every((value, index) => value === signalGateSequence[index])) {
+      unlockSignalGate();
+    } else {
+      failSignalGate();
+    }
+  }
 }
 
 function parseTipsYaml(source) {
@@ -218,18 +398,44 @@ if (openTracksButton) {
   openTracksButton.addEventListener("click", openTracksModal);
 }
 
+if (openSignalRiftButton) {
+  openSignalRiftButton.addEventListener("click", openSignalRift);
+}
+
+signalGateButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    handleSignalGateInput(button);
+  });
+});
+
+if (resetSignalGateButton) {
+  resetSignalGateButton.addEventListener("click", () => {
+    if (signalGateStatus) {
+      signalGateStatus.classList.remove("is-complete");
+    }
+    resetSignalGate();
+  });
+}
+
 modalCloseTargets.forEach((target) => {
   target.addEventListener("click", closeTracksModal);
 });
 
+signalRiftCloseTargets.forEach((target) => {
+  target.addEventListener("click", closeSignalRift);
+});
+
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    closeSignalRift();
     closeTracksModal();
   }
 });
 
 updateSelectionCountdown();
 setInterval(updateSelectionCountdown, 1000 * 60);
+
+updateSignalGateProgress();
 
 loadTips();
 setInterval(showNextTip, 5000);

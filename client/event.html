@@ -11,6 +11,7 @@
   <link rel="preload" href="./assets/players-snapshot.json" as="fetch" type="application/json" crossorigin />
   <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="./assets/bg.png" as="image" />
+  <link rel="preload" href="./assets/zishiquhui.png" as="image" />
   <link rel="icon" type="image/png" href="./assets/logo1.png" />
   <link rel="stylesheet" href="./css/event.css" />
 </head>
@@ -224,6 +225,103 @@
         <span>查看完整排名</span>
       </a>
     </section>
+
+    <section class="section signal-gate-section" id="signalGate">
+      <div class="section-title">
+        <p class="eyebrow">DEAD CHANNEL // INPUT REQUIRED</p>
+        <h2>静默频段</h2>
+      </div>
+
+      <div class="signal-gate-panel" aria-label="异常信号解密终端">
+        <div class="signal-gate-copy">
+          <p class="signal-kicker">BOTTOM LAYER HANDSHAKE</p>
+          <h3>把日期拆成频点，再接上偏移。</h3>
+          <p>
+            终端只接受三段脉冲。前两段来自赛场灯亮起的日期，最后一段来自偏移表。顺序错误会让噪点回卷。
+          </p>
+        </div>
+
+        <div class="signal-gate-console">
+          <div class="gate-readout">
+            <span>OFFSET TABLE</span>
+            <strong>+87ms</strong>
+          </div>
+
+          <div class="gate-progress" aria-hidden="true">
+            <span data-gate-dot></span>
+            <span data-gate-dot></span>
+            <span data-gate-dot></span>
+          </div>
+
+          <p class="gate-status" id="signalGateStatus" aria-live="polite">等待频点输入：-- / -- / --</p>
+
+          <div class="gate-keypad" aria-label="频点输入">
+            <button type="button" data-signal-key="7C">7C</button>
+            <button type="button" data-signal-key="07">07</button>
+            <button type="button" data-signal-key="AF">AF</button>
+            <button type="button" data-signal-key="11">11</button>
+            <button type="button" data-signal-key="00">00</button>
+            <button type="button" data-signal-key="87">87</button>
+          </div>
+
+          <button class="gate-reset" id="resetSignalGate" type="button">清除回卷</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section final-signal-section is-locked" id="finalSignal" aria-hidden="true">
+      <div class="section-title">
+        <p class="eyebrow">NOISE LOCK // 0x0711</p>
+        <h2>第零层回声</h2>
+      </div>
+
+      <div class="final-signal-panel" aria-label="失真曲绘信号线索">
+        <button class="final-art-frame" id="openSignalRift" type="button" aria-label="校准失真曲绘信号">
+          <img src="./assets/zishiquhui.png" alt="失真曲绘残片" />
+          <span class="final-art-status">SIGNAL BLEED // 0711</span>
+          <span class="final-art-prompt">tap to desync</span>
+          <span class="glitch-slice slice-a" aria-hidden="true"></span>
+          <span class="glitch-slice slice-b" aria-hidden="true"></span>
+        </button>
+
+        <div class="final-signal-copy">
+          <p class="signal-kicker">UNMAPPED AUDIO TRACE / ACCESS FRAGMENTED</p>
+          <h3>解析失败，请保持连接。</h3>
+          <p>
+            这张残片被折叠进错误帧里。亮度、色差、坐标全部不可信，只有反复跳变的校验值在指向同一个门槛。
+          </p>
+
+          <div class="signal-strip" aria-hidden="true">
+            <span>KEY: PLC-NULL</span>
+            <span>CRC: 7C-11-A?</span>
+            <span>PHASE: DESYNC</span>
+            <span>SEED: 01110000</span>
+          </div>
+
+          <dl class="signal-readout">
+            <div>
+              <dt>同步偏移</dt>
+              <dd>+87ms</dd>
+            </div>
+            <div>
+              <dt>下一项解析</dt>
+              <dd>06-13</dd>
+            </div>
+          </dl>
+
+          <div class="cipher-grid" aria-hidden="true">
+            <span>00</span>
+            <span>7C</span>
+            <span>11</span>
+            <span>AF</span>
+            <span>??</span>
+            <span>01</span>
+            <span>5E</span>
+            <span>0X</span>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <footer class="site-footer">
@@ -263,6 +361,21 @@
 
         <p class="modal-countdown" id="selectionCountdown">海选倒计时：计算中...</p>
       </div>
+    </section>
+  </div>
+
+  <div class="signal-rift" id="signalRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-signal-rift></div>
+    <section
+      class="signal-rift-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="signalRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-signal-rift aria-label="关闭异常窗口">×</button>
+      <p class="signal-rift-code">0x0613 // CLOCK DRIFT ACCEPTED</p>
+      <h2 id="signalRiftTitle">回声将在 06-13 的晚星闪耀时达成连接。</h2>
+      <p class="signal-rift-hint">listen between the broken frames</p>
     </section>
   </div>
 
