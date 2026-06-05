@@ -12,6 +12,8 @@
   <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="./assets/bg.png" as="image" />
   <link rel="preload" href="./assets/zishiquhui-signal.png" as="image" />
+  <link rel="preload" href="./assets/zishiquhui-shard-01.png" as="image" />
+  <link rel="preload" href="./assets/phase-calibration-plate.png" as="image" />
   <link rel="icon" type="image/png" href="./assets/logo1.png" />
   <link rel="stylesheet" href="./css/event.css" />
 </head>
@@ -276,13 +278,40 @@
       </div>
 
       <div class="final-signal-panel" aria-label="失真曲绘信号线索">
-        <button class="final-art-frame" id="openSignalRift" type="button" aria-label="校准失真曲绘信号">
-          <img src="./assets/zishiquhui-signal.png" alt="失真曲绘残片" draggable="false" />
-          <span class="final-art-status">SIGNAL BLEED // 0711</span>
-          <span class="final-art-prompt">tap to desync</span>
-          <span class="glitch-slice slice-a" aria-hidden="true"></span>
-          <span class="glitch-slice slice-b" aria-hidden="true"></span>
-        </button>
+        <div class="final-art-stage">
+          <button class="final-art-frame" id="openSignalRift" type="button" aria-label="校准失真曲绘信号">
+            <img src="./assets/zishiquhui-signal.png" alt="失真曲绘残片" draggable="false" />
+            <span class="final-art-status">SIGNAL BLEED // 0711</span>
+            <span class="final-art-prompt">tap to desync</span>
+            <span class="glitch-slice slice-a" aria-hidden="true"></span>
+            <span class="glitch-slice slice-b" aria-hidden="true"></span>
+            <span class="fracture-map" aria-hidden="true">
+              <span class="fracture-piece piece-a"></span>
+              <span class="fracture-piece piece-b"></span>
+              <span class="fracture-piece piece-c"></span>
+              <span class="fracture-piece piece-d"></span>
+              <span class="fracture-piece piece-e"></span>
+              <span class="fracture-piece piece-f"></span>
+            </span>
+          </button>
+          <div class="artifact-shards" aria-label="裂解后的曲绘碎片">
+            <button
+              class="artifact-shard shard-one"
+              id="openFragmentRift"
+              type="button"
+              aria-label="读取右上残片"
+              disabled
+            >
+              <img src="./assets/zishiquhui-shard-01.png" alt="右上原始曲绘残片" draggable="false" />
+              <span>FRAGMENT 01 // ONLINE</span>
+            </button>
+            <span class="artifact-shard shard-two" aria-hidden="true"><span>02 // SEALED</span></span>
+            <span class="artifact-shard shard-three" aria-hidden="true"><span>03 // SEALED</span></span>
+            <span class="artifact-shard shard-four" aria-hidden="true"><span>04 // SEALED</span></span>
+            <span class="artifact-shard shard-five" aria-hidden="true"><span>05 // SEALED</span></span>
+            <span class="artifact-shard shard-six" aria-hidden="true"><span>06 // SEALED</span></span>
+          </div>
+        </div>
 
         <div class="final-signal-copy">
           <p class="signal-kicker">UNMAPPED AUDIO TRACE / ACCESS FRAGMENTED</p>
@@ -305,9 +334,55 @@
             </div>
             <div>
               <dt>下一项解析</dt>
-              <dd>读取失败</dd>
+              <dd>
+                <button class="read-retry-button" id="openRetryPuzzle" type="button">
+                  <span>读取失败，点击重试</span>
+                </button>
+              </dd>
             </div>
           </dl>
+
+          <div class="retry-puzzle" id="retryPuzzle" aria-hidden="true">
+            <div class="retry-puzzle-header">
+              <p>FRAME READER // RETRY 01 / MULTI-LAYER</p>
+              <strong>先按来源排门牌，再用相位板把门牌翻成颜色。</strong>
+            </div>
+
+            <button class="phase-plate" id="openPhasePlate" type="button" aria-label="放大相位校准板">
+              <img src="./assets/phase-calibration-plate.png" alt="六片相位校准板" draggable="false" />
+              <span>
+                点击相位板以放大。六片玻璃只负责映射颜色；读取顺序藏在下方三层记录里。
+              </span>
+            </button>
+
+            <div class="retry-layer-grid" aria-label="读取层级">
+              <span>01 来自第一块残片，所以先入栈。</span>
+              <span>07 / 11 来自开赛日期；87 来自同步偏移。</span>
+              <span>白门读取 5E；失同步的 0X 永远最后处理。</span>
+            </div>
+
+            <div class="pulse-sequence" aria-hidden="true">
+              <span data-retry-slot>--</span>
+              <span data-retry-slot>--</span>
+              <span data-retry-slot>--</span>
+              <span data-retry-slot>--</span>
+              <span data-retry-slot>--</span>
+              <span data-retry-slot>--</span>
+            </div>
+
+            <div class="pulse-options" aria-label="相位脉冲选择">
+              <button type="button" data-retry-pulse="cyan"><span>冷光</span><small>07</small></button>
+              <button type="button" data-retry-pulse="pink"><span>粉噪</span><small>11</small></button>
+              <button type="button" data-retry-pulse="yellow"><span>闪核</span><small>87</small></button>
+              <button type="button" data-retry-pulse="green"><span>绿漂</span><small>01</small></button>
+              <button type="button" data-retry-pulse="white"><span>白门</span><small>5E</small></button>
+              <button type="button" data-retry-pulse="violet"><span>余影</span><small>0X</small></button>
+            </div>
+
+            <p class="retry-status" id="retryPuzzleStatus" aria-live="polite">
+              读取笔记：残片 -> 日期 -> 白门 -> 偏移 -> 失同步。按钮小字是门牌，按钮颜色是最终输入。
+            </p>
+          </div>
 
           <div class="cipher-grid" aria-hidden="true">
             <span>00</span>
@@ -376,6 +451,94 @@
       <p class="signal-rift-code">0xERR019 // CLOCK DRIFT ACCEPTED</p>
       <h2 id="signalRiftTitle">回声数据丢失，请保持连接。</h2>
       <p class="signal-rift-hint">listen between the broken frames</p>
+    </section>
+  </div>
+
+  <div class="signal-rift fragment-rift" id="fragmentRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-fragment-rift></div>
+    <section
+      class="signal-rift-panel fragment-rift-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="fragmentRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-fragment-rift aria-label="关闭残片窗口">×</button>
+      <p class="signal-rift-code">FRAGMENT 01 // TOP-RIGHT TRACE</p>
+      <h2 id="fragmentRiftTitle">三段校验</h2>
+      <p class="fragment-riddle">
+        右上角不读图像，只读它的来源。白门拒绝十进制；偏移拒绝符号；最小残片只补一针。把三条读数压成三位，不写单位。
+      </p>
+      <div class="fragment-proof-grid" aria-hidden="true">
+        <span>ORIGIN: TOP-RIGHT</span>
+        <span>WHITE GATE: 5E</span>
+        <span>DRIFT: ABS</span>
+        <span>INDEX: FIRST</span>
+      </div>
+      <form class="fragment-answer" id="fragmentAnswerForm">
+        <label for="fragmentAnswerInput">三位归一值</label>
+        <div>
+          <input
+            id="fragmentAnswerInput"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            maxlength="3"
+            pattern="[0-9]{3}"
+            placeholder="---"
+          />
+          <button id="fragmentAnswerSubmit" type="button">写入</button>
+        </div>
+      </form>
+      <p class="fragment-answer-status" id="fragmentAnswerStatus" aria-live="polite">
+        TRACE WAITING // 87 + 5E + 01
+      </p>
+      <p class="fragment-result" id="fragmentResult" aria-hidden="true">BPM 182</p>
+    </section>
+  </div>
+
+  <div class="signal-rift phase-plate-rift" id="phasePlateRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-phase-plate></div>
+    <section
+      class="signal-rift-panel phase-plate-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="phasePlateTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-phase-plate aria-label="关闭相位校准板">×</button>
+      <p class="signal-rift-code">PHASE PLATE // COLOR MAP</p>
+      <h2 id="phasePlateTitle">把门牌翻成颜色。</h2>
+      <img src="./assets/phase-calibration-plate.png" alt="放大的六片相位校准板" draggable="false" />
+      <p class="phase-plate-note">
+        不按按钮位置读。先用下方记录确认门牌顺序，再回到按钮小字找对应颜色。
+      </p>
+    </section>
+  </div>
+
+  <div class="signal-rift date-rift" id="dateRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-date-rift></div>
+    <section
+      class="signal-rift-panel date-rift-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="dateRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-date-rift aria-label="关闭时间坐标">×</button>
+      <p class="signal-rift-code">GEO FIX // 06-06</p>
+      <h2 id="dateRiftTitle">把门牌放回地球。</h2>
+      <p class="date-riddle">
+        本初子午线只给零点基准。向东数八个时区，落到东经一百二十度的标准线；再把主页面留下的门牌写成公历。当天夜间第二十个整点，才会落到下一次公开坐标。
+      </p>
+      <div class="date-proof-grid" aria-hidden="true">
+        <span>MERIDIAN: 0 -> E8</span>
+        <span>STANDARD: 120E</span>
+        <span>DATE TAG: 06-06</span>
+        <span>LOCAL HOUR: 20</span>
+      </div>
+      <div class="date-format-grid" aria-hidden="true">
+        <span>YEAR: 2026</span>
+        <span>ZONE: UTC +8</span>
+        <span>LATITUDE：120°E</span>
+      </div>
     </section>
   </div>
 

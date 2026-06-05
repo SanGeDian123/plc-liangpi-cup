@@ -5,19 +5,44 @@ const tipsRoller = document.getElementById("tipsRoller");
 const rankingPreviewList = document.getElementById("rankingPreviewList");
 const signalRift = document.getElementById("signalRift");
 const openSignalRiftButton = document.getElementById("openSignalRift");
+const finalArtFrame = document.querySelector(".final-art-frame");
 const finalSignalSection = document.getElementById("finalSignal");
 const signalGatePanel = document.querySelector(".signal-gate-panel");
 const signalGateStatus = document.getElementById("signalGateStatus");
 const resetSignalGateButton = document.getElementById("resetSignalGate");
+const openRetryPuzzleButton = document.getElementById("openRetryPuzzle");
+const retryPuzzle = document.getElementById("retryPuzzle");
+const retryPuzzleStatus = document.getElementById("retryPuzzleStatus");
+const retryPulseButtons = document.querySelectorAll("[data-retry-pulse]");
+const retryPulseSlots = document.querySelectorAll("[data-retry-slot]");
+const phasePlateRift = document.getElementById("phasePlateRift");
+const openPhasePlateButton = document.getElementById("openPhasePlate");
+const dateRift = document.getElementById("dateRift");
+const fragmentRift = document.getElementById("fragmentRift");
+const openFragmentRiftButton = document.getElementById("openFragmentRift");
+const fragmentAnswerForm = document.getElementById("fragmentAnswerForm");
+const fragmentAnswerInput = document.getElementById("fragmentAnswerInput");
+const fragmentAnswerSubmit = document.getElementById("fragmentAnswerSubmit");
+const fragmentAnswerStatus = document.getElementById("fragmentAnswerStatus");
+const fragmentResult = document.getElementById("fragmentResult");
 const modalCloseTargets = document.querySelectorAll("[data-close-tracks-modal]");
 const signalRiftCloseTargets = document.querySelectorAll("[data-close-signal-rift]");
+const fragmentRiftCloseTargets = document.querySelectorAll("[data-close-fragment-rift]");
+const phasePlateCloseTargets = document.querySelectorAll("[data-close-phase-plate]");
+const dateRiftCloseTargets = document.querySelectorAll("[data-close-date-rift]");
 const signalGateButtons = document.querySelectorAll("[data-signal-key]");
 const signalGateDots = document.querySelectorAll("[data-gate-dot]");
 
 let modalCloseTimer = null;
 let signalRiftCloseTimer = null;
+let fragmentRiftCloseTimer = null;
+let phasePlateCloseTimer = null;
+let dateRiftCloseTimer = null;
 let lastFocusedElement = null;
 let signalRiftLastFocusedElement = null;
+let fragmentRiftLastFocusedElement = null;
+let phasePlateLastFocusedElement = null;
+let dateRiftLastFocusedElement = null;
 let tips = Array.isArray(window.PLC_TIPS) && window.PLC_TIPS.length > 0
   ? window.PLC_TIPS
   : ["咕咕咕！"];
@@ -25,8 +50,23 @@ let tipIndex = 0;
 const signalGateSequence = ["07", "11", "87"];
 const signalGateStorageKey = "plc.event.signalGate.v1";
 const signalGateCacheVersion = "2026-06-13";
+const retryPuzzleSequence = ["green", "cyan", "pink", "white", "yellow", "violet"];
+const retryPulseLabels = {
+  cyan: "冷光",
+  pink: "粉噪",
+  yellow: "闪核",
+  green: "绿漂",
+  white: "白门",
+  violet: "余影"
+};
+const signalRetryStorageKey = "plc.event.signalRetry.v1";
+const signalRetryCacheVersion = "2026-06-13-shard-01-hard-v2";
+const fragmentAnswerStorageKey = "plc.event.fragment01.v1";
+const fragmentAnswerCacheVersion = "2026-06-13-fragment-01-hard-v2";
 let signalGateInput = [];
 let signalGateLocked = false;
+let retryPuzzleInput = [];
+let retryPuzzleLocked = false;
 
 function formatSelectionCountdown() {
   const endTime = new Date(2026, 6, 3, 23, 59, 0);
@@ -132,6 +172,88 @@ function closeSignalRift() {
   }, 340);
 }
 
+function openPhasePlateRift() {
+  if (!phasePlateRift) {
+    return;
+  }
+
+  clearTimeout(phasePlateCloseTimer);
+  phasePlateLastFocusedElement = document.activeElement;
+
+  phasePlateRift.classList.remove("is-closing");
+  phasePlateRift.classList.add("is-open");
+  phasePlateRift.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  const closeButton = phasePlateRift.querySelector(".signal-rift-close");
+  if (closeButton) {
+    closeButton.focus();
+  }
+}
+
+function closePhasePlateRift() {
+  if (!phasePlateRift || !phasePlateRift.classList.contains("is-open")) {
+    return;
+  }
+
+  phasePlateRift.classList.add("is-closing");
+  phasePlateRift.classList.remove("is-open");
+  phasePlateRift.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+
+  phasePlateCloseTimer = setTimeout(() => {
+    phasePlateRift.classList.remove("is-closing");
+
+    if (
+      phasePlateLastFocusedElement &&
+      typeof phasePlateLastFocusedElement.focus === "function"
+    ) {
+      phasePlateLastFocusedElement.focus();
+    }
+  }, 340);
+}
+
+function openDateRift() {
+  if (!dateRift) {
+    return;
+  }
+
+  clearTimeout(dateRiftCloseTimer);
+  dateRiftLastFocusedElement = document.activeElement;
+
+  dateRift.classList.remove("is-closing");
+  dateRift.classList.add("is-open");
+  dateRift.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  const closeButton = dateRift.querySelector(".signal-rift-close");
+  if (closeButton) {
+    closeButton.focus();
+  }
+}
+
+function closeDateRift() {
+  if (!dateRift || !dateRift.classList.contains("is-open")) {
+    return;
+  }
+
+  dateRift.classList.add("is-closing");
+  dateRift.classList.remove("is-open");
+  dateRift.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+
+  dateRiftCloseTimer = setTimeout(() => {
+    dateRift.classList.remove("is-closing");
+
+    if (
+      dateRiftLastFocusedElement &&
+      typeof dateRiftLastFocusedElement.focus === "function"
+    ) {
+      dateRiftLastFocusedElement.focus();
+    }
+  }, 340);
+}
+
 function readSignalGateCache() {
   try {
     const cachedValue = readStoredSignalGateValue();
@@ -153,15 +275,19 @@ function readSignalGateCache() {
 }
 
 function readStoredSignalGateValue() {
+  return readStoredValue(signalGateStorageKey);
+}
+
+function readStoredValue(key) {
   try {
     if (typeof window.localStorage !== "undefined") {
-      return window.localStorage.getItem(signalGateStorageKey);
+      return window.localStorage.getItem(key);
     }
   } catch (error) {
   }
 
   try {
-    const cookiePrefix = `${encodeURIComponent(signalGateStorageKey)}=`;
+    const cookiePrefix = `${encodeURIComponent(key)}=`;
     const cachedCookie = document.cookie
       .split("; ")
       .find((item) => item.startsWith(cookiePrefix));
@@ -175,9 +301,13 @@ function readStoredSignalGateValue() {
 }
 
 function writeStoredSignalGateValue(value) {
+  writeStoredValue(signalGateStorageKey, value);
+}
+
+function writeStoredValue(key, value) {
   try {
     if (typeof window.localStorage !== "undefined") {
-      window.localStorage.setItem(signalGateStorageKey, value);
+      window.localStorage.setItem(key, value);
       return;
     }
   } catch (error) {
@@ -185,7 +315,7 @@ function writeStoredSignalGateValue(value) {
 
   try {
     document.cookie = [
-      `${encodeURIComponent(signalGateStorageKey)}=${encodeURIComponent(value)}`,
+      `${encodeURIComponent(key)}=${encodeURIComponent(value)}`,
       "max-age=31536000",
       "path=/",
       "SameSite=Lax"
@@ -207,6 +337,69 @@ function writeSignalGateCache() {
   }
 }
 
+function readSignalRetryCache() {
+  try {
+    const cachedValue = readStoredValue(signalRetryStorageKey);
+    if (!cachedValue) {
+      return null;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    const isValid =
+      payload?.version === signalRetryCacheVersion &&
+      payload?.unlocked === true &&
+      Array.isArray(payload?.sequence) &&
+      payload.sequence.join("/") === retryPuzzleSequence.join("/");
+
+    return isValid ? payload : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function writeSignalRetryCache() {
+  try {
+    writeStoredValue(signalRetryStorageKey, JSON.stringify({
+      version: signalRetryCacheVersion,
+      unlocked: true,
+      sequence: retryPuzzleSequence,
+      completedAt: new Date().toISOString()
+    }));
+  } catch (error) {
+  }
+}
+
+function readFragmentAnswerCache() {
+  try {
+    const cachedValue = readStoredValue(fragmentAnswerStorageKey);
+    if (!cachedValue) {
+      return null;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    const isValid =
+      payload?.version === fragmentAnswerCacheVersion &&
+      payload?.solved === true &&
+      payload?.result === "BPM 182";
+
+    return isValid ? payload : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function writeFragmentAnswerCache() {
+  try {
+    writeStoredValue(fragmentAnswerStorageKey, JSON.stringify({
+      version: fragmentAnswerCacheVersion,
+      solved: true,
+      result: "BPM 182",
+      completedAt: new Date().toISOString()
+    }));
+  } catch (error) {
+  }
+}
+
 function revealFinalSignal({ animate = true, scroll = true } = {}) {
   if (!finalSignalSection) {
     return;
@@ -221,6 +414,286 @@ function revealFinalSignal({ animate = true, scroll = true } = {}) {
       behavior: "smooth",
       block: "start"
     });
+  }
+}
+
+function updateRetryPulseSlots(state = "input") {
+  retryPulseSlots.forEach((slot, index) => {
+    const value = retryPuzzleInput[index];
+    slot.textContent = value ? retryPulseLabels[value] : "--";
+    slot.classList.toggle("is-active", Boolean(value));
+    slot.classList.toggle("is-failed", state === "failed");
+    slot.classList.toggle("is-complete", state === "complete");
+  });
+}
+
+function openRetryPuzzle() {
+  if (openRetryPuzzleButton?.classList.contains("is-date-ready")) {
+    openDateRift();
+    return;
+  }
+
+  if (!retryPuzzle || retryPuzzleLocked) {
+    return;
+  }
+
+  retryPuzzle.classList.remove("is-failed", "is-resolving");
+  retryPuzzle.classList.add("is-open");
+  retryPuzzle.setAttribute("aria-hidden", "false");
+
+  if (retryPuzzleStatus) {
+    retryPuzzleStatus.textContent = "读取笔记：残片 -> 日期 -> 白门 -> 偏移 -> 失同步。按钮小字是门牌，按钮颜色是最终输入。";
+    retryPuzzleStatus.classList.remove("is-failed", "is-complete");
+  }
+}
+
+function revealDateRetryEntry() {
+  if (!openRetryPuzzleButton) {
+    return;
+  }
+
+  openRetryPuzzleButton.disabled = false;
+  openRetryPuzzleButton.classList.add("is-date-ready");
+  openRetryPuzzleButton.setAttribute("aria-label", "打开 06-06 时间坐标");
+
+  const buttonText = openRetryPuzzleButton.querySelector("span");
+  if (buttonText) {
+    buttonText.textContent = "06-06";
+  }
+}
+
+function resetRetryPuzzle() {
+  retryPuzzleInput = [];
+  retryPuzzleLocked = false;
+  retryPuzzle?.classList.remove("is-failed", "is-resolving");
+
+  retryPulseButtons.forEach((button) => {
+    button.classList.remove("is-used", "is-rejected", "is-accepted");
+    button.disabled = false;
+  });
+
+  updateRetryPulseSlots();
+}
+
+function revealShardOne({ fromCache = false } = {}) {
+  retryPuzzleInput = [...retryPuzzleSequence];
+  retryPuzzleLocked = true;
+
+  finalSignalSection?.classList.add("is-fractured", "is-shard-one-open");
+  finalArtFrame?.classList.add("is-fractured");
+  finalArtFrame?.classList.toggle("is-fracturing", !fromCache);
+
+  if (!fromCache && finalArtFrame) {
+    setTimeout(() => {
+      finalArtFrame.classList.remove("is-fracturing");
+    }, 1320);
+  }
+
+  retryPuzzle?.classList.remove("is-failed", "is-resolving");
+  retryPuzzle?.classList.add("is-open", "is-complete");
+  retryPuzzle?.setAttribute("aria-hidden", "false");
+
+  retryPulseButtons.forEach((button) => {
+    const isSequencePulse = retryPuzzleSequence.includes(button.dataset.retryPulse);
+    button.classList.toggle("is-used", isSequencePulse);
+    button.classList.toggle("is-accepted", isSequencePulse);
+    button.classList.remove("is-rejected");
+    button.disabled = true;
+  });
+
+  updateRetryPulseSlots("complete");
+
+  if (openRetryPuzzleButton) {
+    openRetryPuzzleButton.classList.add("is-resolved");
+    openRetryPuzzleButton.disabled = true;
+    const buttonText = openRetryPuzzleButton.querySelector("span");
+    if (buttonText) {
+      buttonText.textContent = "读取完成，裂片在线";
+    }
+  }
+
+  if (retryPuzzleStatus) {
+    retryPuzzleStatus.textContent = fromCache
+      ? "裂解记录已恢复：右上残片保持在线。"
+      : "裂解完成：右上残片已暴露。";
+    retryPuzzleStatus.classList.remove("is-failed");
+    retryPuzzleStatus.classList.add("is-complete");
+  }
+
+  if (openFragmentRiftButton) {
+    openFragmentRiftButton.disabled = false;
+  }
+}
+
+function solveRetryPuzzle() {
+  retryPuzzleLocked = true;
+  retryPuzzle?.classList.add("is-resolving");
+
+  if (retryPuzzleStatus) {
+    retryPuzzleStatus.textContent = "六相位门牌锁定：玻璃层正在断裂。";
+    retryPuzzleStatus.classList.remove("is-failed");
+    retryPuzzleStatus.classList.add("is-complete");
+  }
+
+  retryPulseButtons.forEach((button) => {
+    if (button.classList.contains("is-used")) {
+      button.classList.add("is-accepted");
+    }
+    button.disabled = true;
+  });
+
+  updateRetryPulseSlots("complete");
+
+  setTimeout(() => {
+    writeSignalRetryCache();
+    revealShardOne();
+  }, 920);
+}
+
+function failRetryPuzzle() {
+  retryPuzzleLocked = true;
+  retryPuzzle?.classList.add("is-failed");
+
+  if (retryPuzzleStatus) {
+    retryPuzzleStatus.textContent = "重试失败：错误脉冲被红线回收。";
+    retryPuzzleStatus.classList.remove("is-complete");
+    retryPuzzleStatus.classList.add("is-failed");
+  }
+
+  retryPulseButtons.forEach((button) => {
+    if (button.classList.contains("is-used")) {
+      button.classList.add("is-rejected");
+    }
+    button.disabled = true;
+  });
+
+  updateRetryPulseSlots("failed");
+
+  setTimeout(() => {
+    resetRetryPuzzle();
+    retryPuzzle?.classList.add("is-open");
+    retryPuzzle?.setAttribute("aria-hidden", "false");
+
+    if (retryPuzzleStatus) {
+      retryPuzzleStatus.textContent = "读取笔记：残片 -> 日期 -> 白门 -> 偏移 -> 失同步。按钮小字是门牌，按钮颜色是最终输入。";
+    }
+  }, 1120);
+}
+
+function handleRetryPulseInput(button) {
+  if (retryPuzzleLocked || button.disabled) {
+    return;
+  }
+
+  openRetryPuzzle();
+
+  const value = button.dataset.retryPulse;
+  retryPuzzleInput.push(value);
+  button.classList.add("is-used");
+  button.disabled = true;
+  updateRetryPulseSlots();
+
+  if (retryPuzzleInput.length === retryPuzzleSequence.length) {
+    if (retryPuzzleInput.every((value, index) => value === retryPuzzleSequence[index])) {
+      solveRetryPuzzle();
+    } else {
+      failRetryPuzzle();
+    }
+  }
+}
+
+function revealFragmentAnswer({ fromCache = false } = {}) {
+  fragmentRift?.classList.add("is-fragment-solved");
+  fragmentResult?.setAttribute("aria-hidden", "false");
+
+  if (fragmentAnswerInput) {
+    fragmentAnswerInput.value = "182";
+    fragmentAnswerInput.disabled = true;
+  }
+
+  if (fragmentAnswerSubmit) {
+    fragmentAnswerSubmit.disabled = true;
+  }
+
+  if (fragmentAnswerStatus) {
+    fragmentAnswerStatus.textContent = fromCache
+      ? "TRACE RESTORED // RESULT LOCKED"
+      : "TRACE ACCEPTED // RESULT UNSEALED";
+    fragmentAnswerStatus.classList.remove("is-failed");
+    fragmentAnswerStatus.classList.add("is-complete");
+  }
+
+  revealDateRetryEntry();
+}
+
+function openFragmentRift() {
+  if (!fragmentRift || openFragmentRiftButton?.disabled) {
+    return;
+  }
+
+  clearTimeout(fragmentRiftCloseTimer);
+  fragmentRiftLastFocusedElement = document.activeElement;
+
+  fragmentRift.classList.remove("is-closing", "is-failed");
+  fragmentRift.classList.add("is-open");
+  fragmentRift.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  if (readFragmentAnswerCache()) {
+    revealFragmentAnswer({
+      fromCache: true
+    });
+  }
+
+  const focusTarget = fragmentAnswerInput?.disabled
+    ? fragmentRift.querySelector(".signal-rift-close")
+    : fragmentAnswerInput;
+
+  if (focusTarget && typeof focusTarget.focus === "function") {
+    focusTarget.focus();
+  }
+}
+
+function closeFragmentRift() {
+  if (!fragmentRift || !fragmentRift.classList.contains("is-open")) {
+    return;
+  }
+
+  fragmentRift.classList.add("is-closing");
+  fragmentRift.classList.remove("is-open");
+  fragmentRift.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+
+  fragmentRiftCloseTimer = setTimeout(() => {
+    fragmentRift.classList.remove("is-closing", "is-failed");
+
+    if (
+      fragmentRiftLastFocusedElement &&
+      typeof fragmentRiftLastFocusedElement.focus === "function"
+    ) {
+      fragmentRiftLastFocusedElement.focus();
+    }
+  }, 340);
+}
+
+function handleFragmentAnswerSubmit(event) {
+  event?.preventDefault();
+
+  const answer = fragmentAnswerInput?.value.trim();
+  if (answer === "182") {
+    writeFragmentAnswerCache();
+    revealFragmentAnswer();
+    return;
+  }
+
+  fragmentRift?.classList.remove("is-failed");
+  fragmentRift?.offsetHeight;
+  fragmentRift?.classList.add("is-failed");
+
+  if (fragmentAnswerStatus) {
+    fragmentAnswerStatus.textContent = "TRACE REJECTED // SUM OUT OF RANGE";
+    fragmentAnswerStatus.classList.remove("is-complete");
+    fragmentAnswerStatus.classList.add("is-failed");
   }
 }
 
@@ -279,6 +752,12 @@ function completeSignalGate({ fromCache = false } = {}) {
     animate: !fromCache,
     scroll: !fromCache
   });
+
+  if (readSignalRetryCache()) {
+    revealShardOne({
+      fromCache: true
+    });
+  }
 }
 
 function resetSignalGate() {
@@ -515,6 +994,40 @@ if (openSignalRiftButton) {
   openSignalRiftButton.addEventListener("click", openSignalRift);
 }
 
+if (openRetryPuzzleButton) {
+  openRetryPuzzleButton.addEventListener("click", openRetryPuzzle);
+}
+
+if (openPhasePlateButton) {
+  openPhasePlateButton.addEventListener("click", openPhasePlateRift);
+}
+
+retryPulseButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    handleRetryPulseInput(button);
+  });
+});
+
+if (openFragmentRiftButton) {
+  openFragmentRiftButton.addEventListener("click", openFragmentRift);
+}
+
+if (fragmentAnswerForm) {
+  fragmentAnswerForm.addEventListener("submit", handleFragmentAnswerSubmit);
+}
+
+if (fragmentAnswerSubmit) {
+  fragmentAnswerSubmit.addEventListener("click", handleFragmentAnswerSubmit);
+}
+
+if (fragmentAnswerInput) {
+  fragmentAnswerInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      handleFragmentAnswerSubmit(event);
+    }
+  });
+}
+
 signalGateButtons.forEach((button) => {
   button.addEventListener("click", () => {
     handleSignalGateInput(button);
@@ -538,8 +1051,23 @@ signalRiftCloseTargets.forEach((target) => {
   target.addEventListener("click", closeSignalRift);
 });
 
+fragmentRiftCloseTargets.forEach((target) => {
+  target.addEventListener("click", closeFragmentRift);
+});
+
+phasePlateCloseTargets.forEach((target) => {
+  target.addEventListener("click", closePhasePlateRift);
+});
+
+dateRiftCloseTargets.forEach((target) => {
+  target.addEventListener("click", closeDateRift);
+});
+
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    closeDateRift();
+    closePhasePlateRift();
+    closeFragmentRift();
     closeSignalRift();
     closeTracksModal();
   }
@@ -554,6 +1082,12 @@ if (readSignalGateCache()) {
   });
 } else {
   updateSignalGateProgress();
+}
+
+if (readFragmentAnswerCache()) {
+  revealFragmentAnswer({
+    fromCache: true
+  });
 }
 
 loadTips();
