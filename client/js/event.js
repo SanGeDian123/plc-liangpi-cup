@@ -543,11 +543,24 @@ function solveRetryPuzzle() {
   });
 
   updateRetryPulseSlots("complete");
+  scrollFinalArtIntoView();
 
   setTimeout(() => {
     writeSignalRetryCache();
     revealShardOne();
-  }, 920);
+  }, 1080);
+}
+
+function scrollFinalArtIntoView() {
+  const target = finalArtFrame?.closest(".final-art-stage") || finalArtFrame || finalSignalSection;
+  if (!target) {
+    return;
+  }
+
+  target.scrollIntoView({
+    behavior: "smooth",
+    block: "center"
+  });
 }
 
 function failRetryPuzzle() {
@@ -688,7 +701,9 @@ function handleFragmentAnswerSubmit(event) {
 
   fragmentRift?.classList.remove("is-failed");
   fragmentRift?.offsetHeight;
-  fragmentRift?.classList.add("is-failed");
+  fragmentRift?.classList.add("is-open", "is-failed");
+  fragmentRift?.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
 
   if (fragmentAnswerStatus) {
     fragmentAnswerStatus.textContent = "TRACE REJECTED // SUM OUT OF RANGE";

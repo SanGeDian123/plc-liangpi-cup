@@ -781,6 +781,7 @@ main{
   overflow:hidden;
   background:#050711;
   isolation:isolate;
+  scroll-margin-top:86px;
 }
 
 .final-art-stage::after{
@@ -3430,10 +3431,14 @@ main{
 @keyframes readableErrorPulse{
   0%,
   100%{
+    opacity:1;
+    transform:none;
     filter:none;
   }
 
   42%{
+    opacity:1;
+    transform:none;
     filter:brightness(1.35) contrast(1.35) saturate(1.2);
   }
 }
@@ -3688,6 +3693,75 @@ main{
   .fragment-result{
     width:100%;
     font-size:34px;
+  }
+
+  .fragment-rift{
+    padding:10px;
+  }
+
+  .fragment-rift-panel{
+    width:100%;
+    max-height:calc(100vh - 20px);
+    padding:26px 16px 20px;
+    overflow:auto;
+  }
+
+  .fragment-rift-panel h2{
+    max-width:calc(100% - 44px);
+    margin-top:12px;
+    font-size:24px;
+    line-height:1.2;
+  }
+
+  .fragment-riddle{
+    margin-top:14px;
+    font-size:13px;
+    line-height:1.65;
+  }
+
+  .fragment-proof-grid{
+    grid-template-columns:1fr 1fr;
+    margin-top:14px;
+  }
+
+  .fragment-proof-grid span{
+    min-height:38px;
+    padding:7px 6px;
+    font-size:10px;
+    letter-spacing:.4px;
+  }
+
+  .fragment-answer{
+    margin-top:16px;
+    gap:7px;
+  }
+
+  .fragment-answer label{
+    font-size:11px;
+  }
+
+  .fragment-answer input{
+    min-height:44px;
+    padding:0 12px;
+    font-size:22px;
+    letter-spacing:5px;
+  }
+
+  .fragment-answer button{
+    min-height:42px;
+  }
+
+  .fragment-answer-status{
+    margin-top:10px;
+    font-size:11px;
+    line-height:1.45;
+  }
+
+  .fragment-result{
+    min-height:48px;
+    margin-top:14px;
+    padding:0 12px;
+    font-size:30px;
   }
 
   .signal-readout{
