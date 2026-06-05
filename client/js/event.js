@@ -23,6 +23,8 @@ let tips = Array.isArray(window.PLC_TIPS) && window.PLC_TIPS.length > 0
   : ["咕咕咕！"];
 let tipIndex = 0;
 const signalGateSequence = ["07", "11", "87"];
+const signalGateStorageKey = "plc.event.signalGate.v1";
+const signalGateCacheVersion = "2026-06-13";
 let signalGateInput = [];
 let signalGateLocked = false;
 
@@ -130,6 +132,98 @@ function closeSignalRift() {
   }, 340);
 }
 
+function readSignalGateCache() {
+  try {
+    const cachedValue = readStoredSignalGateValue();
+    if (!cachedValue) {
+      return null;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    const isValid =
+      payload?.version === signalGateCacheVersion &&
+      payload?.unlocked === true &&
+      Array.isArray(payload?.sequence) &&
+      payload.sequence.join("/") === signalGateSequence.join("/");
+
+    return isValid ? payload : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function readStoredSignalGateValue() {
+  try {
+    if (typeof window.localStorage !== "undefined") {
+      return window.localStorage.getItem(signalGateStorageKey);
+    }
+  } catch (error) {
+  }
+
+  try {
+    const cookiePrefix = `${encodeURIComponent(signalGateStorageKey)}=`;
+    const cachedCookie = document.cookie
+      .split("; ")
+      .find((item) => item.startsWith(cookiePrefix));
+
+    return cachedCookie
+      ? decodeURIComponent(cachedCookie.slice(cookiePrefix.length))
+      : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function writeStoredSignalGateValue(value) {
+  try {
+    if (typeof window.localStorage !== "undefined") {
+      window.localStorage.setItem(signalGateStorageKey, value);
+      return;
+    }
+  } catch (error) {
+  }
+
+  try {
+    document.cookie = [
+      `${encodeURIComponent(signalGateStorageKey)}=${encodeURIComponent(value)}`,
+      "max-age=31536000",
+      "path=/",
+      "SameSite=Lax"
+    ].join("; ");
+  } catch (error) {
+  }
+}
+
+function writeSignalGateCache() {
+  try {
+    writeStoredSignalGateValue(JSON.stringify({
+      version: signalGateCacheVersion,
+      unlocked: true,
+      sequence: signalGateSequence,
+      completedAt: new Date().toISOString()
+    }));
+  } catch (error) {
+    // 解密缓存只是体验增强，写入失败时不影响当前解锁。
+  }
+}
+
+function revealFinalSignal({ animate = true, scroll = true } = {}) {
+  if (!finalSignalSection) {
+    return;
+  }
+
+  finalSignalSection.classList.remove("is-locked");
+  finalSignalSection.classList.toggle("is-revealed", animate);
+  finalSignalSection.setAttribute("aria-hidden", "false");
+
+  if (scroll) {
+    finalSignalSection.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
+    });
+  }
+}
+
 function updateSignalGateProgress(state = "input") {
   if (signalGateStatus) {
     const inputText = signalGateInput
@@ -152,6 +246,38 @@ function updateSignalGateProgress(state = "input") {
     dot.classList.toggle("is-active", index < signalGateInput.length);
     dot.classList.toggle("is-failed", state === "failed");
     dot.classList.toggle("is-complete", state === "complete");
+  });
+}
+
+function completeSignalGate({ fromCache = false } = {}) {
+  signalGateInput = [...signalGateSequence];
+  signalGateLocked = true;
+  signalGatePanel?.classList.remove("is-failed", "is-resolving");
+  signalGatePanel?.classList.add("is-unlocked");
+
+  signalGateButtons.forEach((button) => {
+    const isSequenceKey = signalGateSequence.includes(button.dataset.signalKey);
+    button.classList.toggle("is-used", isSequenceKey);
+    button.classList.toggle("is-accepted", isSequenceKey);
+    button.classList.remove("is-rejected");
+    button.disabled = true;
+  });
+
+  if (resetSignalGateButton) {
+    resetSignalGateButton.disabled = true;
+  }
+
+  updateSignalGateProgress("complete");
+
+  if (signalGateStatus) {
+    signalGateStatus.textContent = fromCache
+      ? "握手已恢复：静默频段保持展开"
+      : "握手完成：静默频段已展开";
+  }
+
+  revealFinalSignal({
+    animate: !fromCache,
+    scroll: !fromCache
   });
 }
 
@@ -190,21 +316,8 @@ function unlockSignalGate() {
 
   setTimeout(() => {
     signalGatePanel?.classList.remove("is-resolving");
-    signalGatePanel?.classList.add("is-unlocked");
-
-    if (signalGateStatus) {
-      signalGateStatus.textContent = "握手完成：静默频段已展开";
-    }
-
-    if (finalSignalSection) {
-      finalSignalSection.classList.remove("is-locked");
-      finalSignalSection.classList.add("is-revealed");
-      finalSignalSection.setAttribute("aria-hidden", "false");
-      finalSignalSection.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-    }
+    writeSignalGateCache();
+    completeSignalGate();
   }, 920);
 }
 
@@ -435,7 +548,13 @@ document.addEventListener("keydown", (event) => {
 updateSelectionCountdown();
 setInterval(updateSelectionCountdown, 1000 * 60);
 
-updateSignalGateProgress();
+if (readSignalGateCache()) {
+  completeSignalGate({
+    fromCache: true
+  });
+} else {
+  updateSignalGateProgress();
+}
 
 loadTips();
 setInterval(showNextTip, 5000);
