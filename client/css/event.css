@@ -796,14 +796,13 @@ main{
   height:100%;
   min-height:360px;
   object-fit:cover;
-  opacity:.54;
+  opacity:1;
   filter:
-    blur(7px)
-    brightness(.48)
-    saturate(1.9)
-    contrast(1.85)
-    hue-rotate(18deg);
-  transform:scale(1.08) skewX(-1.5deg);
+    blur(1px)
+    brightness(1.04)
+    saturate(1.28)
+    contrast(1.18);
+  transform:scale(1.035) skewX(-.45deg);
   animation:artCorrupt 4.8s steps(2, end) infinite;
   transition:
     opacity .42s ease,
@@ -813,14 +812,13 @@ main{
 
 .final-signal-panel:hover .final-art-frame img,
 .final-signal-panel:focus-within .final-art-frame img{
-  opacity:.62;
+  opacity:.98;
   filter:
-    blur(5px)
-    brightness(.54)
-    saturate(2.15)
-    contrast(2)
-    hue-rotate(-8deg);
-  transform:scale(1.105) skewX(1deg);
+    blur(.8px)
+    brightness(1.12)
+    saturate(1.32)
+    contrast(1.22);
+  transform:scale(1.045) skewX(.35deg);
 }
 
 .final-art-frame::before,
@@ -834,17 +832,17 @@ main{
 
 .final-art-frame::before{
   background:
-    linear-gradient(90deg, rgba(7,9,20,.82), transparent 22%, rgba(7,9,20,.36) 50%, transparent 72%, rgba(7,9,20,.9)),
-    linear-gradient(180deg, rgba(7,9,20,.32), rgba(7,9,20,.82)),
+    linear-gradient(90deg, rgba(7,9,20,.3), transparent 24%, rgba(7,9,20,.08) 50%, transparent 74%, rgba(7,9,20,.38)),
+    linear-gradient(180deg, rgba(7,9,20,.04), rgba(7,9,20,.24)),
     repeating-linear-gradient(
       0deg,
-      rgba(88,224,255,.22) 0 1px,
+      rgba(88,224,255,.16) 0 1px,
       transparent 1px 4px
     ),
     repeating-linear-gradient(
       90deg,
       transparent 0 8px,
-      rgba(255,107,186,.2) 8px 10px,
+      rgba(255,107,186,.12) 8px 10px,
       transparent 10px 28px
     );
   animation:noiseTear 1.8s steps(4, end) infinite;
@@ -852,11 +850,11 @@ main{
 
 .final-art-frame::after{
   inset:auto 0 0;
-  height:52%;
+  height:36%;
   background:
-    linear-gradient(0deg, rgba(5,7,17,.96), transparent),
-    repeating-linear-gradient(90deg, rgba(255,255,255,.16) 0 2px, transparent 2px 12px);
-  opacity:.92;
+    linear-gradient(0deg, rgba(5,7,17,.68), transparent),
+    repeating-linear-gradient(90deg, rgba(255,255,255,.1) 0 2px, transparent 2px 12px);
+  opacity:.54;
 }
 
 .final-art-status{
@@ -895,7 +893,7 @@ main{
   width:104%;
   height:22%;
   pointer-events:none;
-  background:url("../assets/zishiquhui.png") center/cover;
+  background:url("../assets/zishiquhui-signal.png") center/cover;
   opacity:.38;
   mix-blend-mode:screen;
   filter:
@@ -1760,23 +1758,26 @@ main{
 @keyframes artCorrupt{
   0%,
   100%{
-    transform:scale(1.08) skewX(-1.5deg) translate(0, 0);
+    transform:scale(1.035) skewX(-.45deg);
+    filter:brightness(1.04) saturate(1.28) contrast(1.18);
   }
 
   18%{
-    transform:scale(1.105) skewX(2deg) translate(-8px, 2px);
+    transform:scale(1.04) skewX(.65deg);
+    filter:brightness(1.18) saturate(1.34) contrast(1.24);
   }
 
   19%{
-    transform:scale(1.08) skewX(-1deg) translate(7px, -1px);
+    transform:scale(1.035) skewX(-.35deg);
   }
 
   54%{
-    transform:scale(1.11) skewX(-2deg) translate(4px, 3px);
+    transform:scale(1.045) skewX(-.7deg);
+    filter:brightness(.96) saturate(1.38) contrast(1.28);
   }
 
   55%{
-    transform:scale(1.075) skewX(1deg) translate(-4px, -2px);
+    transform:scale(1.035) skewX(.35deg);
   }
 }
 

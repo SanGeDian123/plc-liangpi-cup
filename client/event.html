@@ -11,7 +11,7 @@
   <link rel="preload" href="./assets/players-snapshot.json" as="fetch" type="application/json" crossorigin />
   <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="./assets/bg.png" as="image" />
-  <link rel="preload" href="./assets/zishiquhui.png" as="image" />
+  <link rel="preload" href="./assets/zishiquhui-signal.png" as="image" />
   <link rel="icon" type="image/png" href="./assets/logo1.png" />
   <link rel="stylesheet" href="./css/event.css" />
 </head>
@@ -277,7 +277,7 @@
 
       <div class="final-signal-panel" aria-label="失真曲绘信号线索">
         <button class="final-art-frame" id="openSignalRift" type="button" aria-label="校准失真曲绘信号">
-          <img src="./assets/zishiquhui.png" alt="失真曲绘残片" />
+          <img src="./assets/zishiquhui-signal.png" alt="失真曲绘残片" draggable="false" />
           <span class="final-art-status">SIGNAL BLEED // 0711</span>
           <span class="final-art-prompt">tap to desync</span>
           <span class="glitch-slice slice-a" aria-hidden="true"></span>
@@ -305,7 +305,7 @@
             </div>
             <div>
               <dt>下一项解析</dt>
-              <dd>06-13</dd>
+              <dd>读取失败</dd>
             </div>
           </dl>
 
@@ -373,8 +373,8 @@
       aria-labelledby="signalRiftTitle"
     >
       <button class="signal-rift-close" type="button" data-close-signal-rift aria-label="关闭异常窗口">×</button>
-      <p class="signal-rift-code">0x0613 // CLOCK DRIFT ACCEPTED</p>
-      <h2 id="signalRiftTitle">回声将在 06-13 的晚星闪耀时达成连接。</h2>
+      <p class="signal-rift-code">0xERR019 // CLOCK DRIFT ACCEPTED</p>
+      <h2 id="signalRiftTitle">回声数据丢失，请保持连接。</h2>
       <p class="signal-rift-hint">listen between the broken frames</p>
     </section>
   </div>
