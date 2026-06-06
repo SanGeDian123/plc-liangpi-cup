@@ -304,7 +304,16 @@
             >
               <img src="./assets/zishiquhui-shard-01.png" alt="右上原始曲绘残片" draggable="false" />
             </button>
-            <span class="artifact-shard shard-two" aria-hidden="true"><span>02 // SEALED</span></span>
+            <button
+              class="artifact-shard shard-two"
+              id="openFragmentTwoRift"
+              type="button"
+              aria-label="读取左上残片"
+              disabled
+            >
+              <img src="./assets/zishiquhui-shard-02.png" alt="左上失真曲绘残片" draggable="false" />
+              <span>02 // SEALED</span>
+            </button>
             <span class="artifact-shard shard-three" aria-hidden="true"><span>03 // SEALED</span></span>
             <span class="artifact-shard shard-four" aria-hidden="true"><span>04 // SEALED</span></span>
             <span class="artifact-shard shard-five" aria-hidden="true"><span>05 // SEALED</span></span>
@@ -380,6 +389,45 @@
 
             <p class="retry-status" id="retryPuzzleStatus" aria-live="polite">
               读取笔记：残片 -> 日期 -> 白门 -> 偏移 -> 失同步。按钮小字是门牌，按钮颜色是最终输入。
+            </p>
+          </div>
+
+          <div class="retry-puzzle stage-two-puzzle" id="artistGatePuzzle" aria-hidden="true">
+            <div class="retry-puzzle-header">
+              <p>RESULT READER // LANE 02 / PHIGROS</p>
+              <strong>SYNC / RANKINGSCORE / DIFFICULTY / FILE</strong>
+            </div>
+
+            <button class="settlement-plate" type="button" data-open-settlement-plate aria-label="放大结算图线索">
+              <img src="./assets/phigros-settlement-fragment-02.png" alt="Phigros 结算图线索" draggable="false" />
+              <span>RESULT TRACE // ZOOM</span>
+            </button>
+
+            <div class="retry-layer-grid artist-layer-grid" aria-label="结算图读取顺序">
+              <span>SYNC</span>
+              <span>Ranking Score</span>
+              <span>Difficulty</span>
+              <span>File</span>
+            </div>
+
+            <div class="pulse-sequence artist-sequence" aria-hidden="true">
+              <span data-artist-slot>--</span>
+              <span data-artist-slot>--</span>
+              <span data-artist-slot>--</span>
+              <span data-artist-slot>--</span>
+            </div>
+
+            <div class="pulse-options artist-options" aria-label="结算图字段选择">
+              <button type="button" data-artist-pulse="score"><span>1000000</span><small>score</small></button>
+              <button type="button" data-artist-pulse="status"><span>同步失败</span><small>status</small></button>
+              <button type="button" data-artist-pulse="track"><span>AT</span><small>track</small></button>
+              <button type="button" data-artist-pulse="date"><span>6.06</span><small>plate</small></button>
+              <button type="button" data-artist-pulse="rank"><span>φ</span><small>rank</small></button>
+              <button type="button" data-artist-pulse="file"><span>A1Z26</span><small>file</small></button>
+            </div>
+
+            <p class="retry-status" id="artistGateStatus" aria-live="polite">
+              TRACE WAITING // 4 KEYS
             </p>
           </div>
 
@@ -491,7 +539,63 @@
       <p class="fragment-answer-status" id="fragmentAnswerStatus" aria-live="polite">
         TRACE WAITING // 87 + 5E + 01
       </p>
-      <p class="fragment-result" id="fragmentResult" aria-hidden="true">BPM 182</p>
+      <p class="fragment-result" id="fragmentResult" aria-hidden="true"></p>
+    </section>
+  </div>
+
+  <div class="signal-rift fragment-rift fragment-two-rift" id="fragmentTwoRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-fragment-two-rift></div>
+    <section
+      class="signal-rift-panel fragment-rift-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="fragmentTwoRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-fragment-two-rift aria-label="关闭第二残片窗口">×</button>
+      <p class="signal-rift-code">FRAGMENT 02 // PHIGROS TRACE</p>
+      <h2 id="fragmentTwoRiftTitle">结算页残响</h2>
+      <p class="fragment-riddle">
+        底行六格。文件名即表。
+      </p>
+      <button class="settlement-plate fragment-settlement-plate" type="button" data-open-settlement-plate aria-label="放大结算图线索">
+        <img src="./assets/phigros-settlement-fragment-02.png" alt="Phigros 结算图线索" draggable="false" />
+        <span>JUDGE LINE // FILE MAP</span>
+      </button>
+      <form class="fragment-answer" id="fragmentTwoAnswerForm">
+        <label for="fragmentTwoAnswerInput">六位署名</label>
+        <div>
+          <input
+            id="fragmentTwoAnswerInput"
+            type="text"
+            autocomplete="off"
+            maxlength="16"
+            placeholder="------"
+          />
+          <button id="fragmentTwoAnswerSubmit" type="button">写入</button>
+        </div>
+      </form>
+      <p class="fragment-answer-status" id="fragmentTwoAnswerStatus" aria-live="polite">
+        TRACE WAITING // 05 19 19 02 05 05 / A1Z26
+      </p>
+      <p class="fragment-result" id="fragmentTwoResult" aria-hidden="true"></p>
+    </section>
+  </div>
+
+  <div class="signal-rift phase-plate-rift settlement-rift" id="settlementRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-settlement-rift></div>
+    <section
+      class="signal-rift-panel phase-plate-panel settlement-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="settlementRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-settlement-rift aria-label="关闭结算图">×</button>
+      <p class="signal-rift-code">PHIGROS RESULT // CORRUPTED CLEAR</p>
+      <h2 id="settlementRiftTitle">RESULT TRACE</h2>
+      <img src="./assets/phigros-settlement-fragment-02.png" alt="放大的 Phigros 结算图线索" draggable="false" />
+      <p class="phase-plate-note">
+        4 KEYS / 6 CELLS / FILE MAP
+      </p>
     </section>
   </div>
 
@@ -510,34 +614,6 @@
       <p class="phase-plate-note">
         不按按钮位置读。先用下方记录确认门牌顺序，再回到按钮小字找对应颜色。
       </p>
-    </section>
-  </div>
-
-  <div class="signal-rift date-rift" id="dateRift" aria-hidden="true">
-    <div class="signal-rift-backdrop" data-close-date-rift></div>
-    <section
-      class="signal-rift-panel date-rift-panel"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="dateRiftTitle"
-    >
-      <button class="signal-rift-close" type="button" data-close-date-rift aria-label="关闭时间坐标">×</button>
-      <p class="signal-rift-code">GEO FIX // 06-06</p>
-      <h2 id="dateRiftTitle">把门牌放回地球。</h2>
-      <p class="date-riddle">
-        本初子午线只给零点基准。向东数八个时区，落到东经一百二十度的标准线；再把主页面留下的门牌写成公历。当天夜间第二十个整点，才会落到下一次公开坐标。
-      </p>
-      <div class="date-proof-grid" aria-hidden="true">
-        <span>MERIDIAN: 0 -> E8</span>
-        <span>STANDARD: 120E</span>
-        <span>DATE TAG: 06-06</span>
-        <span>LOCAL HOUR: 20</span>
-      </div>
-      <div class="date-format-grid" aria-hidden="true">
-        <span>YEAR: 2026</span>
-        <span>ZONE: UTC +8</span>
-        <span>LATITUDE：120°E</span>
-      </div>
     </section>
   </div>
 

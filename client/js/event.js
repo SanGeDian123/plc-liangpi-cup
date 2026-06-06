@@ -18,17 +18,32 @@ const retryPulseSlots = document.querySelectorAll("[data-retry-slot]");
 const phasePlateRift = document.getElementById("phasePlateRift");
 const openPhasePlateButton = document.getElementById("openPhasePlate");
 const dateRift = document.getElementById("dateRift");
+const settlementRift = document.getElementById("settlementRift");
+const openSettlementPlateButtons = document.querySelectorAll("[data-open-settlement-plate]");
+const artistGatePuzzle = document.getElementById("artistGatePuzzle");
+const artistGateStatus = document.getElementById("artistGateStatus");
+const artistPulseButtons = document.querySelectorAll("[data-artist-pulse]");
+const artistPulseSlots = document.querySelectorAll("[data-artist-slot]");
 const fragmentRift = document.getElementById("fragmentRift");
 const openFragmentRiftButton = document.getElementById("openFragmentRift");
+const fragmentTwoRift = document.getElementById("fragmentTwoRift");
+const openFragmentTwoRiftButton = document.getElementById("openFragmentTwoRift");
 const fragmentAnswerForm = document.getElementById("fragmentAnswerForm");
 const fragmentAnswerInput = document.getElementById("fragmentAnswerInput");
 const fragmentAnswerSubmit = document.getElementById("fragmentAnswerSubmit");
 const fragmentAnswerStatus = document.getElementById("fragmentAnswerStatus");
 const fragmentResult = document.getElementById("fragmentResult");
+const fragmentTwoAnswerForm = document.getElementById("fragmentTwoAnswerForm");
+const fragmentTwoAnswerInput = document.getElementById("fragmentTwoAnswerInput");
+const fragmentTwoAnswerSubmit = document.getElementById("fragmentTwoAnswerSubmit");
+const fragmentTwoAnswerStatus = document.getElementById("fragmentTwoAnswerStatus");
+const fragmentTwoResult = document.getElementById("fragmentTwoResult");
 const modalCloseTargets = document.querySelectorAll("[data-close-tracks-modal]");
 const signalRiftCloseTargets = document.querySelectorAll("[data-close-signal-rift]");
 const fragmentRiftCloseTargets = document.querySelectorAll("[data-close-fragment-rift]");
+const fragmentTwoRiftCloseTargets = document.querySelectorAll("[data-close-fragment-two-rift]");
 const phasePlateCloseTargets = document.querySelectorAll("[data-close-phase-plate]");
+const settlementRiftCloseTargets = document.querySelectorAll("[data-close-settlement-rift]");
 const dateRiftCloseTargets = document.querySelectorAll("[data-close-date-rift]");
 const signalGateButtons = document.querySelectorAll("[data-signal-key]");
 const signalGateDots = document.querySelectorAll("[data-gate-dot]");
@@ -36,12 +51,16 @@ const signalGateDots = document.querySelectorAll("[data-gate-dot]");
 let modalCloseTimer = null;
 let signalRiftCloseTimer = null;
 let fragmentRiftCloseTimer = null;
+let fragmentTwoRiftCloseTimer = null;
 let phasePlateCloseTimer = null;
+let settlementRiftCloseTimer = null;
 let dateRiftCloseTimer = null;
 let lastFocusedElement = null;
 let signalRiftLastFocusedElement = null;
 let fragmentRiftLastFocusedElement = null;
+let fragmentTwoRiftLastFocusedElement = null;
 let phasePlateLastFocusedElement = null;
+let settlementRiftLastFocusedElement = null;
 let dateRiftLastFocusedElement = null;
 let tips = Array.isArray(window.PLC_TIPS) && window.PLC_TIPS.length > 0
   ? window.PLC_TIPS
@@ -51,6 +70,7 @@ const signalGateSequence = ["07", "11", "87"];
 const signalGateStorageKey = "plc.event.signalGate.v1";
 const signalGateCacheVersion = "2026-06-13";
 const retryPuzzleSequence = ["green", "cyan", "pink", "white", "yellow", "violet"];
+const artistGateSequence = ["status", "date", "track", "file"];
 const retryPulseLabels = {
   cyan: "冷光",
   pink: "粉噪",
@@ -59,14 +79,29 @@ const retryPulseLabels = {
   white: "白门",
   violet: "余影"
 };
+const artistPulseLabels = {
+  status: "同步失败",
+  date: "6.06",
+  track: "AT",
+  file: "A1Z26",
+  score: "1000000",
+  rank: "φ"
+};
 const signalRetryStorageKey = "plc.event.signalRetry.v1";
 const signalRetryCacheVersion = "2026-06-13-shard-01-hard-v2";
 const fragmentAnswerStorageKey = "plc.event.fragment01.v1";
 const fragmentAnswerCacheVersion = "2026-06-13-fragment-01-hard-v2";
+const artistGateStorageKey = "plc.event.artistGate.v1";
+const artistGateCacheVersion = "2026-06-13-fragment-02-result-v2";
+const fragmentTwoAnswerStorageKey = "plc.event.fragment02.v1";
+const fragmentTwoAnswerCacheVersion = "2026-06-13-fragment-02-result-artist-v2";
 let signalGateInput = [];
 let signalGateLocked = false;
 let retryPuzzleInput = [];
 let retryPuzzleLocked = false;
+let artistGateInput = [];
+let artistGateLocked = false;
+let fragmentTwoWrongCount = 0;
 
 function formatSelectionCountdown() {
   const endTime = new Date(2026, 6, 3, 23, 59, 0);
@@ -209,6 +244,47 @@ function closePhasePlateRift() {
       typeof phasePlateLastFocusedElement.focus === "function"
     ) {
       phasePlateLastFocusedElement.focus();
+    }
+  }, 340);
+}
+
+function openSettlementRift() {
+  if (!settlementRift) {
+    return;
+  }
+
+  clearTimeout(settlementRiftCloseTimer);
+  settlementRiftLastFocusedElement = document.activeElement;
+
+  settlementRift.classList.remove("is-closing");
+  settlementRift.classList.add("is-open");
+  settlementRift.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  const closeButton = settlementRift.querySelector(".signal-rift-close");
+  if (closeButton) {
+    closeButton.focus();
+  }
+}
+
+function closeSettlementRift() {
+  if (!settlementRift || !settlementRift.classList.contains("is-open")) {
+    return;
+  }
+
+  settlementRift.classList.add("is-closing");
+  settlementRift.classList.remove("is-open");
+  settlementRift.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+
+  settlementRiftCloseTimer = setTimeout(() => {
+    settlementRift.classList.remove("is-closing");
+
+    if (
+      settlementRiftLastFocusedElement &&
+      typeof settlementRiftLastFocusedElement.focus === "function"
+    ) {
+      settlementRiftLastFocusedElement.focus();
     }
   }, 340);
 }
@@ -400,6 +476,69 @@ function writeFragmentAnswerCache() {
   }
 }
 
+function readArtistGateCache() {
+  try {
+    const cachedValue = readStoredValue(artistGateStorageKey);
+    if (!cachedValue) {
+      return null;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    const isValid =
+      payload?.version === artistGateCacheVersion &&
+      payload?.unlocked === true &&
+      Array.isArray(payload?.sequence) &&
+      payload.sequence.join("/") === artistGateSequence.join("/");
+
+    return isValid ? payload : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function writeArtistGateCache() {
+  try {
+    writeStoredValue(artistGateStorageKey, JSON.stringify({
+      version: artistGateCacheVersion,
+      unlocked: true,
+      sequence: artistGateSequence,
+      completedAt: new Date().toISOString()
+    }));
+  } catch (error) {
+  }
+}
+
+function readFragmentTwoAnswerCache() {
+  try {
+    const cachedValue = readStoredValue(fragmentTwoAnswerStorageKey);
+    if (!cachedValue) {
+      return null;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    const isValid =
+      payload?.version === fragmentTwoAnswerCacheVersion &&
+      payload?.solved === true &&
+      payload?.result === "Artist：Essbee";
+
+    return isValid ? payload : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function writeFragmentTwoAnswerCache() {
+  try {
+    writeStoredValue(fragmentTwoAnswerStorageKey, JSON.stringify({
+      version: fragmentTwoAnswerCacheVersion,
+      solved: true,
+      result: "Artist：Essbee",
+      completedAt: new Date().toISOString()
+    }));
+  } catch (error) {
+  }
+}
+
 function revealFinalSignal({ animate = true, scroll = true } = {}) {
   if (!finalSignalSection) {
     return;
@@ -427,9 +566,19 @@ function updateRetryPulseSlots(state = "input") {
   });
 }
 
+function updateArtistPulseSlots(state = "input") {
+  artistPulseSlots.forEach((slot, index) => {
+    const value = artistGateInput[index];
+    slot.textContent = value ? artistPulseLabels[value] : "--";
+    slot.classList.toggle("is-active", Boolean(value));
+    slot.classList.toggle("is-failed", state === "failed");
+    slot.classList.toggle("is-complete", state === "complete");
+  });
+}
+
 function openRetryPuzzle() {
-  if (openRetryPuzzleButton?.classList.contains("is-date-ready")) {
-    openDateRift();
+  if (openRetryPuzzleButton?.classList.contains("is-stage-two-ready")) {
+    openArtistGatePuzzle();
     return;
   }
 
@@ -447,18 +596,181 @@ function openRetryPuzzle() {
   }
 }
 
-function revealDateRetryEntry() {
+function revealArtistGateRetryEntry() {
   if (!openRetryPuzzleButton) {
     return;
   }
 
   openRetryPuzzleButton.disabled = false;
-  openRetryPuzzleButton.classList.add("is-date-ready");
-  openRetryPuzzleButton.setAttribute("aria-label", "打开 06-06 时间坐标");
+  openRetryPuzzleButton.classList.remove("is-resolved", "is-date-ready");
+  openRetryPuzzleButton.classList.add("is-stage-two-ready");
+  openRetryPuzzleButton.setAttribute("aria-label", "打开 Phigros 结算图校准");
+
+  retryPuzzle?.classList.remove("is-open", "is-failed", "is-resolving");
+  retryPuzzle?.setAttribute("aria-hidden", "true");
 
   const buttonText = openRetryPuzzleButton.querySelector("span");
   if (buttonText) {
-    buttonText.textContent = "06-06";
+    buttonText.textContent = "结算页失焦，点击重采样";
+  }
+}
+
+function openArtistGatePuzzle() {
+  if (!artistGatePuzzle || artistGateLocked) {
+    return;
+  }
+
+  retryPuzzle?.classList.remove("is-open", "is-failed", "is-resolving");
+  retryPuzzle?.setAttribute("aria-hidden", "true");
+
+  artistGatePuzzle.classList.remove("is-failed", "is-resolving");
+  artistGatePuzzle.classList.add("is-open");
+  artistGatePuzzle.setAttribute("aria-hidden", "false");
+
+  if (artistGateStatus) {
+    artistGateStatus.textContent = "TRACE WAITING // 4 KEYS";
+    artistGateStatus.classList.remove("is-failed", "is-complete");
+  }
+}
+
+function resetArtistGatePuzzle() {
+  artistGateInput = [];
+  artistGateLocked = false;
+  artistGatePuzzle?.classList.remove("is-failed", "is-resolving");
+
+  artistPulseButtons.forEach((button) => {
+    button.classList.remove("is-used", "is-rejected", "is-accepted");
+    button.disabled = false;
+  });
+
+  updateArtistPulseSlots();
+}
+
+function revealShardTwo({ fromCache = false } = {}) {
+  artistGateInput = [...artistGateSequence];
+  artistGateLocked = true;
+
+  finalSignalSection?.classList.add("is-fractured", "is-shard-two-open");
+  finalArtFrame?.classList.toggle("is-fracturing", !fromCache);
+
+  if (!fromCache && finalArtFrame) {
+    setTimeout(() => {
+      finalArtFrame.classList.remove("is-fracturing");
+    }, 1320);
+  }
+
+  artistGatePuzzle?.classList.remove("is-failed", "is-resolving");
+  artistGatePuzzle?.classList.add("is-open", "is-complete");
+  artistGatePuzzle?.setAttribute("aria-hidden", "false");
+
+  artistPulseButtons.forEach((button) => {
+    const isSequencePulse = artistGateSequence.includes(button.dataset.artistPulse);
+    button.classList.toggle("is-used", isSequencePulse);
+    button.classList.toggle("is-accepted", isSequencePulse);
+    button.classList.remove("is-rejected");
+    button.disabled = true;
+  });
+
+  updateArtistPulseSlots("complete");
+
+  if (openRetryPuzzleButton) {
+    openRetryPuzzleButton.classList.add("is-resolved");
+    openRetryPuzzleButton.classList.remove("is-stage-two-ready", "is-date-ready");
+    openRetryPuzzleButton.disabled = true;
+    const buttonText = openRetryPuzzleButton.querySelector("span");
+    if (buttonText) {
+      buttonText.textContent = "读取完成，第二片在线";
+    }
+  }
+
+  if (artistGateStatus) {
+    artistGateStatus.textContent = fromCache
+      ? "TRACE RESTORED // FRAGMENT 02"
+      : "TRACE ACCEPTED // FRAGMENT 02";
+    artistGateStatus.classList.remove("is-failed");
+    artistGateStatus.classList.add("is-complete");
+  }
+
+  if (openFragmentTwoRiftButton) {
+    openFragmentTwoRiftButton.disabled = false;
+  }
+}
+
+function solveArtistGatePuzzle() {
+  artistGateLocked = true;
+  artistGatePuzzle?.classList.add("is-resolving");
+
+  if (artistGateStatus) {
+    artistGateStatus.textContent = "TRACE LOCKED // UNFOLDING";
+    artistGateStatus.classList.remove("is-failed");
+    artistGateStatus.classList.add("is-complete");
+  }
+
+  artistPulseButtons.forEach((button) => {
+    if (button.classList.contains("is-used")) {
+      button.classList.add("is-accepted");
+    }
+    button.disabled = true;
+  });
+
+  updateArtistPulseSlots("complete");
+  scrollFinalArtIntoView();
+
+  setTimeout(() => {
+    writeArtistGateCache();
+    revealShardTwo();
+  }, 1080);
+}
+
+function failArtistGatePuzzle() {
+  artistGateLocked = true;
+  artistGatePuzzle?.classList.add("is-failed");
+
+  if (artistGateStatus) {
+    artistGateStatus.textContent = "TRACE REJECTED";
+    artistGateStatus.classList.remove("is-complete");
+    artistGateStatus.classList.add("is-failed");
+  }
+
+  artistPulseButtons.forEach((button) => {
+    if (button.classList.contains("is-used")) {
+      button.classList.add("is-rejected");
+    }
+    button.disabled = true;
+  });
+
+  updateArtistPulseSlots("failed");
+
+  setTimeout(() => {
+    resetArtistGatePuzzle();
+    artistGatePuzzle?.classList.add("is-open");
+    artistGatePuzzle?.setAttribute("aria-hidden", "false");
+
+    if (artistGateStatus) {
+      artistGateStatus.textContent = "TRACE WAITING // 4 KEYS";
+    }
+  }, 1120);
+}
+
+function handleArtistPulseInput(button) {
+  if (artistGateLocked || button.disabled) {
+    return;
+  }
+
+  openArtistGatePuzzle();
+
+  const value = button.dataset.artistPulse;
+  artistGateInput.push(value);
+  button.classList.add("is-used");
+  button.disabled = true;
+  updateArtistPulseSlots();
+
+  if (artistGateInput.length === artistGateSequence.length) {
+    if (artistGateInput.every((value, index) => value === artistGateSequence[index])) {
+      solveArtistGatePuzzle();
+    } else {
+      failArtistGatePuzzle();
+    }
   }
 }
 
@@ -617,7 +929,11 @@ function handleRetryPulseInput(button) {
 
 function revealFragmentAnswer({ fromCache = false } = {}) {
   fragmentRift?.classList.add("is-fragment-solved");
-  fragmentResult?.setAttribute("aria-hidden", "false");
+
+  if (fragmentResult) {
+    fragmentResult.textContent = "BPM 182";
+    fragmentResult.setAttribute("aria-hidden", "false");
+  }
 
   if (fragmentAnswerInput) {
     fragmentAnswerInput.value = "182";
@@ -636,7 +952,7 @@ function revealFragmentAnswer({ fromCache = false } = {}) {
     fragmentAnswerStatus.classList.add("is-complete");
   }
 
-  revealDateRetryEntry();
+  revealArtistGateRetryEntry();
 }
 
 function openFragmentRift() {
@@ -709,6 +1025,139 @@ function handleFragmentAnswerSubmit(event) {
     fragmentAnswerStatus.textContent = "TRACE REJECTED // SUM OUT OF RANGE";
     fragmentAnswerStatus.classList.remove("is-complete");
     fragmentAnswerStatus.classList.add("is-failed");
+  }
+}
+
+function revealFragmentTwoAnswer({ fromCache = false } = {}) {
+  fragmentTwoRift?.classList.add("is-fragment-solved");
+
+  if (fragmentTwoResult) {
+    fragmentTwoResult.textContent = "Artist：Essbee";
+    fragmentTwoResult.setAttribute("aria-hidden", "false");
+  }
+
+  if (fragmentTwoAnswerInput) {
+    fragmentTwoAnswerInput.value = "Essbee";
+    fragmentTwoAnswerInput.disabled = true;
+  }
+
+  if (fragmentTwoAnswerSubmit) {
+    fragmentTwoAnswerSubmit.disabled = true;
+  }
+
+  if (fragmentTwoAnswerStatus) {
+    fragmentTwoAnswerStatus.textContent = fromCache
+      ? "TRACE RESTORED // CREDIT LOCKED"
+      : "TRACE ACCEPTED // CREDIT UNSEALED";
+    fragmentTwoAnswerStatus.classList.remove("is-failed");
+    fragmentTwoAnswerStatus.classList.add("is-complete");
+  }
+
+  revealNextDateEntry();
+}
+
+function revealNextDateEntry() {
+  if (!openRetryPuzzleButton) {
+    return;
+  }
+
+  openRetryPuzzleButton.disabled = false;
+  openRetryPuzzleButton.classList.remove("is-resolved", "is-stage-two-ready", "is-date-ready");
+  openRetryPuzzleButton.classList.add("is-date-ready");
+  openRetryPuzzleButton.setAttribute("aria-label", "打开 06-07 坐标");
+
+  const buttonText = openRetryPuzzleButton.querySelector("span");
+  if (buttonText) {
+    buttonText.textContent = "06-07";
+  }
+}
+
+function openFragmentTwoRift() {
+  if (!fragmentTwoRift || openFragmentTwoRiftButton?.disabled) {
+    return;
+  }
+
+  clearTimeout(fragmentTwoRiftCloseTimer);
+  fragmentTwoRiftLastFocusedElement = document.activeElement;
+
+  fragmentTwoRift.classList.remove("is-closing", "is-failed");
+  fragmentTwoRift.classList.add("is-open");
+  fragmentTwoRift.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  if (readFragmentTwoAnswerCache()) {
+    revealFragmentTwoAnswer({
+      fromCache: true
+    });
+  }
+
+  const focusTarget = fragmentTwoAnswerInput?.disabled
+    ? fragmentTwoRift.querySelector(".signal-rift-close")
+    : fragmentTwoAnswerInput;
+
+  if (focusTarget && typeof focusTarget.focus === "function") {
+    focusTarget.focus();
+  }
+}
+
+function closeFragmentTwoRift() {
+  if (!fragmentTwoRift || !fragmentTwoRift.classList.contains("is-open")) {
+    return;
+  }
+
+  fragmentTwoRift.classList.add("is-closing");
+  fragmentTwoRift.classList.remove("is-open");
+  fragmentTwoRift.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+
+  fragmentTwoRiftCloseTimer = setTimeout(() => {
+    fragmentTwoRift.classList.remove("is-closing", "is-failed");
+
+    if (
+      fragmentTwoRiftLastFocusedElement &&
+      typeof fragmentTwoRiftLastFocusedElement.focus === "function"
+    ) {
+      fragmentTwoRiftLastFocusedElement.focus();
+    }
+  }, 340);
+}
+
+function normalizeFragmentTwoAnswer(value = "") {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/^artist\s*[:：]\s*/, "")
+    .replace(/[^a-z]/g, "");
+}
+
+function handleFragmentTwoAnswerSubmit(event) {
+  event?.preventDefault();
+
+  const answer = normalizeFragmentTwoAnswer(fragmentTwoAnswerInput?.value);
+  if (answer === "essbee") {
+    writeFragmentTwoAnswerCache();
+    revealFragmentTwoAnswer();
+    return;
+  }
+
+  fragmentTwoWrongCount += 1;
+
+  fragmentTwoRift?.classList.remove("is-failed");
+  fragmentTwoRift?.offsetHeight;
+  fragmentTwoRift?.classList.add("is-open", "is-failed");
+  fragmentTwoRift?.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  if (fragmentTwoWrongCount >= 3) {
+    writeFragmentTwoAnswerCache();
+    revealFragmentTwoAnswer();
+    return;
+  }
+
+  if (fragmentTwoAnswerStatus) {
+    fragmentTwoAnswerStatus.textContent = "TRACE REJECTED // CREDIT FIELD MISMATCH";
+    fragmentTwoAnswerStatus.classList.remove("is-complete");
+    fragmentTwoAnswerStatus.classList.add("is-failed");
   }
 }
 
@@ -1017,14 +1466,28 @@ if (openPhasePlateButton) {
   openPhasePlateButton.addEventListener("click", openPhasePlateRift);
 }
 
+openSettlementPlateButtons.forEach((button) => {
+  button.addEventListener("click", openSettlementRift);
+});
+
 retryPulseButtons.forEach((button) => {
   button.addEventListener("click", () => {
     handleRetryPulseInput(button);
   });
 });
 
+artistPulseButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    handleArtistPulseInput(button);
+  });
+});
+
 if (openFragmentRiftButton) {
   openFragmentRiftButton.addEventListener("click", openFragmentRift);
+}
+
+if (openFragmentTwoRiftButton) {
+  openFragmentTwoRiftButton.addEventListener("click", openFragmentTwoRift);
 }
 
 if (fragmentAnswerForm) {
@@ -1039,6 +1502,22 @@ if (fragmentAnswerInput) {
   fragmentAnswerInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       handleFragmentAnswerSubmit(event);
+    }
+  });
+}
+
+if (fragmentTwoAnswerForm) {
+  fragmentTwoAnswerForm.addEventListener("submit", handleFragmentTwoAnswerSubmit);
+}
+
+if (fragmentTwoAnswerSubmit) {
+  fragmentTwoAnswerSubmit.addEventListener("click", handleFragmentTwoAnswerSubmit);
+}
+
+if (fragmentTwoAnswerInput) {
+  fragmentTwoAnswerInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      handleFragmentTwoAnswerSubmit(event);
     }
   });
 }
@@ -1070,8 +1549,16 @@ fragmentRiftCloseTargets.forEach((target) => {
   target.addEventListener("click", closeFragmentRift);
 });
 
+fragmentTwoRiftCloseTargets.forEach((target) => {
+  target.addEventListener("click", closeFragmentTwoRift);
+});
+
 phasePlateCloseTargets.forEach((target) => {
   target.addEventListener("click", closePhasePlateRift);
+});
+
+settlementRiftCloseTargets.forEach((target) => {
+  target.addEventListener("click", closeSettlementRift);
 });
 
 dateRiftCloseTargets.forEach((target) => {
@@ -1081,7 +1568,9 @@ dateRiftCloseTargets.forEach((target) => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeDateRift();
+    closeSettlementRift();
     closePhasePlateRift();
+    closeFragmentTwoRift();
     closeFragmentRift();
     closeSignalRift();
     closeTracksModal();
@@ -1101,6 +1590,18 @@ if (readSignalGateCache()) {
 
 if (readFragmentAnswerCache()) {
   revealFragmentAnswer({
+    fromCache: true
+  });
+}
+
+if (readArtistGateCache()) {
+  revealShardTwo({
+    fromCache: true
+  });
+}
+
+if (readFragmentTwoAnswerCache()) {
+  revealFragmentTwoAnswer({
     fromCache: true
   });
 }
