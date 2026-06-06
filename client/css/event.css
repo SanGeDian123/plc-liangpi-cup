@@ -2354,6 +2354,9 @@ main{
   position:relative;
   z-index:1;
   display:grid;
+  width:100%;
+  min-width:0;
+  max-width:100%;
   gap:9px;
   margin-top:22px;
 }
@@ -2368,10 +2371,16 @@ main{
 .fragment-answer div{
   display:grid;
   grid-template-columns:minmax(0, 1fr) 104px;
+  width:100%;
+  min-width:0;
+  max-width:100%;
   gap:10px;
 }
 
 .fragment-answer input{
+  width:100%;
+  min-width:0;
+  max-width:100%;
   min-height:46px;
   border:1px solid rgba(88,224,255,.34);
   border-radius:6px;
@@ -2399,6 +2408,9 @@ main{
 }
 
 .fragment-answer button{
+  width:100%;
+  min-width:0;
+  max-width:100%;
   min-height:46px;
   border:1px solid rgba(255,222,89,.42);
   border-radius:6px;
@@ -3787,6 +3799,66 @@ main{
 
   .signal-rift-panel h2{
     font-size:25px;
+  }
+
+  .fragment-rift.signal-rift{
+    padding:8px;
+  }
+
+  .fragment-rift .fragment-rift-panel{
+    width:100%;
+    max-width:100%;
+    max-height:calc(100vh - 16px);
+    max-height:calc(100dvh - 16px);
+    padding:24px 14px 18px;
+    overflow:auto;
+  }
+
+  .fragment-rift .fragment-rift-panel h2{
+    max-width:calc(100% - 48px);
+    margin-top:10px;
+    font-size:24px;
+    line-height:1.18;
+  }
+
+  .fragment-rift .fragment-answer,
+  .fragment-rift .fragment-answer div{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+  }
+
+  .fragment-rift .fragment-answer div{
+    grid-template-columns:minmax(0, 1fr);
+    gap:8px;
+    overflow:hidden;
+  }
+
+  .fragment-rift .fragment-answer input,
+  .fragment-rift .fragment-answer button{
+    width:100%;
+    min-width:0;
+    max-width:100%;
+  }
+
+  .fragment-rift .fragment-answer input{
+    min-height:42px;
+    padding:0 10px;
+    font-size:20px;
+    letter-spacing:4px;
+  }
+
+  .fragment-rift .fragment-answer button{
+    min-height:40px;
+    font-size:16px;
+  }
+
+  .fragment-rift .fragment-result{
+    width:100%;
+    max-width:100%;
+    min-height:46px;
+    font-size:clamp(24px, 8vw, 34px);
+    overflow-wrap:anywhere;
   }
 
   .event-facts div{
