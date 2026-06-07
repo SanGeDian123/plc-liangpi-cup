@@ -13,7 +13,10 @@
   <link rel="preload" href="./assets/bg.png" as="image" />
   <link rel="preload" href="./assets/zishiquhui-signal.png" as="image" />
   <link rel="preload" href="./assets/zishiquhui-shard-01.png" as="image" />
+  <link rel="preload" href="./assets/zishiquhui-shard-02.png" as="image" />
+  <link rel="preload" href="./assets/zishiquhui-shard-03.png" as="image" />
   <link rel="preload" href="./assets/phase-calibration-plate.png" as="image" />
+  <link rel="preload" href="./assets/R.png" as="image" />
   <link rel="icon" type="image/png" href="./assets/logo1.png" />
   <link rel="stylesheet" href="./css/event.css" />
 </head>
@@ -314,7 +317,16 @@
               <img src="./assets/zishiquhui-shard-02.png" alt="左上失真曲绘残片" draggable="false" />
               <span>02 // SEALED</span>
             </button>
-            <span class="artifact-shard shard-three" aria-hidden="true"><span>03 // SEALED</span></span>
+            <button
+              class="artifact-shard shard-three"
+              id="openFragmentThreeRift"
+              type="button"
+              aria-label="读取左中残片"
+              disabled
+            >
+              <img src="./assets/zishiquhui-shard-03.png" alt="左中原始曲绘残片" draggable="false" />
+              <span>03 // SEALED</span>
+            </button>
             <span class="artifact-shard shard-four" aria-hidden="true"><span>04 // SEALED</span></span>
             <span class="artifact-shard shard-five" aria-hidden="true"><span>05 // SEALED</span></span>
             <span class="artifact-shard shard-six" aria-hidden="true"><span>06 // SEALED</span></span>
@@ -427,7 +439,104 @@
             </div>
 
             <p class="retry-status" id="artistGateStatus" aria-live="polite">
-              TRACE WAITING // 4 KEYS
+              按结算页上真正有用的四项顺序点。
+            </p>
+          </div>
+
+          <div class="retry-puzzle stage-three-puzzle" id="palaceGatePuzzle" aria-hidden="true">
+            <div class="retry-puzzle-header">
+              <p>第三片 · 旧画里的编号</p>
+              <strong>这不是数学题。先把每个数字还给图里的句子，再补上下一句开头的数量。</strong>
+            </div>
+
+            <button class="palace-plate" type="button" data-open-palace-plate aria-label="放大 R 图像">
+              <img src="./assets/R.png" alt="R 图像线索" draggable="false" />
+              <span>R // ZOOM</span>
+            </button>
+
+            <div class="palace-equation" aria-label="残缺序列">
+              <span>6</span>
+              <span>4</span>
+              <span>Π</span>
+              <span>300</span>
+              <span>2</span>
+              <span>5</span>
+              <span>______</span>
+            </div>
+
+            <form class="fragment-answer gate-answer" id="palaceGateForm">
+              <label for="palaceGateInput">缺口读数</label>
+              <div>
+                <input
+                  id="palaceGateInput"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  maxlength="2"
+                  pattern="[0-9]{1,2}"
+                  placeholder="--"
+                />
+                <button id="palaceGateSubmit" type="button">写入</button>
+              </div>
+            </form>
+
+            <p class="retry-status" id="palaceGateStatus" aria-live="polite">
+              等待补全：只写空格里的数字。
+            </p>
+          </div>
+
+          <div class="retry-puzzle stage-three-puzzle multisource-puzzle" id="multisourceGatePuzzle" aria-hidden="true">
+            <div class="retry-puzzle-header">
+              <p>第三片 · 上线前检查</p>
+              <strong>请求上线。</strong>
+            </div>
+
+            <div class="multisource-grid" aria-label="三源校准">
+              <button class="multisource-card visual-source" type="button" data-open-release-rift aria-label="放大构建截图">
+                <p>构建截图</p>
+                <img src="./assets/build-relay-map.png" alt="编译与部署日志图" draggable="false" />
+                <span>Including：退出码、包体积、探针结果 Not Including：端口、耗时、PID。</span>
+              </button>
+
+              <section class="multisource-card web-source">
+                <p>运行探针</p>
+                <div class="web-address">https://plc.local/health/ready</div>
+                <div class="web-response">
+                  <span>HTTP/2</span>
+                  <b>200 OK</b>
+                  <small>ready probe passed</small>
+                </div>
+              </section>
+
+              <section class="multisource-card audio-source">
+                <p>值守提示音</p>
+                <button class="audio-pulse-button" id="playMultisourceAudio" type="button">
+                  <span>听一次巡检提示</span>
+                </button>
+                <div class="audio-bars" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </section>
+            </div>
+
+            <form class="fragment-answer gate-answer" id="multisourceGateForm">
+              <label for="multisourceGateInput">上线口令</label>
+              <div>
+                <input
+                  id="multisourceGateInput"
+                  type="text"
+                  autocomplete="off"
+                  maxlength="8"
+                  placeholder="-----"
+                />
+                <button id="multisourceGateSubmit" type="button">写入</button>
+              </div>
+            </form>
+
+            <p class="retry-status" id="multisourceGateStatus" aria-live="polite">
+              等待口令：退出码 / 包体积 / 探针状态。
             </p>
           </div>
 
@@ -537,7 +646,7 @@
         </div>
       </form>
       <p class="fragment-answer-status" id="fragmentAnswerStatus" aria-live="polite">
-        TRACE WAITING // 87 + 5E + 01
+        等待三位数：87、白门、第一针。
       </p>
       <p class="fragment-result" id="fragmentResult" aria-hidden="true"></p>
     </section>
@@ -575,9 +684,106 @@
         </div>
       </form>
       <p class="fragment-answer-status" id="fragmentTwoAnswerStatus" aria-live="polite">
-        TRACE WAITING // 05 19 19 02 05 05 / A1Z26
+        等待署名：底行六格已经给够了。
       </p>
       <p class="fragment-result" id="fragmentTwoResult" aria-hidden="true"></p>
+    </section>
+  </div>
+
+  <div class="signal-rift fragment-rift fragment-three-rift" id="fragmentThreeRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-fragment-three-rift></div>
+    <section
+      class="signal-rift-panel fragment-rift-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="fragmentThreeRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-fragment-three-rift aria-label="关闭第三残片窗口">×</button>
+      <p class="signal-rift-code">FRAGMENT 03 // OXIDE TRACE</p>
+      <h2 id="fragmentThreeRiftTitle">元素表里的创意师</h2>
+      <p class="fragment-riddle">
+        把四个原子序数换成元素符号，再按右侧的层数写下标；只有一层的，不写数字。
+      </p>
+      <div class="chem-lattice" aria-label="谱线沉积表">
+        <span><b>56</b><small>第 2 族 / 第 6 周期 / 单层</small></span>
+        <span><b>11</b><small>D 线双闪 / 双层</small></span>
+        <span><b>4</b><small>轻碱土 / 双层</small></span>
+        <span><b>8</b><small>氧端封口 / 五层</small></span>
+      </div>
+      <form class="fragment-answer" id="fragmentThreeAnswerForm">
+        <label for="fragmentThreeAnswerInput">化学式</label>
+        <div>
+          <input
+            id="fragmentThreeAnswerInput"
+            type="text"
+            autocomplete="off"
+            maxlength="28"
+            placeholder="------------"
+          />
+          <button id="fragmentThreeAnswerSubmit" type="button">写入</button>
+        </div>
+      </form>
+      <p class="fragment-answer-status" id="fragmentThreeAnswerStatus" aria-live="polite">
+        等待化学式：56 / 11 / 4 / 8
+      </p>
+      <p class="fragment-result" id="fragmentThreeResult" aria-hidden="true"></p>
+    </section>
+  </div>
+
+  <div class="signal-rift phase-plate-rift palace-rift" id="palaceRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-palace-rift></div>
+    <section
+      class="signal-rift-panel phase-plate-panel palace-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="palaceRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-palace-rift aria-label="关闭 R 图像">×</button>
+      <p class="signal-rift-code">R // PALACE TRACE</p>
+      <h2 id="palaceRiftTitle">R</h2>
+      <img src="./assets/R.png" alt="放大的 R 图像线索" draggable="false" />
+      <p class="phase-plate-note">
+        6 / 4 / Π / 300 / 2 / 5 / ______
+      </p>
+    </section>
+  </div>
+
+  <div class="signal-rift phase-plate-rift release-rift" id="releaseRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-release-rift></div>
+    <section
+      class="signal-rift-panel phase-plate-panel release-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="releaseRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-release-rift aria-label="关闭构建截图">×</button>
+      <p class="signal-rift-code">RELEASE CHECK // BUILD LOG</p>
+      <h2 id="releaseRiftTitle">上线前检查</h2>
+      <img src="./assets/build-relay-map.png" alt="放大的编译与部署日志图" draggable="false" />
+      <p class="phase-plate-note">
+        只取会决定上线结果的三项：退出码、包体积、健康检查状态。
+      </p>
+    </section>
+  </div>
+
+  <div class="signal-rift phase-plate-rift date-rift" id="dateRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-date-rift></div>
+    <section
+      class="signal-rift-panel phase-plate-panel date-rift-panel geo-date-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="dateRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-date-rift aria-label="关闭地理坐标">×</button>
+      <p class="signal-rift-code">SOLAR FIX // 06-??</p>
+      <h2 id="dateRiftTitle">把太阳的位置换成北京时间。</h2>
+      <p class="date-riddle">
+
+      </p>
+      <img class="geo-relay-map" src="./assets/geo-relay-map.png" alt="太阳直射点与时区换算线索图" draggable="false" />
+      <p class="phase-plate-note">
+        图面只认地球自己的节拍：公转给日期，自转给时刻。
+      </p>
     </section>
   </div>
 

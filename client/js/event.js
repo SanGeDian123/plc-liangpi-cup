@@ -20,14 +20,31 @@ const openPhasePlateButton = document.getElementById("openPhasePlate");
 const dateRift = document.getElementById("dateRift");
 const settlementRift = document.getElementById("settlementRift");
 const openSettlementPlateButtons = document.querySelectorAll("[data-open-settlement-plate]");
+const palaceRift = document.getElementById("palaceRift");
+const openPalacePlateButtons = document.querySelectorAll("[data-open-palace-plate]");
+const releaseRift = document.getElementById("releaseRift");
+const openReleaseRiftButtons = document.querySelectorAll("[data-open-release-rift]");
 const artistGatePuzzle = document.getElementById("artistGatePuzzle");
 const artistGateStatus = document.getElementById("artistGateStatus");
 const artistPulseButtons = document.querySelectorAll("[data-artist-pulse]");
 const artistPulseSlots = document.querySelectorAll("[data-artist-slot]");
+const palaceGatePuzzle = document.getElementById("palaceGatePuzzle");
+const palaceGateForm = document.getElementById("palaceGateForm");
+const palaceGateInput = document.getElementById("palaceGateInput");
+const palaceGateSubmit = document.getElementById("palaceGateSubmit");
+const palaceGateStatus = document.getElementById("palaceGateStatus");
+const multisourceGatePuzzle = document.getElementById("multisourceGatePuzzle");
+const multisourceGateForm = document.getElementById("multisourceGateForm");
+const multisourceGateInput = document.getElementById("multisourceGateInput");
+const multisourceGateSubmit = document.getElementById("multisourceGateSubmit");
+const multisourceGateStatus = document.getElementById("multisourceGateStatus");
+const playMultisourceAudioButton = document.getElementById("playMultisourceAudio");
 const fragmentRift = document.getElementById("fragmentRift");
 const openFragmentRiftButton = document.getElementById("openFragmentRift");
 const fragmentTwoRift = document.getElementById("fragmentTwoRift");
 const openFragmentTwoRiftButton = document.getElementById("openFragmentTwoRift");
+const fragmentThreeRift = document.getElementById("fragmentThreeRift");
+const openFragmentThreeRiftButton = document.getElementById("openFragmentThreeRift");
 const fragmentAnswerForm = document.getElementById("fragmentAnswerForm");
 const fragmentAnswerInput = document.getElementById("fragmentAnswerInput");
 const fragmentAnswerSubmit = document.getElementById("fragmentAnswerSubmit");
@@ -38,12 +55,20 @@ const fragmentTwoAnswerInput = document.getElementById("fragmentTwoAnswerInput")
 const fragmentTwoAnswerSubmit = document.getElementById("fragmentTwoAnswerSubmit");
 const fragmentTwoAnswerStatus = document.getElementById("fragmentTwoAnswerStatus");
 const fragmentTwoResult = document.getElementById("fragmentTwoResult");
+const fragmentThreeAnswerForm = document.getElementById("fragmentThreeAnswerForm");
+const fragmentThreeAnswerInput = document.getElementById("fragmentThreeAnswerInput");
+const fragmentThreeAnswerSubmit = document.getElementById("fragmentThreeAnswerSubmit");
+const fragmentThreeAnswerStatus = document.getElementById("fragmentThreeAnswerStatus");
+const fragmentThreeResult = document.getElementById("fragmentThreeResult");
 const modalCloseTargets = document.querySelectorAll("[data-close-tracks-modal]");
 const signalRiftCloseTargets = document.querySelectorAll("[data-close-signal-rift]");
 const fragmentRiftCloseTargets = document.querySelectorAll("[data-close-fragment-rift]");
 const fragmentTwoRiftCloseTargets = document.querySelectorAll("[data-close-fragment-two-rift]");
+const fragmentThreeRiftCloseTargets = document.querySelectorAll("[data-close-fragment-three-rift]");
 const phasePlateCloseTargets = document.querySelectorAll("[data-close-phase-plate]");
 const settlementRiftCloseTargets = document.querySelectorAll("[data-close-settlement-rift]");
+const palaceRiftCloseTargets = document.querySelectorAll("[data-close-palace-rift]");
+const releaseRiftCloseTargets = document.querySelectorAll("[data-close-release-rift]");
 const dateRiftCloseTargets = document.querySelectorAll("[data-close-date-rift]");
 const signalGateButtons = document.querySelectorAll("[data-signal-key]");
 const signalGateDots = document.querySelectorAll("[data-gate-dot]");
@@ -52,15 +77,21 @@ let modalCloseTimer = null;
 let signalRiftCloseTimer = null;
 let fragmentRiftCloseTimer = null;
 let fragmentTwoRiftCloseTimer = null;
+let fragmentThreeRiftCloseTimer = null;
 let phasePlateCloseTimer = null;
 let settlementRiftCloseTimer = null;
+let palaceRiftCloseTimer = null;
+let releaseRiftCloseTimer = null;
 let dateRiftCloseTimer = null;
 let lastFocusedElement = null;
 let signalRiftLastFocusedElement = null;
 let fragmentRiftLastFocusedElement = null;
 let fragmentTwoRiftLastFocusedElement = null;
+let fragmentThreeRiftLastFocusedElement = null;
 let phasePlateLastFocusedElement = null;
 let settlementRiftLastFocusedElement = null;
+let palaceRiftLastFocusedElement = null;
+let releaseRiftLastFocusedElement = null;
 let dateRiftLastFocusedElement = null;
 let tips = Array.isArray(window.PLC_TIPS) && window.PLC_TIPS.length > 0
   ? window.PLC_TIPS
@@ -71,6 +102,8 @@ const signalGateStorageKey = "plc.event.signalGate.v1";
 const signalGateCacheVersion = "2026-06-13";
 const retryPuzzleSequence = ["green", "cyan", "pink", "white", "yellow", "violet"];
 const artistGateSequence = ["status", "date", "track", "file"];
+const palaceGateAnswer = "10";
+const multisourceGateAnswer = "0418200";
 const retryPulseLabels = {
   cyan: "冷光",
   pink: "粉噪",
@@ -95,13 +128,24 @@ const artistGateStorageKey = "plc.event.artistGate.v1";
 const artistGateCacheVersion = "2026-06-13-fragment-02-result-v2";
 const fragmentTwoAnswerStorageKey = "plc.event.fragment02.v1";
 const fragmentTwoAnswerCacheVersion = "2026-06-13-fragment-02-result-artist-v2";
+const palaceGateStorageKey = "plc.event.palaceGate.v1";
+const palaceGateCacheVersion = "2026-06-13-fragment-03-palace-v1";
+const multisourceGateStorageKey = "plc.event.multisourceGate.v1";
+const multisourceGateCacheVersion = "2026-06-13-fragment-03-release-check-v1";
+const fragmentThreeAnswerStorageKey = "plc.event.fragment03.v1";
+const fragmentThreeAnswerCacheVersion = "2026-06-13-fragment-03-chart-v1";
 let signalGateInput = [];
 let signalGateLocked = false;
 let retryPuzzleInput = [];
 let retryPuzzleLocked = false;
 let artistGateInput = [];
 let artistGateLocked = false;
+let palaceGateLocked = false;
+let palaceGateWrongCount = 0;
+let multisourceGateLocked = false;
+let multisourceGateWrongCount = 0;
 let fragmentTwoWrongCount = 0;
+let fragmentThreeWrongCount = 0;
 
 function formatSelectionCountdown() {
   const endTime = new Date(2026, 6, 3, 23, 59, 0);
@@ -285,6 +329,88 @@ function closeSettlementRift() {
       typeof settlementRiftLastFocusedElement.focus === "function"
     ) {
       settlementRiftLastFocusedElement.focus();
+    }
+  }, 340);
+}
+
+function openPalaceRift() {
+  if (!palaceRift) {
+    return;
+  }
+
+  clearTimeout(palaceRiftCloseTimer);
+  palaceRiftLastFocusedElement = document.activeElement;
+
+  palaceRift.classList.remove("is-closing");
+  palaceRift.classList.add("is-open");
+  palaceRift.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  const closeButton = palaceRift.querySelector(".signal-rift-close");
+  if (closeButton) {
+    closeButton.focus();
+  }
+}
+
+function closePalaceRift() {
+  if (!palaceRift || !palaceRift.classList.contains("is-open")) {
+    return;
+  }
+
+  palaceRift.classList.add("is-closing");
+  palaceRift.classList.remove("is-open");
+  palaceRift.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+
+  palaceRiftCloseTimer = setTimeout(() => {
+    palaceRift.classList.remove("is-closing");
+
+    if (
+      palaceRiftLastFocusedElement &&
+      typeof palaceRiftLastFocusedElement.focus === "function"
+    ) {
+      palaceRiftLastFocusedElement.focus();
+    }
+  }, 340);
+}
+
+function openReleaseRift() {
+  if (!releaseRift) {
+    return;
+  }
+
+  clearTimeout(releaseRiftCloseTimer);
+  releaseRiftLastFocusedElement = document.activeElement;
+
+  releaseRift.classList.remove("is-closing");
+  releaseRift.classList.add("is-open");
+  releaseRift.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  const closeButton = releaseRift.querySelector(".signal-rift-close");
+  if (closeButton) {
+    closeButton.focus();
+  }
+}
+
+function closeReleaseRift() {
+  if (!releaseRift || !releaseRift.classList.contains("is-open")) {
+    return;
+  }
+
+  releaseRift.classList.add("is-closing");
+  releaseRift.classList.remove("is-open");
+  releaseRift.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+
+  releaseRiftCloseTimer = setTimeout(() => {
+    releaseRift.classList.remove("is-closing");
+
+    if (
+      releaseRiftLastFocusedElement &&
+      typeof releaseRiftLastFocusedElement.focus === "function"
+    ) {
+      releaseRiftLastFocusedElement.focus();
     }
   }, 340);
 }
@@ -539,6 +665,99 @@ function writeFragmentTwoAnswerCache() {
   }
 }
 
+function readPalaceGateCache() {
+  try {
+    const cachedValue = readStoredValue(palaceGateStorageKey);
+    if (!cachedValue) {
+      return null;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    const isValid =
+      payload?.version === palaceGateCacheVersion &&
+      payload?.unlocked === true &&
+      payload?.result === palaceGateAnswer;
+
+    return isValid ? payload : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function writePalaceGateCache() {
+  try {
+    writeStoredValue(palaceGateStorageKey, JSON.stringify({
+      version: palaceGateCacheVersion,
+      unlocked: true,
+      result: palaceGateAnswer,
+      completedAt: new Date().toISOString()
+    }));
+  } catch (error) {
+  }
+}
+
+function readMultisourceGateCache() {
+  try {
+    const cachedValue = readStoredValue(multisourceGateStorageKey);
+    if (!cachedValue) {
+      return null;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    const isValid =
+      payload?.version === multisourceGateCacheVersion &&
+      payload?.unlocked === true &&
+      payload?.result === multisourceGateAnswer;
+
+    return isValid ? payload : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function writeMultisourceGateCache() {
+  try {
+    writeStoredValue(multisourceGateStorageKey, JSON.stringify({
+      version: multisourceGateCacheVersion,
+      unlocked: true,
+      result: multisourceGateAnswer,
+      completedAt: new Date().toISOString()
+    }));
+  } catch (error) {
+  }
+}
+
+function readFragmentThreeAnswerCache() {
+  try {
+    const cachedValue = readStoredValue(fragmentThreeAnswerStorageKey);
+    if (!cachedValue) {
+      return null;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    const isValid =
+      payload?.version === fragmentThreeAnswerCacheVersion &&
+      payload?.solved === true &&
+      payload?.result === "Chart：BaNa₂Be₂O₅";
+
+    return isValid ? payload : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function writeFragmentThreeAnswerCache() {
+  try {
+    writeStoredValue(fragmentThreeAnswerStorageKey, JSON.stringify({
+      version: fragmentThreeAnswerCacheVersion,
+      solved: true,
+      result: "Chart：BaNa₂Be₂O₅",
+      completedAt: new Date().toISOString()
+    }));
+  } catch (error) {
+  }
+}
+
 function revealFinalSignal({ animate = true, scroll = true } = {}) {
   if (!finalSignalSection) {
     return;
@@ -576,9 +795,24 @@ function updateArtistPulseSlots(state = "input") {
   });
 }
 
+function hidePuzzlePanel(panel) {
+  panel?.classList.remove("is-open", "is-complete", "is-failed", "is-resolving");
+  panel?.setAttribute("aria-hidden", "true");
+}
+
 function openRetryPuzzle() {
   if (openRetryPuzzleButton?.classList.contains("is-stage-two-ready")) {
     openArtistGatePuzzle();
+    return;
+  }
+
+  if (openRetryPuzzleButton?.classList.contains("is-unknown-date-ready")) {
+    openDateRift();
+    return;
+  }
+
+  if (openRetryPuzzleButton?.classList.contains("is-date-ready")) {
+    openPalaceGatePuzzle();
     return;
   }
 
@@ -602,7 +836,7 @@ function revealArtistGateRetryEntry() {
   }
 
   openRetryPuzzleButton.disabled = false;
-  openRetryPuzzleButton.classList.remove("is-resolved", "is-date-ready");
+  openRetryPuzzleButton.classList.remove("is-resolved", "is-date-ready", "is-unknown-date-ready");
   openRetryPuzzleButton.classList.add("is-stage-two-ready");
   openRetryPuzzleButton.setAttribute("aria-label", "打开 Phigros 结算图校准");
 
@@ -620,15 +854,16 @@ function openArtistGatePuzzle() {
     return;
   }
 
-  retryPuzzle?.classList.remove("is-open", "is-failed", "is-resolving");
-  retryPuzzle?.setAttribute("aria-hidden", "true");
+  hidePuzzlePanel(retryPuzzle);
+  hidePuzzlePanel(palaceGatePuzzle);
+  hidePuzzlePanel(multisourceGatePuzzle);
 
-  artistGatePuzzle.classList.remove("is-failed", "is-resolving");
+  artistGatePuzzle.classList.remove("is-complete", "is-failed", "is-resolving");
   artistGatePuzzle.classList.add("is-open");
   artistGatePuzzle.setAttribute("aria-hidden", "false");
 
   if (artistGateStatus) {
-    artistGateStatus.textContent = "TRACE WAITING // 4 KEYS";
+    artistGateStatus.textContent = "按结算页上真正有用的四项顺序点。";
     artistGateStatus.classList.remove("is-failed", "is-complete");
   }
 }
@@ -675,7 +910,7 @@ function revealShardTwo({ fromCache = false } = {}) {
 
   if (openRetryPuzzleButton) {
     openRetryPuzzleButton.classList.add("is-resolved");
-    openRetryPuzzleButton.classList.remove("is-stage-two-ready", "is-date-ready");
+    openRetryPuzzleButton.classList.remove("is-stage-two-ready", "is-date-ready", "is-unknown-date-ready");
     openRetryPuzzleButton.disabled = true;
     const buttonText = openRetryPuzzleButton.querySelector("span");
     if (buttonText) {
@@ -685,8 +920,8 @@ function revealShardTwo({ fromCache = false } = {}) {
 
   if (artistGateStatus) {
     artistGateStatus.textContent = fromCache
-      ? "TRACE RESTORED // FRAGMENT 02"
-      : "TRACE ACCEPTED // FRAGMENT 02";
+      ? "第二片进度已恢复。"
+      : "顺序对了，第二片已经放行。";
     artistGateStatus.classList.remove("is-failed");
     artistGateStatus.classList.add("is-complete");
   }
@@ -701,7 +936,7 @@ function solveArtistGatePuzzle() {
   artistGatePuzzle?.classList.add("is-resolving");
 
   if (artistGateStatus) {
-    artistGateStatus.textContent = "TRACE LOCKED // UNFOLDING";
+    artistGateStatus.textContent = "顺序锁定，正在展开第二片。";
     artistGateStatus.classList.remove("is-failed");
     artistGateStatus.classList.add("is-complete");
   }
@@ -727,7 +962,7 @@ function failArtistGatePuzzle() {
   artistGatePuzzle?.classList.add("is-failed");
 
   if (artistGateStatus) {
-    artistGateStatus.textContent = "TRACE REJECTED";
+    artistGateStatus.textContent = "顺序不对，结算页再读一遍。";
     artistGateStatus.classList.remove("is-complete");
     artistGateStatus.classList.add("is-failed");
   }
@@ -747,7 +982,7 @@ function failArtistGatePuzzle() {
     artistGatePuzzle?.setAttribute("aria-hidden", "false");
 
     if (artistGateStatus) {
-      artistGateStatus.textContent = "TRACE WAITING // 4 KEYS";
+      artistGateStatus.textContent = "按结算页上真正有用的四项顺序点。";
     }
   }, 1120);
 }
@@ -817,6 +1052,7 @@ function revealShardOne({ fromCache = false } = {}) {
 
   if (openRetryPuzzleButton) {
     openRetryPuzzleButton.classList.add("is-resolved");
+    openRetryPuzzleButton.classList.remove("is-stage-two-ready", "is-date-ready", "is-unknown-date-ready");
     openRetryPuzzleButton.disabled = true;
     const buttonText = openRetryPuzzleButton.querySelector("span");
     if (buttonText) {
@@ -946,8 +1182,8 @@ function revealFragmentAnswer({ fromCache = false } = {}) {
 
   if (fragmentAnswerStatus) {
     fragmentAnswerStatus.textContent = fromCache
-      ? "TRACE RESTORED // RESULT LOCKED"
-      : "TRACE ACCEPTED // RESULT UNSEALED";
+      ? "这一项已经记录过了。"
+      : "读数成立，结果已写入。";
     fragmentAnswerStatus.classList.remove("is-failed");
     fragmentAnswerStatus.classList.add("is-complete");
   }
@@ -1022,13 +1258,13 @@ function handleFragmentAnswerSubmit(event) {
   document.body.classList.add("modal-open");
 
   if (fragmentAnswerStatus) {
-    fragmentAnswerStatus.textContent = "TRACE REJECTED // SUM OUT OF RANGE";
+    fragmentAnswerStatus.textContent = "这个三位数不对，先把白门换成十进制。";
     fragmentAnswerStatus.classList.remove("is-complete");
     fragmentAnswerStatus.classList.add("is-failed");
   }
 }
 
-function revealFragmentTwoAnswer({ fromCache = false } = {}) {
+function revealFragmentTwoAnswer({ fromCache = false, advanceNextEntry = true } = {}) {
   fragmentTwoRift?.classList.add("is-fragment-solved");
 
   if (fragmentTwoResult) {
@@ -1047,13 +1283,15 @@ function revealFragmentTwoAnswer({ fromCache = false } = {}) {
 
   if (fragmentTwoAnswerStatus) {
     fragmentTwoAnswerStatus.textContent = fromCache
-      ? "TRACE RESTORED // CREDIT LOCKED"
-      : "TRACE ACCEPTED // CREDIT UNSEALED";
+      ? "署名已经记录过了。"
+      : "署名对上了，下一项已经开放。";
     fragmentTwoAnswerStatus.classList.remove("is-failed");
     fragmentTwoAnswerStatus.classList.add("is-complete");
   }
 
-  revealNextDateEntry();
+  if (advanceNextEntry) {
+    revealNextDateEntry();
+  }
 }
 
 function revealNextDateEntry() {
@@ -1061,8 +1299,13 @@ function revealNextDateEntry() {
     return;
   }
 
+  hidePuzzlePanel(retryPuzzle);
+  hidePuzzlePanel(artistGatePuzzle);
+  hidePuzzlePanel(palaceGatePuzzle);
+  hidePuzzlePanel(multisourceGatePuzzle);
+
   openRetryPuzzleButton.disabled = false;
-  openRetryPuzzleButton.classList.remove("is-resolved", "is-stage-two-ready", "is-date-ready");
+  openRetryPuzzleButton.classList.remove("is-resolved", "is-stage-two-ready", "is-date-ready", "is-unknown-date-ready");
   openRetryPuzzleButton.classList.add("is-date-ready");
   openRetryPuzzleButton.setAttribute("aria-label", "打开 06-07 坐标");
 
@@ -1070,6 +1313,358 @@ function revealNextDateEntry() {
   if (buttonText) {
     buttonText.textContent = "06-07";
   }
+}
+
+function revealUnknownDateEntry() {
+  if (!openRetryPuzzleButton) {
+    return;
+  }
+
+  hidePuzzlePanel(retryPuzzle);
+  hidePuzzlePanel(artistGatePuzzle);
+  hidePuzzlePanel(palaceGatePuzzle);
+  hidePuzzlePanel(multisourceGatePuzzle);
+
+  openRetryPuzzleButton.disabled = false;
+  openRetryPuzzleButton.classList.remove("is-resolved", "is-stage-two-ready", "is-date-ready", "is-unknown-date-ready");
+  openRetryPuzzleButton.classList.add("is-unknown-date-ready");
+  openRetryPuzzleButton.setAttribute("aria-label", "下一项坐标未稳定");
+
+  const buttonText = openRetryPuzzleButton.querySelector("span");
+  if (buttonText) {
+    buttonText.textContent = "06-??";
+  }
+}
+
+function openPalaceGatePuzzle() {
+  if (!palaceGatePuzzle || palaceGateLocked) {
+    return;
+  }
+
+  hidePuzzlePanel(retryPuzzle);
+  hidePuzzlePanel(artistGatePuzzle);
+  hidePuzzlePanel(multisourceGatePuzzle);
+
+  palaceGatePuzzle.classList.remove("is-complete", "is-failed", "is-resolving");
+  palaceGatePuzzle.classList.add("is-open");
+  palaceGatePuzzle.setAttribute("aria-hidden", "false");
+
+  if (palaceGateStatus) {
+    palaceGateStatus.textContent = "等待补全：只写空格里的数字。";
+    palaceGateStatus.classList.remove("is-failed", "is-complete");
+  }
+
+  if (palaceGateInput && !palaceGateInput.disabled) {
+    palaceGateInput.focus();
+  }
+}
+
+function revealMultisourceGate({ fromCache = false } = {}) {
+  palaceGateLocked = true;
+  multisourceGateLocked = false;
+
+  hidePuzzlePanel(retryPuzzle);
+  hidePuzzlePanel(artistGatePuzzle);
+
+  if (palaceGateInput) {
+    palaceGateInput.value = palaceGateAnswer;
+    palaceGateInput.disabled = true;
+  }
+
+  if (palaceGateSubmit) {
+    palaceGateSubmit.disabled = true;
+  }
+
+  if (palaceGateStatus) {
+    palaceGateStatus.textContent = fromCache
+      ? "上一段已恢复，继续做上线检查。"
+      : "编号补上了，继续检查这次能不能上线。";
+    palaceGateStatus.classList.remove("is-failed");
+    palaceGateStatus.classList.add("is-complete");
+  }
+
+  hidePuzzlePanel(palaceGatePuzzle);
+
+  multisourceGatePuzzle?.classList.remove("is-complete", "is-failed", "is-resolving");
+  multisourceGatePuzzle?.classList.add("is-open");
+  multisourceGatePuzzle?.setAttribute("aria-hidden", "false");
+
+  if (multisourceGateStatus) {
+    multisourceGateStatus.textContent = "等待口令：退出码 / 包体积 / 探针状态。";
+    multisourceGateStatus.classList.remove("is-failed", "is-complete");
+  }
+
+  if (openRetryPuzzleButton) {
+    openRetryPuzzleButton.disabled = true;
+    openRetryPuzzleButton.classList.add("is-resolved");
+    openRetryPuzzleButton.classList.remove("is-stage-two-ready", "is-date-ready", "is-unknown-date-ready");
+    const buttonText = openRetryPuzzleButton.querySelector("span");
+    if (buttonText) {
+      buttonText.textContent = "上线检查中";
+    }
+  }
+}
+
+function revealShardThree({ fromCache = false } = {}) {
+  palaceGateLocked = true;
+  multisourceGateLocked = true;
+  hidePuzzlePanel(retryPuzzle);
+  hidePuzzlePanel(artistGatePuzzle);
+  hidePuzzlePanel(palaceGatePuzzle);
+  hidePuzzlePanel(multisourceGatePuzzle);
+
+  finalSignalSection?.classList.add("is-fractured", "is-shard-three-open");
+  finalArtFrame?.classList.toggle("is-fracturing", !fromCache);
+
+  if (!fromCache && finalArtFrame) {
+    setTimeout(() => {
+      finalArtFrame.classList.remove("is-fracturing");
+    }, 1320);
+  }
+
+  if (palaceGateInput) {
+    palaceGateInput.value = palaceGateAnswer;
+    palaceGateInput.disabled = true;
+  }
+
+  if (palaceGateSubmit) {
+    palaceGateSubmit.disabled = true;
+  }
+
+  if (multisourceGateInput) {
+    multisourceGateInput.value = "0418200";
+    multisourceGateInput.disabled = true;
+  }
+
+  if (multisourceGateSubmit) {
+    multisourceGateSubmit.disabled = true;
+  }
+
+  if (multisourceGateStatus) {
+    multisourceGateStatus.textContent = fromCache
+      ? "上线检查已恢复，第三片保持在线。"
+      : "检查通过，第三片已经放行。";
+    multisourceGateStatus.classList.remove("is-failed");
+    multisourceGateStatus.classList.add("is-complete");
+  }
+
+  if (openRetryPuzzleButton) {
+    openRetryPuzzleButton.classList.add("is-resolved");
+    openRetryPuzzleButton.classList.remove("is-stage-two-ready", "is-date-ready", "is-unknown-date-ready");
+    openRetryPuzzleButton.disabled = true;
+    const buttonText = openRetryPuzzleButton.querySelector("span");
+    if (buttonText) {
+      buttonText.textContent = "读取完成，第三片在线";
+    }
+  }
+
+  if (palaceGateStatus) {
+    palaceGateStatus.textContent = fromCache
+      ? "上一段已恢复，第三片保持在线。"
+      : "编号确认，第三片已经放行。";
+    palaceGateStatus.classList.remove("is-failed");
+    palaceGateStatus.classList.add("is-complete");
+  }
+
+  if (openFragmentThreeRiftButton) {
+    openFragmentThreeRiftButton.disabled = false;
+  }
+}
+
+function solvePalaceGatePuzzle() {
+  palaceGateLocked = true;
+  palaceGatePuzzle?.classList.add("is-resolving");
+
+  if (palaceGateStatus) {
+    palaceGateStatus.textContent = "编号成立，正在打开下一段检查。";
+    palaceGateStatus.classList.remove("is-failed");
+    palaceGateStatus.classList.add("is-complete");
+  }
+
+  scrollFinalArtIntoView();
+
+  setTimeout(() => {
+    writePalaceGateCache();
+    revealMultisourceGate();
+  }, 920);
+}
+
+function failPalaceGatePuzzle() {
+  palaceGateWrongCount += 1;
+  palaceGateLocked = true;
+  palaceGatePuzzle?.classList.remove("is-failed");
+  palaceGatePuzzle?.offsetHeight;
+  palaceGatePuzzle?.classList.add("is-open", "is-failed");
+  palaceGatePuzzle?.setAttribute("aria-hidden", "false");
+
+  if (palaceGateWrongCount >= 3) {
+    writePalaceGateCache();
+    revealMultisourceGate();
+    return;
+  }
+
+  if (palaceGateStatus) {
+    palaceGateStatus.textContent = "这个数对不上原句，再看一眼图和题面。";
+    palaceGateStatus.classList.remove("is-complete");
+    palaceGateStatus.classList.add("is-failed");
+  }
+
+  setTimeout(() => {
+    palaceGateLocked = false;
+    palaceGatePuzzle?.classList.remove("is-failed", "is-resolving");
+    palaceGatePuzzle?.classList.add("is-open");
+    palaceGatePuzzle?.setAttribute("aria-hidden", "false");
+
+    if (palaceGateInput) {
+      palaceGateInput.value = "";
+      palaceGateInput.focus();
+    }
+
+    if (palaceGateStatus) {
+      palaceGateStatus.textContent = "等待补全：只写空格里的数字。";
+      palaceGateStatus.classList.remove("is-failed");
+    }
+  }, 980);
+}
+
+function handlePalaceGateSubmit(event) {
+  event?.preventDefault();
+
+  if (palaceGateLocked) {
+    return;
+  }
+
+  const answer = palaceGateInput?.value.trim();
+  if (answer === palaceGateAnswer) {
+    solvePalaceGatePuzzle();
+    return;
+  }
+
+  failPalaceGatePuzzle();
+}
+
+function playMultisourceAudio() {
+  const AudioContext = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContext) {
+    if (multisourceGateStatus) {
+      multisourceGateStatus.textContent = "浏览器不支持播放这段提示音，可以先看图和探针。";
+      multisourceGateStatus.classList.add("is-failed");
+    }
+    return;
+  }
+
+  const context = new AudioContext();
+  const now = context.currentTime + 0.04;
+  const pulses = [
+    { tone: 523.25, delay: 0 },
+    { tone: 659.25, delay: 0.28 },
+    { tone: 523.25, delay: 0.56 }
+  ];
+
+  playMultisourceAudioButton?.classList.add("is-playing");
+
+  pulses.forEach(({ tone, delay }) => {
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = "square";
+    oscillator.frequency.value = tone;
+    gain.gain.setValueAtTime(0.0001, now + delay);
+    gain.gain.exponentialRampToValueAtTime(0.08, now + delay + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + delay + 0.15);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start(now + delay);
+    oscillator.stop(now + delay + 0.17);
+  });
+
+  if (multisourceGateStatus) {
+    multisourceGateStatus.textContent = "听到三段提示音：这道题也是三段值。";
+    multisourceGateStatus.classList.remove("is-failed");
+  }
+
+  setTimeout(() => {
+    playMultisourceAudioButton?.classList.remove("is-playing");
+    context.close?.();
+  }, 980);
+}
+
+function normalizeMultisourceAnswer(value = "") {
+  return value
+    .trim()
+    .replace(/[^a-z0-9]/gi, "")
+    .toLowerCase();
+}
+
+function solveMultisourceGatePuzzle() {
+  multisourceGateLocked = true;
+  multisourceGatePuzzle?.classList.add("is-resolving");
+
+  if (multisourceGateStatus) {
+    multisourceGateStatus.textContent = "上线口令成立，正在放行第三片。";
+    multisourceGateStatus.classList.remove("is-failed");
+    multisourceGateStatus.classList.add("is-complete");
+  }
+
+  scrollFinalArtIntoView();
+
+  setTimeout(() => {
+    writeMultisourceGateCache();
+    revealShardThree();
+  }, 980);
+}
+
+function failMultisourceGatePuzzle() {
+  multisourceGateWrongCount += 1;
+  multisourceGateLocked = true;
+  multisourceGatePuzzle?.classList.remove("is-failed");
+  multisourceGatePuzzle?.offsetHeight;
+  multisourceGatePuzzle?.classList.add("is-open", "is-failed");
+  multisourceGatePuzzle?.setAttribute("aria-hidden", "false");
+
+  if (multisourceGateWrongCount >= 3) {
+    writeMultisourceGateCache();
+    revealShardThree();
+    return;
+  }
+
+  if (multisourceGateStatus) {
+    multisourceGateStatus.textContent = "口令不对。只取退出码、包体积、健康检查状态。";
+    multisourceGateStatus.classList.remove("is-complete");
+    multisourceGateStatus.classList.add("is-failed");
+  }
+
+  setTimeout(() => {
+    multisourceGateLocked = false;
+    multisourceGatePuzzle?.classList.remove("is-failed", "is-resolving");
+    multisourceGatePuzzle?.classList.add("is-open");
+    multisourceGatePuzzle?.setAttribute("aria-hidden", "false");
+
+    if (multisourceGateInput) {
+      multisourceGateInput.value = "";
+      multisourceGateInput.focus();
+    }
+
+    if (multisourceGateStatus) {
+      multisourceGateStatus.textContent = "等待口令：退出码 / 包体积 / 探针状态。";
+      multisourceGateStatus.classList.remove("is-failed");
+    }
+  }, 980);
+}
+
+function handleMultisourceGateSubmit(event) {
+  event?.preventDefault();
+
+  if (multisourceGateLocked) {
+    return;
+  }
+
+  const answer = normalizeMultisourceAnswer(multisourceGateInput?.value);
+  if (answer === multisourceGateAnswer) {
+    solveMultisourceGatePuzzle();
+    return;
+  }
+
+  failMultisourceGatePuzzle();
 }
 
 function openFragmentTwoRift() {
@@ -1087,7 +1682,8 @@ function openFragmentTwoRift() {
 
   if (readFragmentTwoAnswerCache()) {
     revealFragmentTwoAnswer({
-      fromCache: true
+      fromCache: true,
+      advanceNextEntry: false
     });
   }
 
@@ -1155,9 +1751,128 @@ function handleFragmentTwoAnswerSubmit(event) {
   }
 
   if (fragmentTwoAnswerStatus) {
-    fragmentTwoAnswerStatus.textContent = "TRACE REJECTED // CREDIT FIELD MISMATCH";
+    fragmentTwoAnswerStatus.textContent = "署名不对；底行六格按 A1Z26 再换一次。";
     fragmentTwoAnswerStatus.classList.remove("is-complete");
     fragmentTwoAnswerStatus.classList.add("is-failed");
+  }
+}
+
+function revealFragmentThreeAnswer({ fromCache = false } = {}) {
+  fragmentThreeRift?.classList.add("is-fragment-solved");
+
+  if (fragmentThreeResult) {
+    fragmentThreeResult.textContent = "Chart：BaNa₂Be₂O₅";
+    fragmentThreeResult.setAttribute("aria-hidden", "false");
+  }
+
+  if (fragmentThreeAnswerInput) {
+    fragmentThreeAnswerInput.value = "BaNa₂Be₂O₅";
+    fragmentThreeAnswerInput.disabled = true;
+  }
+
+  if (fragmentThreeAnswerSubmit) {
+    fragmentThreeAnswerSubmit.disabled = true;
+  }
+
+  if (fragmentThreeAnswerStatus) {
+    fragmentThreeAnswerStatus.textContent = fromCache
+      ? "谱面式已经记录过了。"
+      : "元素式成立，谱面名已写入。";
+    fragmentThreeAnswerStatus.classList.remove("is-failed");
+    fragmentThreeAnswerStatus.classList.add("is-complete");
+  }
+
+  revealUnknownDateEntry();
+}
+
+function openFragmentThreeRift() {
+  if (!fragmentThreeRift || openFragmentThreeRiftButton?.disabled) {
+    return;
+  }
+
+  clearTimeout(fragmentThreeRiftCloseTimer);
+  fragmentThreeRiftLastFocusedElement = document.activeElement;
+
+  fragmentThreeRift.classList.remove("is-closing", "is-failed");
+  fragmentThreeRift.classList.add("is-open");
+  fragmentThreeRift.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  if (readFragmentThreeAnswerCache()) {
+    revealFragmentThreeAnswer({
+      fromCache: true
+    });
+  }
+
+  const focusTarget = fragmentThreeAnswerInput?.disabled
+    ? fragmentThreeRift.querySelector(".signal-rift-close")
+    : fragmentThreeAnswerInput;
+
+  if (focusTarget && typeof focusTarget.focus === "function") {
+    focusTarget.focus();
+  }
+}
+
+function closeFragmentThreeRift() {
+  if (!fragmentThreeRift || !fragmentThreeRift.classList.contains("is-open")) {
+    return;
+  }
+
+  fragmentThreeRift.classList.add("is-closing");
+  fragmentThreeRift.classList.remove("is-open");
+  fragmentThreeRift.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+
+  fragmentThreeRiftCloseTimer = setTimeout(() => {
+    fragmentThreeRift.classList.remove("is-closing", "is-failed");
+
+    if (
+      fragmentThreeRiftLastFocusedElement &&
+      typeof fragmentThreeRiftLastFocusedElement.focus === "function"
+    ) {
+      fragmentThreeRiftLastFocusedElement.focus();
+    }
+  }, 340);
+}
+
+function normalizeFragmentThreeAnswer(value = "") {
+  return value
+    .trim()
+    .replace(/^chart\s*[:：]\s*/i, "")
+    .replace(/[₂]/g, "2")
+    .replace(/[₅]/g, "5")
+    .replace(/[^a-z0-9]/gi, "")
+    .toLowerCase();
+}
+
+function handleFragmentThreeAnswerSubmit(event) {
+  event?.preventDefault();
+
+  const answer = normalizeFragmentThreeAnswer(fragmentThreeAnswerInput?.value);
+  if (answer === "bana2be2o5") {
+    writeFragmentThreeAnswerCache();
+    revealFragmentThreeAnswer();
+    return;
+  }
+
+  fragmentThreeWrongCount += 1;
+
+  fragmentThreeRift?.classList.remove("is-failed");
+  fragmentThreeRift?.offsetHeight;
+  fragmentThreeRift?.classList.add("is-open", "is-failed");
+  fragmentThreeRift?.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  if (fragmentThreeWrongCount >= 3) {
+    writeFragmentThreeAnswerCache();
+    revealFragmentThreeAnswer();
+    return;
+  }
+
+  if (fragmentThreeAnswerStatus) {
+    fragmentThreeAnswerStatus.textContent = "式子不对；先按原子序数换符号，再写层数。";
+    fragmentThreeAnswerStatus.classList.remove("is-complete");
+    fragmentThreeAnswerStatus.classList.add("is-failed");
   }
 }
 
@@ -1470,6 +2185,14 @@ openSettlementPlateButtons.forEach((button) => {
   button.addEventListener("click", openSettlementRift);
 });
 
+openPalacePlateButtons.forEach((button) => {
+  button.addEventListener("click", openPalaceRift);
+});
+
+openReleaseRiftButtons.forEach((button) => {
+  button.addEventListener("click", openReleaseRift);
+});
+
 retryPulseButtons.forEach((button) => {
   button.addEventListener("click", () => {
     handleRetryPulseInput(button);
@@ -1488,6 +2211,46 @@ if (openFragmentRiftButton) {
 
 if (openFragmentTwoRiftButton) {
   openFragmentTwoRiftButton.addEventListener("click", openFragmentTwoRift);
+}
+
+if (openFragmentThreeRiftButton) {
+  openFragmentThreeRiftButton.addEventListener("click", openFragmentThreeRift);
+}
+
+if (palaceGateForm) {
+  palaceGateForm.addEventListener("submit", handlePalaceGateSubmit);
+}
+
+if (palaceGateSubmit) {
+  palaceGateSubmit.addEventListener("click", handlePalaceGateSubmit);
+}
+
+if (palaceGateInput) {
+  palaceGateInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      handlePalaceGateSubmit(event);
+    }
+  });
+}
+
+if (multisourceGateForm) {
+  multisourceGateForm.addEventListener("submit", handleMultisourceGateSubmit);
+}
+
+if (multisourceGateSubmit) {
+  multisourceGateSubmit.addEventListener("click", handleMultisourceGateSubmit);
+}
+
+if (multisourceGateInput) {
+  multisourceGateInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      handleMultisourceGateSubmit(event);
+    }
+  });
+}
+
+if (playMultisourceAudioButton) {
+  playMultisourceAudioButton.addEventListener("click", playMultisourceAudio);
 }
 
 if (fragmentAnswerForm) {
@@ -1518,6 +2281,22 @@ if (fragmentTwoAnswerInput) {
   fragmentTwoAnswerInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter") {
       handleFragmentTwoAnswerSubmit(event);
+    }
+  });
+}
+
+if (fragmentThreeAnswerForm) {
+  fragmentThreeAnswerForm.addEventListener("submit", handleFragmentThreeAnswerSubmit);
+}
+
+if (fragmentThreeAnswerSubmit) {
+  fragmentThreeAnswerSubmit.addEventListener("click", handleFragmentThreeAnswerSubmit);
+}
+
+if (fragmentThreeAnswerInput) {
+  fragmentThreeAnswerInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      handleFragmentThreeAnswerSubmit(event);
     }
   });
 }
@@ -1553,12 +2332,24 @@ fragmentTwoRiftCloseTargets.forEach((target) => {
   target.addEventListener("click", closeFragmentTwoRift);
 });
 
+fragmentThreeRiftCloseTargets.forEach((target) => {
+  target.addEventListener("click", closeFragmentThreeRift);
+});
+
 phasePlateCloseTargets.forEach((target) => {
   target.addEventListener("click", closePhasePlateRift);
 });
 
 settlementRiftCloseTargets.forEach((target) => {
   target.addEventListener("click", closeSettlementRift);
+});
+
+palaceRiftCloseTargets.forEach((target) => {
+  target.addEventListener("click", closePalaceRift);
+});
+
+releaseRiftCloseTargets.forEach((target) => {
+  target.addEventListener("click", closeReleaseRift);
 });
 
 dateRiftCloseTargets.forEach((target) => {
@@ -1568,8 +2359,11 @@ dateRiftCloseTargets.forEach((target) => {
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     closeDateRift();
+    closeReleaseRift();
+    closePalaceRift();
     closeSettlementRift();
     closePhasePlateRift();
+    closeFragmentThreeRift();
     closeFragmentTwoRift();
     closeFragmentRift();
     closeSignalRift();
@@ -1602,6 +2396,24 @@ if (readArtistGateCache()) {
 
 if (readFragmentTwoAnswerCache()) {
   revealFragmentTwoAnswer({
+    fromCache: true
+  });
+}
+
+if (readPalaceGateCache()) {
+  revealMultisourceGate({
+    fromCache: true
+  });
+}
+
+if (readMultisourceGateCache()) {
+  revealShardThree({
+    fromCache: true
+  });
+}
+
+if (readFragmentThreeAnswerCache()) {
+  revealFragmentThreeAnswer({
     fromCache: true
   });
 }
