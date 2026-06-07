@@ -141,11 +141,7 @@ let retryPuzzleLocked = false;
 let artistGateInput = [];
 let artistGateLocked = false;
 let palaceGateLocked = false;
-let palaceGateWrongCount = 0;
 let multisourceGateLocked = false;
-let multisourceGateWrongCount = 0;
-let fragmentTwoWrongCount = 0;
-let fragmentThreeWrongCount = 0;
 
 function formatSelectionCountdown() {
   const endTime = new Date(2026, 6, 3, 23, 59, 0);
@@ -1490,18 +1486,11 @@ function solvePalaceGatePuzzle() {
 }
 
 function failPalaceGatePuzzle() {
-  palaceGateWrongCount += 1;
   palaceGateLocked = true;
   palaceGatePuzzle?.classList.remove("is-failed");
   palaceGatePuzzle?.offsetHeight;
   palaceGatePuzzle?.classList.add("is-open", "is-failed");
   palaceGatePuzzle?.setAttribute("aria-hidden", "false");
-
-  if (palaceGateWrongCount >= 3) {
-    writePalaceGateCache();
-    revealMultisourceGate();
-    return;
-  }
 
   if (palaceGateStatus) {
     palaceGateStatus.textContent = "这个数对不上原句，再看一眼图和题面。";
@@ -1614,18 +1603,11 @@ function solveMultisourceGatePuzzle() {
 }
 
 function failMultisourceGatePuzzle() {
-  multisourceGateWrongCount += 1;
   multisourceGateLocked = true;
   multisourceGatePuzzle?.classList.remove("is-failed");
   multisourceGatePuzzle?.offsetHeight;
   multisourceGatePuzzle?.classList.add("is-open", "is-failed");
   multisourceGatePuzzle?.setAttribute("aria-hidden", "false");
-
-  if (multisourceGateWrongCount >= 3) {
-    writeMultisourceGateCache();
-    revealShardThree();
-    return;
-  }
 
   if (multisourceGateStatus) {
     multisourceGateStatus.textContent = "口令不对。只取退出码、包体积、健康检查状态。";
@@ -1736,19 +1718,11 @@ function handleFragmentTwoAnswerSubmit(event) {
     return;
   }
 
-  fragmentTwoWrongCount += 1;
-
   fragmentTwoRift?.classList.remove("is-failed");
   fragmentTwoRift?.offsetHeight;
   fragmentTwoRift?.classList.add("is-open", "is-failed");
   fragmentTwoRift?.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
-
-  if (fragmentTwoWrongCount >= 3) {
-    writeFragmentTwoAnswerCache();
-    revealFragmentTwoAnswer();
-    return;
-  }
 
   if (fragmentTwoAnswerStatus) {
     fragmentTwoAnswerStatus.textContent = "署名不对；底行六格按 A1Z26 再换一次。";
@@ -1855,19 +1829,11 @@ function handleFragmentThreeAnswerSubmit(event) {
     return;
   }
 
-  fragmentThreeWrongCount += 1;
-
   fragmentThreeRift?.classList.remove("is-failed");
   fragmentThreeRift?.offsetHeight;
   fragmentThreeRift?.classList.add("is-open", "is-failed");
   fragmentThreeRift?.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
-
-  if (fragmentThreeWrongCount >= 3) {
-    writeFragmentThreeAnswerCache();
-    revealFragmentThreeAnswer();
-    return;
-  }
 
   if (fragmentThreeAnswerStatus) {
     fragmentThreeAnswerStatus.textContent = "式子不对；先按原子序数换符号，再写层数。";
