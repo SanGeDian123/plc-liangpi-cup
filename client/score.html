@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PLC凉皮杯 Phigros 查分工具。" />
+
+  <title>PLC凉皮杯 - Phigros查分</title>
+
+  <link rel="preconnect" href="https://plc-liangpi-cup.onrender.com" crossorigin />
+  <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="./assets/bg.png" as="image" />
+  <link rel="icon" type="image/png" href="./assets/logo1.png" />
+  <link rel="stylesheet" href="./css/score.css" />
+</head>
+<body>
+  <div class="overlay"></div>
+  <canvas id="particles"></canvas>
+
+  <header class="score-header">
+    <a class="score-brand" href="https://plc-liangpi-cup.xyz/event" aria-label="返回赛事主页">
+      <img src="./assets/logo2.png" alt="" aria-hidden="true" />
+      <strong>PLC凉皮杯</strong>
+    </a>
+
+    <nav class="score-nav" aria-label="页面导航">
+      <a href="https://plc-liangpi-cup.xyz/event">赛事主页</a>
+      <a href="https://plc-liangpi-cup.xyz">海选榜</a>
+    </nav>
+  </header>
+
+  <main class="score-page">
+    <section class="score-workbench" aria-labelledby="scoreTitle">
+      <div class="identity-panel">
+        <p class="eyebrow">Phigros Score Check</p>
+        <h1 id="scoreTitle">查分台</h1>
+
+        <div class="auth-tabs" role="tablist" aria-label="身份方式">
+          <button class="auth-tab is-active" type="button" data-auth-mode="token">Token</button>
+          <button class="auth-tab" type="button" data-auth-mode="platform">平台ID</button>
+          <button class="auth-tab" type="button" data-auth-mode="qr">扫码</button>
+        </div>
+
+        <form class="identity-form" id="identityForm">
+          <div class="auth-pane is-active" data-auth-pane="token">
+            <label for="sessionToken">SessionToken</label>
+            <input
+              id="sessionToken"
+              name="sessionToken"
+              inputmode="latin"
+              autocomplete="off"
+              maxlength="25"
+              placeholder="25位 SessionToken"
+            />
+          </div>
+
+          <div class="auth-pane" data-auth-pane="platform">
+            <div class="form-grid">
+              <div>
+                <label for="platformName">平台</label>
+                <input id="platformName" name="platformName" value="qq" autocomplete="off" />
+              </div>
+              <div>
+                <label for="platformId">平台ID</label>
+                <input id="platformId" name="platformId" autocomplete="off" placeholder="已绑定的账号ID" />
+              </div>
+            </div>
+          </div>
+
+          <div class="auth-pane" data-auth-pane="qr">
+            <button class="secondary-action" id="requestQrButton" type="button">获取扫码二维码</button>
+            <div class="qr-box" id="qrBox" hidden>
+              <img id="qrImage" alt="TapTap扫码登录二维码" />
+              <p id="qrStatus">等待扫码</p>
+            </div>
+          </div>
+
+          <div class="privacy-line">
+            Token 仅用于本次查询转发，不会写入浏览器本地存储。
+          </div>
+        </form>
+      </div>
+
+      <div class="query-panel">
+        <div class="query-row">
+          <button class="primary-action" id="queryB30Button" type="button">查询 B30</button>
+          <button class="secondary-action" id="queryRksButton" type="button">查看 RKS</button>
+        </div>
+
+        <div class="bn-row">
+          <label for="bestCount">Best N</label>
+          <input id="bestCount" type="number" min="1" max="100" value="30" />
+          <button class="secondary-action" id="queryBnButton" type="button">查询</button>
+          <button class="secondary-action" id="imageBnButton" type="button">生成图</button>
+        </div>
+
+        <form class="song-form" id="songForm">
+          <label for="songQuery">单曲成绩</label>
+          <div class="song-row">
+            <input id="songQuery" name="songQuery" autocomplete="off" placeholder="歌曲名 / ID / 别名" />
+            <select id="songDifficulty" name="songDifficulty" aria-label="难度">
+              <option value="">全部</option>
+              <option value="EZ">EZ</option>
+              <option value="HD">HD</option>
+              <option value="IN">IN</option>
+              <option value="AT">AT</option>
+            </select>
+            <button class="primary-action" type="submit">查询</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <section class="score-output" aria-live="polite">
+      <div class="status-line" id="scoreStatus">等待查询</div>
+
+      <div class="summary-grid" id="summaryGrid" hidden></div>
+
+      <figure class="image-result" id="imageResult" hidden>
+        <img id="generatedImage" alt="生成的 Phigros 成绩图" />
+      </figure>
+
+      <div class="records-table" id="recordsTable" hidden></div>
+    </section>
+  </main>
+
+  <script src="./js/api.js?v=20260608"></script>
+  <script src="./js/score.js?v=20260608b"></script>
+  <script src="./js/particles.js"></script>
+</body>
+</html>

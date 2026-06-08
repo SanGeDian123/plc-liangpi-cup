@@ -91,13 +91,14 @@ function renderTop3(players) {
   container.innerHTML = "";
 
   players.forEach((p, index) => {
+    const rank = getScoreRank(players, index);
     const div = document.createElement("div");
 
-    div.className = "top-card " + (index === 0 ? "first" : "");
+    div.className = "top-card " + (rank === 1 ? "first" : "");
     div.onclick = () => openComments(p.id, p.nickname);
 
     div.innerHTML = `
-      <div class="rank">#${index + 1}</div>
+      <div class="rank">#${rank}</div>
       <div class="nickname">${escapeHtml(p.nickname)}</div>
       <div class="score">${p.score}</div>
     `;
@@ -111,6 +112,8 @@ function renderRanking(players) {
   list.innerHTML = "";
 
   players.forEach((p, index) => {
+    const rank = getScoreRank(players, index);
+
     if (index === 0) {
       const groupTop = document.createElement("div");
       groupTop.className = "group-divider";
@@ -128,7 +131,7 @@ function renderRanking(players) {
     div.onclick = () => openComments(p.id, p.nickname);
 
     div.innerHTML = `
-      <div>#${index + 1}</div>
+      <div>#${rank}</div>
       <div>${escapeHtml(p.nickname)}</div>
       <div>${p.score}</div>
     `;
@@ -157,6 +160,13 @@ function renderRanking(players) {
       list.appendChild(groupOverflow);
     }
   });
+}
+
+function getScoreRank(players, index) {
+  const score = players[index]?.score;
+  const tiedIndex = players.findIndex((player) => player.score === score);
+
+  return tiedIndex >= 0 ? tiedIndex + 1 : index + 1;
 }
 
 async function openComments(playerId, nickname) {

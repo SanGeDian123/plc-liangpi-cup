@@ -290,6 +290,23 @@ footer{
   color:#4fdcff;
 }
 
+.score-entry{
+  display:inline-flex;
+  align-items:center;
+  min-height:36px;
+  margin-left:10px;
+  padding:8px 14px;
+  border:1px solid rgba(79,220,255,.28);
+  border-radius:999px;
+  color:white;
+  background:rgba(79,220,255,.1);
+  text-decoration:none;
+}
+
+.score-entry:hover{
+  box-shadow:0 0 18px rgba(79,220,255,.28);
+}
+
 .loading-note{
   margin-top:10px;
   font-size:14px;

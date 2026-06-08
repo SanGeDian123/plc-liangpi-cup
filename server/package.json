@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "PLC凉皮杯排行榜系统",
   "main": "server.js",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "start": "node server.js"
   },

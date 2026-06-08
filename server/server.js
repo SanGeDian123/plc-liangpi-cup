@@ -30,6 +30,11 @@ const PLAYERS_SEED_SNAPSHOT_PATH = path.join(
 const PLAYERS_RUNTIME_SNAPSHOT_PATH =
   process.env.PLAYERS_SNAPSHOT_PATH ||
   path.join(os.tmpdir(), "plc-liangpi-cup-players.json");
+const PHI_BACKEND_URL = (
+  process.env.PHI_BACKEND_URL || "http://127.0.0.1:8080"
+).replace(/\/+$/, "");
+const PHI_BACKEND_TIMEOUT_MS =
+  Number(process.env.PHI_BACKEND_TIMEOUT_MS) || 15000;
 
 const playersCache = {
   players: [],
@@ -291,8 +296,219 @@ function checkAdmin(req, res, next) {
   next();
 }
 
+function normalizePhiBody(body = {}) {
+  const normalized = { ...body };
+
+  if (normalized.source && !normalized.data_source) {
+    normalized.data_source = normalized.source;
+  }
+
+  if (!normalized.data_source) {
+    normalized.data_source = "internal";
+  }
+
+  if (
+    !normalized.qq &&
+    String(normalized.platform || "").toLowerCase() === "qq" &&
+    normalized.platform_id
+  ) {
+    normalized.qq = normalized.platform_id;
+  }
+
+  delete normalized.source;
+
+  Object.keys(normalized).forEach((key) => {
+    if (normalized[key] === "") {
+      delete normalized[key];
+    }
+  });
+
+  return normalized;
+}
+
+function buildPhiUrl(pathname, query = {}) {
+  const url = new URL(pathname, `${PHI_BACKEND_URL}/`);
+
+  Object.entries(query).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === "") {
+      return;
+    }
+
+    if (Array.isArray(value)) {
+      value.forEach((item) => url.searchParams.append(key, item));
+    } else {
+      url.searchParams.set(key, value);
+    }
+  });
+
+  return url;
+}
+
+async function fetchPhi(pathname, options = {}) {
+  if (typeof fetch !== "function") {
+    throw new Error("当前 Node.js 运行时不支持 fetch");
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), PHI_BACKEND_TIMEOUT_MS);
+
+  try {
+    return await fetch(buildPhiUrl(pathname, options.query), {
+      method: options.method || "GET",
+      headers: options.headers,
+      body: options.body,
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+function sendPhiError(res, error) {
+  const timedOut = error.name === "AbortError";
+
+  res.status(timedOut ? 504 : 502).json({
+    message: timedOut
+      ? "Phi-Backend 请求超时"
+      : "Phi-Backend 暂时不可用",
+    detail: error.message
+  });
+}
+
+async function proxyPhiJson(req, res, pathname, options = {}) {
+  try {
+    const hasBody = options.method !== "GET";
+    const response = await fetchPhi(pathname, {
+      method: options.method || "POST",
+      query: options.query || req.query,
+      headers: hasBody
+        ? {
+            "Content-Type": "application/json"
+          }
+        : undefined,
+      body: hasBody ? JSON.stringify(normalizePhiBody(req.body)) : undefined
+    });
+    const text = await response.text();
+    const contentType = response.headers.get("content-type") || "application/json";
+
+    res.status(response.status);
+    res.set("Cache-Control", "no-store");
+    res.set(
+      "Content-Type",
+      contentType.includes("json") ? "application/json" : contentType
+    );
+    res.send(text);
+  } catch (error) {
+    sendPhiError(res, error);
+  }
+}
+
+async function proxyPhiBinary(req, res, pathname, options = {}) {
+  try {
+    const response = await fetchPhi(pathname, {
+      method: options.method || "POST",
+      query: options.query || req.query,
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(normalizePhiBody(req.body))
+    });
+    const buffer = Buffer.from(await response.arrayBuffer());
+    const contentType = response.headers.get("content-type") || "application/octet-stream";
+
+    res.status(response.status);
+    res.set("Cache-Control", "no-store");
+    res.set("Content-Type", contentType);
+    res.send(buffer);
+  } catch (error) {
+    sendPhiError(res, error);
+  }
+}
+
 app.get("/", (req, res) => {
   res.send("PLC凉皮杯后端运行中");
+});
+
+app.get("/phigros/proxy/status", (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json({
+    status: "ok",
+    proxy: "phigros",
+    backendUrl: PHI_BACKEND_URL
+  });
+});
+
+app.get("/phigros/status", async (req, res) => {
+  await proxyPhiJson(req, res, "/status", {
+    method: "GET"
+  });
+});
+
+app.get("/phigros/auth/qrcode", async (req, res) => {
+  await proxyPhiJson(req, res, "/auth/qrcode", {
+    method: "GET"
+  });
+});
+
+app.get("/phigros/auth/qrcode/:qrId/status", async (req, res) => {
+  await proxyPhiJson(
+    req,
+    res,
+    `/auth/qrcode/${encodeURIComponent(req.params.qrId)}/status`,
+    {
+      method: "GET"
+    }
+  );
+});
+
+app.post("/phigros/bind", async (req, res) => {
+  await proxyPhiJson(req, res, "/bind");
+});
+
+app.post("/phigros/rks", async (req, res) => {
+  await proxyPhiJson(req, res, "/rks");
+});
+
+app.post("/phigros/b30", async (req, res) => {
+  await proxyPhiJson(req, res, "/b30");
+});
+
+app.post("/phigros/bn/:n", async (req, res) => {
+  const n = Number(req.params.n);
+
+  if (!Number.isInteger(n) || n <= 0 || n > 100) {
+    return res.status(400).json({
+      message: "Best N 参数必须是 1 到 100 之间的整数"
+    });
+  }
+
+  await proxyPhiJson(req, res, `/bn/${n}`);
+});
+
+app.get("/phigros/song/search", async (req, res) => {
+  await proxyPhiJson(req, res, "/song/search", {
+    method: "GET"
+  });
+});
+
+app.post("/phigros/song/record", async (req, res) => {
+  await proxyPhiJson(req, res, "/song/search/record");
+});
+
+app.post("/phigros/image/bn/:n", async (req, res) => {
+  const n = Number(req.params.n);
+
+  if (!Number.isInteger(n) || n <= 0 || n > 100) {
+    return res.status(400).json({
+      message: "Best N 参数必须是 1 到 100 之间的整数"
+    });
+  }
+
+  await proxyPhiBinary(req, res, `/image/bn/${n}`);
+});
+
+app.post("/phigros/image/song", async (req, res) => {
+  await proxyPhiBinary(req, res, "/image/song");
 });
 
 app.post("/admin/login", (req, res) => {
