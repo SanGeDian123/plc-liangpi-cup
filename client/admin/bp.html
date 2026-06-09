@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PLC BP 一览图导出工具</title>
+  <link rel="icon" type="image/png" href="../assets/logo1.png">
+  <link rel="stylesheet" href="../css/admin-bp.css">
+</head>
+<body>
+  <main id="loginPanel" class="login-shell">
+    <section class="login-card">
+      <h1>管理员登录</h1>
+      <p>请输入管理员密码后进入 BP 图导出工具。</p>
+      <form id="loginForm">
+        <input id="adminPassword" type="password" placeholder="请输入管理员密码" autocomplete="current-password">
+        <button type="submit">进入工具</button>
+      </form>
+      <p id="loginMsg" class="login-msg" role="status"></p>
+    </section>
+  </main>
+
+  <main id="bpPanel" class="app" style="display:none;">
+    <section class="panel">
+      <div class="panel-top">
+        <div>
+          <h1>PLC 凉皮杯 BP 一览图导出工具</h1>
+          <p class="hint">输入选手名、曲名，上传曲绘，选择难度/状态，即可导出 1600x900 PNG。</p>
+        </div>
+        <button id="logoutBtn" class="ghost-btn" type="button">退出</button>
+      </div>
+
+      <div class="grid">
+        <label>标题
+          <select id="modeTitle">
+            <option value="选择曲目一览">选择曲目一览</option>
+            <option value="禁用曲目一览">禁用曲目一览</option>
+          </select>
+        </label>
+        <label>文件名
+          <input id="fileName" value="PLC_BP_Overview">
+        </label>
+      </div>
+
+      <h2>左侧卡片</h2>
+      <div class="grid">
+        <label>选手名<input id="leftPlayer" value="Player 1"></label>
+        <label>曲目名<input id="leftSong" value="Song 1"></label>
+        <label>难度
+          <select id="leftDiff">
+            <option>EZ</option>
+            <option>HD</option>
+            <option selected>IN</option>
+            <option>AT</option>
+          </select>
+        </label>
+        <label>状态
+          <select id="leftState">
+            <option value="normal" selected>选择</option>
+            <option value="ban">禁用</option>
+          </select>
+        </label>
+        <label class="wide">曲绘 <input id="leftArt" type="file" accept="image/*"></label>
+      </div>
+
+      <h2>右侧卡片</h2>
+      <div class="grid">
+        <label>选手名<input id="rightPlayer" value="Player 2"></label>
+        <label>曲目名<input id="rightSong" value="Song 2"></label>
+        <label>难度
+          <select id="rightDiff">
+            <option>EZ</option>
+            <option>HD</option>
+            <option selected>IN</option>
+            <option>AT</option>
+          </select>
+        </label>
+        <label>状态
+          <select id="rightState">
+            <option value="normal" selected>选择</option>
+            <option value="ban">禁用</option>
+          </select>
+        </label>
+        <label class="wide">曲绘 <input id="rightArt" type="file" accept="image/*"></label>
+      </div>
+
+      <div class="actions">
+        <button id="renderBtn" type="button">刷新预览</button>
+        <button id="exportBtn" type="button">导出 PNG</button>
+      </div>
+    </section>
+
+    <section class="preview-wrap">
+      <canvas id="canvas" width="1600" height="900"></canvas>
+    </section>
+  </main>
+
+  <script src="../js/api.js"></script>
+  <script src="../js/admin-bp.js"></script>
+</body>
+</html>
