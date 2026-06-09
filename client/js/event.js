@@ -2055,13 +2055,26 @@ function renderRankingPreview(players) {
     return;
   }
 
-  rankingPreviewList.innerHTML = players.slice(0, 3).map((player, index) => `
-    <article class="ranking-preview-item">
-      <span class="ranking-preview-rank">#${index + 1}</span>
+  const previewPlayers = players.slice(0, 3);
+
+  rankingPreviewList.innerHTML = previewPlayers.map((player, index) => {
+    const rank = getPreviewScoreRank(players, index);
+
+    return `
+    <article class="ranking-preview-item" data-rank="${rank}">
+      <span class="ranking-preview-rank">#${rank}</span>
       <strong class="ranking-preview-name">${escapeHtml(player.nickname)}</strong>
       <span class="ranking-preview-score">${escapeHtml(player.score)}</span>
     </article>
-  `).join("");
+  `;
+  }).join("");
+}
+
+function getPreviewScoreRank(players, index) {
+  const score = players[index]?.score;
+  const tiedIndex = players.findIndex((player) => player.score === score);
+
+  return tiedIndex >= 0 ? tiedIndex + 1 : index + 1;
 }
 
 async function loadRankingPreview() {

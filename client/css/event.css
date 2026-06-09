@@ -2441,11 +2441,11 @@ button.multisource-card:focus-visible{
   background:var(--yellow);
 }
 
-.ranking-preview-item:nth-child(2) .ranking-preview-rank{
+.ranking-preview-item[data-rank="2"] .ranking-preview-rank{
   background:var(--cyan);
 }
 
-.ranking-preview-item:nth-child(3) .ranking-preview-rank{
+.ranking-preview-item[data-rank="3"] .ranking-preview-rank{
   background:var(--pink);
 }
 
