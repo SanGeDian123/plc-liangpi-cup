@@ -7,7 +7,7 @@ const ctx = canvas.getContext("2d");
 const W = canvas.width;
 const H = canvas.height;
 const uploaded = { left: null, right: null };
-const diffColor = { EZ: "#00c864", HD: "#1f6bff", IN: "#d72b2b", AT: "#555555" };
+const diffColor = { EZ: "#00c864", HD: "#46B1E1", IN: "#d72b2b", AT: "#555555" };
 const bg = new Image();
 const canvasFont = '"Phi", "Microsoft YaHei", Arial, sans-serif';
 
