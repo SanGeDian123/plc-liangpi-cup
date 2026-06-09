@@ -84,6 +84,11 @@ function fitText(text, maxWidth, size, font = canvasFont) {
 }
 
 function drawCover(img, x, y, w, h) {
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(x, y, w, h);
+  ctx.clip();
+
   if (!img) {
     ctx.fillStyle = "#111";
     ctx.fillRect(x, y, w, h);
@@ -94,6 +99,7 @@ function drawCover(img, x, y, w, h) {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText("导入曲绘", x + w / 2, y + h / 2);
+    ctx.restore();
     return;
   }
 
@@ -101,6 +107,23 @@ function drawCover(img, x, y, w, h) {
   const nw = img.width * ratio;
   const nh = img.height * ratio;
   ctx.drawImage(img, x + (w - nw) / 2, y + (h - nh) / 2, nw, nh);
+  ctx.restore();
+}
+
+function fillCenteredText(text, x, y) {
+  const metrics = ctx.measureText(text);
+  const offsetY =
+    (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
+
+  ctx.fillText(text, x, y + offsetY);
+}
+
+function strokeCenteredText(text, x, y) {
+  const metrics = ctx.measureText(text);
+  const offsetY =
+    (metrics.actualBoundingBoxAscent - metrics.actualBoundingBoxDescent) / 2;
+
+  ctx.strokeText(text, x, y + offsetY);
 }
 
 function drawCard(side, data) {
@@ -137,9 +160,9 @@ function drawCard(side, data) {
   const playerSize = fitText(data.player, headerW - 22, 44);
   ctx.font = `${playerSize}px ${canvasFont}`;
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.strokeText(data.player, hx + headerW / 2, hy + headerH / 2 + 1);
-  ctx.fillText(data.player, hx + headerW / 2, hy + headerH / 2 + 1);
+  ctx.textBaseline = "alphabetic";
+  strokeCenteredText(data.player, hx + headerW / 2, hy + headerH / 2);
+  fillCenteredText(data.player, hx + headerW / 2, hy + headerH / 2);
   ctx.restore();
 
   drawCover(data.img, x, y, artW, artH);
