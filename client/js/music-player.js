@@ -79,9 +79,32 @@
 
   const lyricCache = new Map();
   const volume = 0.1;
+  const mobileAudioDir = "./assets/music-mobile/";
 
   function getAssetSrc(fileName) {
     return `./assets/${encodeURIComponent(fileName)}`;
+  }
+
+  function shouldUseMobileAudio() {
+    const connection =
+      navigator.connection ||
+      navigator.mozConnection ||
+      navigator.webkitConnection;
+    const effectiveType = connection?.effectiveType || "";
+    const isMobileViewport = window.matchMedia("(max-width: 768px)").matches;
+    const isCompactViewport = window.matchMedia("(max-width: 1024px)").matches;
+    const isSmallTouchDevice =
+      isCompactViewport &&
+      window.matchMedia("(pointer: coarse)").matches;
+    const isSlowNetwork = ["slow-2g", "2g", "3g"].includes(effectiveType);
+    const prefersLightAudio = isCompactViewport && (connection?.saveData || isSlowNetwork);
+
+    return Boolean(isMobileViewport || isSmallTouchDevice || prefersLightAudio);
+  }
+
+  function getAudioSrc(fileName) {
+    const baseDir = shouldUseMobileAudio() ? mobileAudioDir : "./assets/";
+    return `${baseDir}${encodeURIComponent(fileName)}`;
   }
 
   function pickRandomIndex(exceptIndex = -1) {
@@ -235,7 +258,9 @@
       currentLyrics: [],
       lyricIndex: -1,
       started: false,
-      readyPromise: null
+      readyPromise: null,
+      currentSrc: "",
+      usingMobileAudio: false
     };
 
     function setTrackLabel(track, status = "") {
@@ -281,7 +306,8 @@
 
     async function prepareTrack() {
       const track = tracks[state.currentIndex];
-      const src = getAssetSrc(track.fileName);
+      state.usingMobileAudio = shouldUseMobileAudio();
+      const src = getAudioSrc(track.fileName);
 
       if (audio.dataset.trackSrc !== src) {
         audio.dataset.trackSrc = src;
@@ -289,6 +315,9 @@
         audio.load();
       }
 
+      state.currentSrc = src;
+      nameEl.dataset.audioSrc = src;
+      nameEl.dataset.mobileAudio = String(state.usingMobileAudio);
       state.currentLyrics = await loadLyrics(track);
       state.lyricIndex = -1;
       setTrackLabel(track);
@@ -359,6 +388,7 @@
     setLyric("");
     window.addEventListener("pointerdown", startMusic);
     window.addEventListener("keydown", startMusic);
+    window.PLCMusicPlayerState = state;
 
     return state;
   }
