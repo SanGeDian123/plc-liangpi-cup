@@ -281,7 +281,14 @@
 
     async function prepareTrack() {
       const track = tracks[state.currentIndex];
-      audio.src = getAssetSrc(track.fileName);
+      const src = getAssetSrc(track.fileName);
+
+      if (audio.dataset.trackSrc !== src) {
+        audio.dataset.trackSrc = src;
+        audio.src = src;
+        audio.load();
+      }
+
       state.currentLyrics = await loadLyrics(track);
       state.lyricIndex = -1;
       setTrackLabel(track);
@@ -325,13 +332,19 @@
       state.currentIndex = pickRandomIndex(state.currentIndex);
       state.started = false;
       state.readyPromise = null;
+      audio.removeAttribute("src");
+      audio.removeAttribute("data-track-src");
+      audio.load();
       startMusic();
     }
 
-    audio.preload = "auto";
+    audio.preload = "metadata";
     audio.volume = volume;
     audio.addEventListener("ended", playRandomTrack);
     audio.addEventListener("timeupdate", syncLyric);
+    nameEl.addEventListener("pointerdown", (event) => {
+      event.stopPropagation();
+    });
     nameEl.addEventListener("click", playRandomTrack);
 
     if (muteButton) {
@@ -346,8 +359,6 @@
     setLyric("");
     window.addEventListener("pointerdown", startMusic);
     window.addEventListener("keydown", startMusic);
-    state.readyPromise = prepareTrack();
-    startMusic();
 
     return state;
   }
