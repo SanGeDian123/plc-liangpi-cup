@@ -612,6 +612,8 @@ imageBnButton.addEventListener("click", generateBnImage);
 requestQrButton.addEventListener("click", requestQrCode);
 songForm.addEventListener("submit", querySong);
 
+window.PLCMusicPlayer?.init();
+
 getScoreApiBase().then((apiBase) => {
   if (apiBase) {
     setStatus(`查分代理已连接：${apiBase}`, "success");

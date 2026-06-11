@@ -122,10 +122,18 @@
 
       <div class="records-table" id="recordsTable" hidden></div>
     </section>
+
+    <footer class="music-status" aria-live="polite">
+      <span>当前播放</span>
+      <strong id="currentMusicName">准备播放</strong>
+      <button id="musicMuteButton" type="button">静音</button>
+      <div class="music-lyric" id="currentLyricLine" hidden></div>
+    </footer>
   </main>
 
   <script src="./js/api.js?v=20260608"></script>
-  <script src="./js/score.js?v=20260608b"></script>
+  <script src="./js/music-player.js?v=20260612a"></script>
+  <script src="./js/score.js?v=20260612a"></script>
   <script src="./js/particles.js"></script>
 </body>
 </html>

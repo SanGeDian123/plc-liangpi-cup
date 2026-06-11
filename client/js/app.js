@@ -270,4 +270,5 @@ function escapeHtml(text) {
     .replaceAll("'", "&#039;");
 }
 
+window.PLCMusicPlayer?.init();
 loadPlayers();

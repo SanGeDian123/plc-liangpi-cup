@@ -424,6 +424,53 @@ button:disabled{
   margin:0 auto;
 }
 
+.music-status{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:18px;
+  padding:12px 16px 0;
+  color:rgba(255,255,255,.66);
+  font-size:13px;
+}
+
+.music-status strong{
+  color:#ffe07d;
+  cursor:pointer;
+  font-weight:normal;
+  overflow-wrap:anywhere;
+  transition:.2s ease;
+}
+
+.music-status strong:hover{
+  text-shadow:0 0 12px rgba(255,224,125,.5);
+}
+
+.music-status button{
+  min-height:32px;
+  padding:6px 12px;
+  border:1px solid rgba(255,224,125,.28);
+  border-radius:999px;
+  color:white;
+  background:rgba(255,224,125,.1);
+  cursor:pointer;
+}
+
+.music-status button:hover{
+  box-shadow:0 0 14px rgba(255,224,125,.25);
+}
+
+.music-lyric{
+  flex-basis:100%;
+  min-height:24px;
+  color:rgba(255,255,255,.9);
+  line-height:1.6;
+  text-align:center;
+  text-shadow:0 0 14px rgba(255,224,125,.28);
+}
+
 @media(max-width:860px){
   .score-header{
     align-items:flex-start;
