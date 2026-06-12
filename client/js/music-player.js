@@ -79,32 +79,14 @@
 
   const lyricCache = new Map();
   const volume = 0.1;
-  const mobileAudioDir = "./assets/music-mobile/";
+  const optimizedAudioDir = "./assets/music-mobile/";
 
   function getAssetSrc(fileName) {
     return `./assets/${encodeURIComponent(fileName)}`;
   }
 
-  function shouldUseMobileAudio() {
-    const connection =
-      navigator.connection ||
-      navigator.mozConnection ||
-      navigator.webkitConnection;
-    const effectiveType = connection?.effectiveType || "";
-    const isMobileViewport = window.matchMedia("(max-width: 768px)").matches;
-    const isCompactViewport = window.matchMedia("(max-width: 1024px)").matches;
-    const isSmallTouchDevice =
-      isCompactViewport &&
-      window.matchMedia("(pointer: coarse)").matches;
-    const isSlowNetwork = ["slow-2g", "2g", "3g"].includes(effectiveType);
-    const prefersLightAudio = isCompactViewport && (connection?.saveData || isSlowNetwork);
-
-    return Boolean(isMobileViewport || isSmallTouchDevice || prefersLightAudio);
-  }
-
   function getAudioSrc(fileName) {
-    const baseDir = shouldUseMobileAudio() ? mobileAudioDir : "./assets/";
-    return `${baseDir}${encodeURIComponent(fileName)}`;
+    return `${optimizedAudioDir}${encodeURIComponent(fileName)}`;
   }
 
   function pickRandomIndex(exceptIndex = -1) {
@@ -260,7 +242,7 @@
       started: false,
       readyPromise: null,
       currentSrc: "",
-      usingMobileAudio: false
+      usingOptimizedAudio: false
     };
 
     function setTrackLabel(track, status = "") {
@@ -306,7 +288,6 @@
 
     async function prepareTrack() {
       const track = tracks[state.currentIndex];
-      state.usingMobileAudio = shouldUseMobileAudio();
       const src = getAudioSrc(track.fileName);
 
       if (audio.dataset.trackSrc !== src) {
@@ -316,8 +297,9 @@
       }
 
       state.currentSrc = src;
+      state.usingOptimizedAudio = src.startsWith(optimizedAudioDir);
       nameEl.dataset.audioSrc = src;
-      nameEl.dataset.mobileAudio = String(state.usingMobileAudio);
+      nameEl.dataset.optimizedAudio = String(state.usingOptimizedAudio);
       state.currentLyrics = await loadLyrics(track);
       state.lyricIndex = -1;
       setTrackLabel(track);
@@ -367,9 +349,34 @@
       startMusic();
     }
 
+    function fallbackToFullAudio() {
+      const track = tracks[state.currentIndex];
+      const fallbackSrc = getAssetSrc(track.fileName);
+
+      if (audio.dataset.trackSrc === fallbackSrc) {
+        return;
+      }
+
+      audio.dataset.trackSrc = fallbackSrc;
+      audio.src = fallbackSrc;
+      audio.load();
+      state.currentSrc = fallbackSrc;
+      state.usingOptimizedAudio = false;
+      nameEl.dataset.audioSrc = fallbackSrc;
+      nameEl.dataset.optimizedAudio = "false";
+
+      if (state.started) {
+        audio.play().catch(() => {
+          state.started = false;
+          setTrackLabel(track, "点击页面后播放");
+        });
+      }
+    }
+
     audio.preload = "metadata";
     audio.volume = volume;
     audio.addEventListener("ended", playRandomTrack);
+    audio.addEventListener("error", fallbackToFullAudio);
     audio.addEventListener("timeupdate", syncLyric);
     nameEl.addEventListener("pointerdown", (event) => {
       event.stopPropagation();
