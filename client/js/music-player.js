@@ -320,11 +320,6 @@
       await audio.play();
     }
 
-    function removeUnlockListeners() {
-      window.removeEventListener("pointerdown", startMusic);
-      window.removeEventListener("keydown", startMusic);
-    }
-
     function startMusic() {
       if (state.started) {
         return;
@@ -332,10 +327,9 @@
 
       state.started = true;
       playCurrentTrack()
-        .then(removeUnlockListeners)
         .catch(() => {
           state.started = false;
-          setTrackLabel(tracks[state.currentIndex], "点击页面后播放");
+          setTrackLabel(tracks[state.currentIndex], "自动播放受限");
         });
     }
 
@@ -368,19 +362,16 @@
       if (state.started) {
         audio.play().catch(() => {
           state.started = false;
-          setTrackLabel(track, "点击页面后播放");
+          setTrackLabel(track, "自动播放受限");
         });
       }
     }
 
-    audio.preload = "metadata";
+    audio.preload = "auto";
     audio.volume = volume;
     audio.addEventListener("ended", playRandomTrack);
     audio.addEventListener("error", fallbackToFullAudio);
     audio.addEventListener("timeupdate", syncLyric);
-    nameEl.addEventListener("pointerdown", (event) => {
-      event.stopPropagation();
-    });
     nameEl.addEventListener("click", playRandomTrack);
 
     if (muteButton) {
@@ -393,9 +384,9 @@
 
     setTrackLabel(tracks[state.currentIndex], "准备播放");
     setLyric("");
-    window.addEventListener("pointerdown", startMusic);
-    window.addEventListener("keydown", startMusic);
     window.PLCMusicPlayerState = state;
+    state.readyPromise = prepareTrack();
+    startMusic();
 
     return state;
   }
