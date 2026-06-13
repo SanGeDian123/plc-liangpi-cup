@@ -161,7 +161,8 @@ const fragmentFourAnswerStorageKey = "plc.event.fragment04.v1";
 const fragmentFourAnswerCacheVersion = "2026-06-13-fragment-04-dif-v1";
 const fragmentFourAnswer = "17";
 const fragmentFourAnswerLabel = "Dif：17";
-const fragmentFourResultLabel = "Dif：17.?";
+const fragmentFourResultLabel = "Dif：17.0";
+const legacyFragmentFourResultLabel = "Dif：17.?";
 const finalDateTargetTime = Date.UTC(2026, 5, 20, 12, 0, 0);
 let signalGateInput = [];
 let signalGateLocked = false;
@@ -934,7 +935,11 @@ function readFragmentFourAnswerCache() {
     const isValid =
       payload?.version === fragmentFourAnswerCacheVersion &&
       payload?.solved === true &&
-      (payload?.result === fragmentFourResultLabel || payload?.result === fragmentFourAnswerLabel);
+      (
+        payload?.result === fragmentFourResultLabel ||
+        payload?.result === legacyFragmentFourResultLabel ||
+        payload?.result === fragmentFourAnswerLabel
+      );
 
     return isValid ? payload : null;
   } catch (error) {
