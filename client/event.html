@@ -15,6 +15,7 @@
   <link rel="preload" href="./assets/zishiquhui-shard-01.png" as="image" />
   <link rel="preload" href="./assets/zishiquhui-shard-02.png" as="image" />
   <link rel="preload" href="./assets/zishiquhui-shard-03.png" as="image" />
+  <link rel="preload" href="./assets/zishiquhui-shard-04.png" as="image" />
   <link rel="preload" href="./assets/phase-calibration-plate.png" as="image" />
   <link rel="preload" href="./assets/R.png" as="image" />
   <link rel="icon" type="image/png" href="./assets/logo1.png" />
@@ -328,7 +329,16 @@
               <img src="./assets/zishiquhui-shard-03.png" alt="左中原始曲绘残片" draggable="false" />
               <span>03 // SEALED</span>
             </button>
-            <span class="artifact-shard shard-four" aria-hidden="true"><span>04 // SEALED</span></span>
+            <button
+              class="artifact-shard shard-four"
+              id="openFragmentFourRift"
+              type="button"
+              aria-label="读取第四残片"
+              disabled
+            >
+              <img src="./assets/zishiquhui-shard-04.png" alt="中央原始曲绘残片" draggable="false" />
+              <span>04 // NOTE TRACE</span>
+            </button>
             <span class="artifact-shard shard-five" aria-hidden="true"><span>05 // SEALED</span></span>
             <span class="artifact-shard shard-six" aria-hidden="true"><span>06 // SEALED</span></span>
           </div>
@@ -731,6 +741,78 @@
     </section>
   </div>
 
+  <div class="signal-rift fragment-rift fragment-four-rift" id="fragmentFourRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-fragment-four-rift></div>
+    <section
+      class="signal-rift-panel fragment-rift-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="fragmentFourRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-fragment-four-rift aria-label="关闭第四残片窗口">×</button>
+      <p class="signal-rift-code">FRAGMENT 04 // NOTE TRACE</p>
+      <h2 id="fragmentFourRiftTitle">把余数写回谱面。</h2>
+      <p class="fragment-riddle">
+        总难度已经在前一扇门里成立。前三条线留下 16.9 / 17.8 / 17.1；最后一格只认字段名。
+      </p>
+      <div class="dif-ledger" aria-label="难度余数">
+        <span>
+          <b>16.9</b>
+          <small>01</small>
+        </span>
+        <span>
+          <b>17.8</b>
+          <small>02</small>
+        </span>
+        <span>
+          <b>17.1</b>
+          <small>03</small>
+        </span>
+        <span>
+          <b>??</b>
+          <small>04</small>
+        </span>
+      </div>
+      <form class="fragment-answer" id="fragmentFourAnswerForm">
+        <label for="fragmentFourAnswerInput">谱面字段</label>
+        <div>
+          <input
+            id="fragmentFourAnswerInput"
+            name="fragmentFourAnswer"
+            type="text"
+            inputmode="text"
+            autocomplete="off"
+            placeholder="??：--"
+          />
+          <button id="fragmentFourAnswerSubmit" type="button">写入</button>
+        </div>
+      </form>
+      <p class="fragment-answer-status" id="fragmentFourAnswerStatus" aria-live="polite">
+        等待第四格。
+      </p>
+      <p class="fragment-result" id="fragmentFourResult" aria-hidden="true"></p>
+    </section>
+  </div>
+
+  <div class="signal-rift phase-plate-rift final-date-rift" id="finalDateRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-final-date-rift></div>
+    <section
+      class="signal-rift-panel final-date-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="finalDateRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-final-date-rift aria-label="关闭 06-20 窗口">×</button>
+      <div class="final-date-obscured-bg" aria-hidden="true"></div>
+      <div class="final-date-countdown">
+        <p>COUNTDOWN</p>
+        <h2 id="finalDateRiftTitle">
+          <time id="finalDateCountdown" datetime="2026-06-20T20:00:00+08:00">--:--:--:--</time>
+        </h2>
+      </div>
+    </section>
+  </div>
+
   <div class="signal-rift phase-plate-rift palace-rift" id="palaceRift" aria-hidden="true">
     <div class="signal-rift-backdrop" data-close-palace-rift></div>
     <section
@@ -767,23 +849,80 @@
     </section>
   </div>
 
-  <div class="signal-rift phase-plate-rift date-rift" id="dateRift" aria-hidden="true">
+  <div class="signal-rift phase-plate-rift date-rift note-rift" id="dateRift" aria-hidden="true">
     <div class="signal-rift-backdrop" data-close-date-rift></div>
     <section
-      class="signal-rift-panel phase-plate-panel date-rift-panel geo-date-panel"
+      class="signal-rift-panel phase-plate-panel date-rift-panel note-rift-panel"
       role="dialog"
       aria-modal="true"
       aria-labelledby="dateRiftTitle"
     >
-      <button class="signal-rift-close" type="button" data-close-date-rift aria-label="关闭地理坐标">×</button>
-      <p class="signal-rift-code">SOLAR FIX // 06-??</p>
-      <h2 id="dateRiftTitle">把太阳的位置换成北京时间。</h2>
+      <button class="signal-rift-close" type="button" data-close-date-rift aria-label="关闭音符残像">×</button>
+      <p class="signal-rift-code">FRAGMENT 04 // NOTE TRACE</p>
+      <h2 id="dateRiftTitle">等三种 note 自己归位。</h2>
       <p class="date-riddle">
-
+        画面稳定后，只看总难度。
       </p>
-      <img class="geo-relay-map" src="./assets/geo-relay-map.png" alt="太阳直射点与时区换算线索图" draggable="false" />
-      <p class="phase-plate-note">
-        图面只认地球自己的节拍：公转给日期，自转给时刻。
+      <div class="note-rebuild-field" aria-label="三种 note 复原图">
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:10; --y:7; --w:8; --h:1.1; --rot:0deg; --from-x:-34%; --from-y:-24%; --from-rot:-12deg; --delay:.04s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:38; --y:11; --w:7.5; --h:1.05; --rot:0deg; --from-x:22%; --from-y:-31%; --from-rot:9deg; --delay:.11s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:27; --y:15; --w:7.4; --h:1.05; --rot:0deg; --from-x:-8%; --from-y:-35%; --from-rot:-7deg; --delay:.18s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:17; --y:19; --w:7.6; --h:1.05; --rot:0deg; --from-x:-28%; --from-y:18%; --from-rot:10deg; --delay:.25s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:7.4; --y:23; --w:7.8; --h:1.05; --rot:0deg; --from-x:-32%; --from-y:34%; --from-rot:-8deg; --delay:.32s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:27; --y:27; --w:7.4; --h:1.05; --rot:0deg; --from-x:34%; --from-y:5%; --from-rot:7deg; --delay:.39s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:38; --y:31.5; --w:7.5; --h:1.05; --rot:0deg; --from-x:26%; --from-y:28%; --from-rot:-9deg; --delay:.46s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:7.8; --y:34.5; --w:7.8; --h:1.05; --rot:0deg; --from-x:-38%; --from-y:10%; --from-rot:12deg; --delay:.53s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:18; --y:39; --w:7.4; --h:1.05; --rot:0deg; --from-x:-20%; --from-y:36%; --from-rot:-11deg; --delay:.6s;" />
+
+        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:58; --y:8; --w:9.4; --h:7.6; --rot:0deg; --from-x:18%; --from-y:-36%; --from-rot:-4deg; --delay:.18s;" />
+        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:80; --y:8; --w:26.6; --h:7.6; --rot:0deg; --from-x:36%; --from-y:-28%; --from-rot:3deg; --delay:.25s;" />
+        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:52; --y:22; --w:6.8; --h:7.7; --rot:0deg; --from-x:-16%; --from-y:-18%; --from-rot:6deg; --delay:.34s;" />
+        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:63; --y:22; --w:9.1; --h:7.7; --rot:0deg; --from-x:12%; --from-y:-8%; --from-rot:-5deg; --delay:.41s;" />
+        <img class="note-token note-tap note-vertical" src="./assets/tap.png" alt="" draggable="false" style="--x:72; --y:22; --w:7.2; --h:1.05; --rot:90deg; --from-x:6%; --from-y:-22%; --from-rot:72deg; --delay:.48s;" />
+        <img class="note-token note-tap note-vertical" src="./assets/tap.png" alt="" draggable="false" style="--x:76.4; --y:22; --w:7.2; --h:1.05; --rot:90deg; --from-x:2%; --from-y:-25%; --from-rot:104deg; --delay:.55s;" />
+        <img class="note-token note-tap note-vertical" src="./assets/tap.png" alt="" draggable="false" style="--x:80.8; --y:22; --w:7.2; --h:1.05; --rot:90deg; --from-x:-3%; --from-y:-19%; --from-rot:78deg; --delay:.62s;" />
+        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:91; --y:22; --w:9.4; --h:7.7; --rot:0deg; --from-x:34%; --from-y:8%; --from-rot:5deg; --delay:.69s;" />
+        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:55; --y:36; --w:9.4; --h:7.7; --rot:0deg; --from-x:-14%; --from-y:24%; --from-rot:-4deg; --delay:.76s;" />
+        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:66.5; --y:36; --w:9.7; --h:7.7; --rot:0deg; --from-x:2%; --from-y:18%; --from-rot:4deg; --delay:.83s;" />
+        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:85; --y:36; --w:18.2; --h:7.7; --rot:0deg; --from-x:28%; --from-y:25%; --from-rot:-3deg; --delay:.9s;" />
+
+        <img class="note-token note-drag" src="./assets/drag.png" alt="" draggable="false" style="--x:23; --y:59; --w:7.4; --h:1.05; --rot:0deg; --from-x:-32%; --from-y:30%; --from-rot:-10deg; --delay:.74s;" />
+        <img class="note-token note-drag" src="./assets/drag.png" alt="" draggable="false" style="--x:29; --y:62.5; --w:7.6; --h:1.05; --rot:0deg; --from-x:-24%; --from-y:36%; --from-rot:8deg; --delay:.81s;" />
+        <img class="note-token note-drag" src="./assets/drag.png" alt="" draggable="false" style="--x:33; --y:66.2; --w:7.4; --h:1.05; --rot:0deg; --from-x:-18%; --from-y:40%; --from-rot:-8deg; --delay:.88s;" />
+        <img class="note-token note-drag" src="./assets/drag.png" alt="" draggable="false" style="--x:37; --y:70.3; --w:7.3; --h:1.05; --rot:0deg; --from-x:-10%; --from-y:36%; --from-rot:11deg; --delay:.95s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:37; --y:77; --w:7.4; --h:1.05; --rot:0deg; --from-x:-8%; --from-y:42%; --from-rot:-7deg; --delay:1.02s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:36.5; --y:83; --w:7.4; --h:1.05; --rot:0deg; --from-x:-14%; --from-y:46%; --from-rot:6deg; --delay:1.09s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:36.2; --y:88; --w:7.4; --h:1.05; --rot:0deg; --from-x:-12%; --from-y:42%; --from-rot:-5deg; --delay:1.16s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:36.2; --y:93; --w:7.4; --h:1.05; --rot:0deg; --from-x:-16%; --from-y:40%; --from-rot:8deg; --delay:1.23s;" />
+
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:71.5; --y:61.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:30%; --from-y:20%; --from-rot:-8deg; --delay:1s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:80; --y:65.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:28%; --from-y:26%; --from-rot:8deg; --delay:1.07s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:58; --y:68.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:8%; --from-y:26%; --from-rot:-9deg; --delay:1.14s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:91; --y:72; --w:7.4; --h:1.05; --rot:0deg; --from-x:36%; --from-y:28%; --from-rot:7deg; --delay:1.21s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:79.8; --y:77; --w:7.4; --h:1.05; --rot:0deg; --from-x:22%; --from-y:32%; --from-rot:-8deg; --delay:1.28s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:64; --y:82; --w:7.4; --h:1.05; --rot:0deg; --from-x:10%; --from-y:38%; --from-rot:10deg; --delay:1.35s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:92.5; --y:86; --w:7.4; --h:1.05; --rot:0deg; --from-x:26%; --from-y:36%; --from-rot:-6deg; --delay:1.42s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:69; --y:89.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:10%; --from-y:40%; --from-rot:7deg; --delay:1.49s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:85; --y:92.8; --w:7.4; --h:1.05; --rot:0deg; --from-x:22%; --from-y:42%; --from-rot:-8deg; --delay:1.56s;" />
+        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:58; --y:97.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:6%; --from-y:34%; --from-rot:8deg; --delay:1.63s;" />
+      </div>
+
+      <form class="fragment-answer note-answer" id="noteGateForm">
+        <label for="noteGateInput">Total Dif =</label>
+        <div>
+          <input
+            id="noteGateInput"
+            type="text"
+            inputmode="decimal"
+            autocomplete="off"
+            maxlength="12"
+            placeholder="--.-"
+          />
+          <button id="noteGateSubmit" type="button">写入</button>
+        </div>
+      </form>
+      <p class="fragment-answer-status note-answer-status" id="noteGateStatus" aria-live="polite">
+        等待总难度。
       </p>
     </section>
   </div>

@@ -1077,6 +1077,7 @@ main{
 
 .shard-one{
   inset:0 0 auto auto;
+  z-index:2;
   width:37%;
   height:34%;
   padding:0;
@@ -1126,6 +1127,7 @@ main{
 
 .shard-two{
   inset:0 auto auto 0;
+  z-index:2;
   width:40%;
   height:42%;
   clip-path:polygon(0 0, 100% 0, 87.5% 71.4%, 32.5% 100%, 0 90.4%);
@@ -1174,6 +1176,7 @@ main{
 
 .shard-three{
   inset:30% auto auto 0;
+  z-index:2;
   width:48%;
   height:42%;
   clip-path:polygon(0 19.05%, 27.08% 28.57%, 72.92% 0, 100% 66.67%, 45.83% 100%, 0 90.48%);
@@ -1221,7 +1224,107 @@ main{
 }
 
 .shard-four{
-  clip-path:polygon(35% 30%, 70% 28%, 82% 60%, 48% 58%);
+  inset:0 0 auto 0;
+  z-index:3;
+  width:100%;
+  height:66%;
+  cursor:default;
+  clip-path:polygon(0 0, 100% 0, 100% 100%, 73% 94%, 52% 88%, 36% 87%, 20% 98%, 0 90%);
+}
+
+.final-signal-section.is-fractured .shard-four{
+  opacity:0;
+  animation:none;
+}
+
+.shard-four img{
+  display:none;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  filter:
+    brightness(.86)
+    contrast(.98)
+    saturate(.96);
+}
+
+.shard-four::before,
+.shard-four::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:0;
+}
+
+.shard-four::before{
+  background:
+    linear-gradient(112deg, transparent 0 38%, rgba(255,222,89,.18) 38.2% 38.55%, transparent 38.9%),
+    linear-gradient(24deg, transparent 0 62%, rgba(88,224,255,.18) 62.2% 62.5%, transparent 62.9%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 6px);
+  mix-blend-mode:screen;
+}
+
+.shard-four::after{
+  background:
+    radial-gradient(circle at 46% 42%, rgba(255,222,89,.18), transparent 18%),
+    radial-gradient(circle at 64% 48%, rgba(88,224,255,.14), transparent 20%);
+  mix-blend-mode:screen;
+}
+
+.final-signal-section.is-shard-four-open .shard-four{
+  pointer-events:auto;
+  cursor:pointer;
+  opacity:1;
+  background:transparent;
+  filter:none;
+  animation:shardFourReveal 1.18s steps(8, end) both;
+  box-shadow:
+    0 0 28px rgba(88,224,255,.12),
+    0 18px 34px rgba(0,0,0,.22);
+}
+
+.final-signal-section.is-shard-four-open .shard-four img{
+  display:block;
+}
+
+.final-signal-section.is-shard-four-open .shard-four::before{
+  opacity:0;
+  animation:shardFourCircuit 2.6s steps(4, end) infinite;
+}
+
+.final-signal-section.is-shard-four-open .shard-four::after{
+  opacity:0;
+  animation:shardFourCorePulse 1.9s steps(3, end) infinite;
+}
+
+.final-signal-section.is-shard-four-open .shard-one,
+.final-signal-section.is-shard-four-open .shard-two,
+.final-signal-section.is-shard-four-open .shard-three{
+  z-index:4;
+  pointer-events:auto;
+  opacity:.001;
+  animation:none;
+  box-shadow:none;
+}
+
+.final-signal-section.is-shard-four-open .shard-four span{
+  display:none;
+  border-color:rgba(255,222,89,.46);
+  color:var(--yellow);
+  text-shadow:
+    1px 0 rgba(255,107,186,.76),
+    -1px 0 rgba(88,224,255,.68);
+}
+
+.shard-four:hover,
+.shard-four:focus-visible{
+  outline:none;
+  filter:brightness(1.02) contrast(1.02);
+  box-shadow:
+    0 0 0 1px rgba(255,255,255,.24),
+    0 0 34px rgba(88,224,255,.2),
+    0 18px 34px rgba(0,0,0,.22);
 }
 
 .shard-five{
@@ -1386,6 +1489,23 @@ main{
   animation:retryTextFault 1.15s steps(2, end) infinite;
 }
 
+.read-retry-button > span{
+  display:grid;
+  gap:4px;
+  justify-items:start;
+}
+
+.read-retry-button small{
+  color:var(--yellow);
+  font-size:16px;
+  line-height:1;
+  letter-spacing:1.4px;
+  text-shadow:
+    1px 0 rgba(255,107,186,.62),
+    -1px 0 rgba(88,224,255,.58),
+    0 0 16px rgba(255,222,89,.34);
+}
+
 .read-retry-button::before,
 .read-retry-button::after{
   content:"";
@@ -1428,8 +1548,20 @@ main{
   animation:retryTextFault 2.4s steps(2, end) infinite;
 }
 
+.read-retry-button.is-final-date-ready{
+  cursor:pointer;
+  animation:retryTextFault 2.8s steps(2, end) infinite;
+}
+
+.read-retry-button.is-final-date-ready:hover small,
+.read-retry-button.is-final-date-ready:focus-visible small{
+  color:#fff2a6;
+}
+
 .read-retry-button.is-date-ready::before,
-.read-retry-button.is-date-ready::after{
+.read-retry-button.is-date-ready::after,
+.read-retry-button.is-final-date-ready::before,
+.read-retry-button.is-final-date-ready::after{
   opacity:.34;
 }
 
@@ -2700,6 +2832,162 @@ button.multisource-card:focus-visible{
     0 0 24px rgba(88,224,255,.26);
 }
 
+.final-date-panel{
+  width:100%;
+  height:100dvh;
+  min-height:100dvh;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:#000205;
+  box-shadow:
+    inset 0 0 170px rgba(0,0,0,.86),
+    0 0 42px rgba(88,224,255,.16),
+    0 34px 120px rgba(0,0,0,.72);
+}
+
+.final-date-panel::before{
+  z-index:2;
+  background:
+    linear-gradient(90deg, transparent 0 12%, rgba(255,255,255,.12) 12.3% 12.7%, transparent 13% 58%, rgba(88,224,255,.1) 58.2% 58.7%, transparent 59%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.065) 0 1px, transparent 1px 6px),
+    repeating-linear-gradient(90deg, rgba(255,107,186,.055) 0 1px, transparent 1px 17px);
+  opacity:.36;
+}
+
+.final-date-panel::after{
+  z-index:3;
+  inset:0;
+  height:auto;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.12), rgba(88,224,255,.04) 13%, transparent 29%),
+    radial-gradient(circle at 50% 50%, transparent 0 19%, rgba(0,0,0,.48) 49%, rgba(0,0,0,.88) 100%),
+    linear-gradient(180deg, rgba(0,0,0,.68), rgba(0,0,0,.28) 48%, rgba(0,0,0,.78));
+  box-shadow:none;
+}
+
+.final-date-obscured-bg{
+  position:absolute;
+  inset:-5%;
+  z-index:1;
+  overflow:hidden;
+  background:
+    url("../assets/countdown-0620-obscured.png") center / cover no-repeat,
+    #000205;
+  opacity:.68;
+  filter:
+    brightness(.86)
+    contrast(1.25)
+    saturate(1.2);
+  transform:scale(1.1);
+  animation:finalDateImageDrift 8s steps(5, end) infinite;
+}
+
+.final-date-obscured-bg::before,
+.final-date-obscured-bg::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+}
+
+.final-date-obscured-bg::before{
+  background:
+    linear-gradient(98deg, rgba(0,0,0,.66), transparent 43%, rgba(0,0,0,.72)),
+    repeating-linear-gradient(0deg, rgba(255,255,255,.08) 0 1px, transparent 1px 9px),
+    repeating-linear-gradient(90deg, rgba(0,0,0,.34) 0 18px, rgba(255,255,255,.025) 18px 19px, rgba(0,0,0,.34) 19px 38px);
+  mix-blend-mode:multiply;
+}
+
+.final-date-obscured-bg::after{
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.22), transparent 15%),
+    linear-gradient(90deg, rgba(255,107,186,.22), rgba(88,224,255,.16), rgba(255,222,89,.14));
+  opacity:.26;
+  mix-blend-mode:screen;
+  animation:finalDateSignalCut 1.7s steps(3, end) infinite;
+}
+
+.final-date-countdown{
+  position:relative;
+  z-index:4;
+  display:grid;
+  place-items:center;
+  width:min(920px, calc(100% - 56px));
+  min-height:260px;
+  padding:42px 20px;
+  text-align:center;
+  background:transparent;
+}
+
+.final-date-countdown::before{
+  content:"";
+  position:absolute;
+  left:50%;
+  top:50%;
+  z-index:-1;
+  width:min(62vw, 620px);
+  aspect-ratio:1;
+  border-radius:50%;
+  background:
+    radial-gradient(circle, rgba(255,255,255,.22) 0 8%, rgba(88,224,255,.12) 22%, rgba(88,224,255,.055) 38%, transparent 68%);
+  filter:blur(20px);
+  transform:translate(-50%, -50%);
+  opacity:.92;
+}
+
+.final-date-countdown p{
+  margin:0 0 18px;
+  color:rgba(247,251,255,.72);
+  font-size:15px;
+  line-height:1;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  text-shadow:
+    1px 0 rgba(255,107,186,.54),
+    -1px 0 rgba(88,224,255,.58),
+    0 0 18px rgba(255,255,255,.2);
+}
+
+.final-date-countdown p span{
+  margin-left:8px;
+  color:rgba(255,222,89,.76);
+  font-size:12px;
+  letter-spacing:1px;
+}
+
+.final-date-countdown h2{
+  max-width:100%;
+  margin:0;
+  color:#f8fbff;
+  font-size:clamp(38px, 6.15vw, 96px);
+  line-height:1;
+  text-align:center;
+  white-space:nowrap;
+  word-break:keep-all;
+  text-shadow:
+    3px 0 rgba(255,107,186,.72),
+    -3px 0 rgba(88,224,255,.74),
+    0 0 34px rgba(255,255,255,.3);
+}
+
+.final-date-countdown time{
+  display:inline-block;
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+.final-date-countdown time.is-ticking{
+  animation:countdownTickFlash .32s steps(2, end) both;
+}
+
+.final-date-panel .signal-rift-close{
+  z-index:5;
+}
+
 .signal-rift-hint{
   position:relative;
   z-index:1;
@@ -2720,6 +3008,10 @@ button.multisource-card:focus-visible{
 
 .date-rift{
   z-index:93;
+}
+
+.final-date-rift{
+  padding:0;
 }
 
 .fragment-rift-panel{
@@ -2753,6 +3045,10 @@ button.multisource-card:focus-visible{
 
 .geo-date-panel{
   width:min(920px, 100%);
+}
+
+.note-rift-panel{
+  width:min(940px, 100%);
 }
 
 .phase-plate-panel h2{
@@ -2825,6 +3121,15 @@ button.multisource-card:focus-visible{
     inset 0 0 34px rgba(255,52,75,.14);
 }
 
+.date-rift.is-failed .date-rift-panel{
+  animation:readableErrorPulse .36s steps(2, end) both;
+  border-color:rgba(255,52,75,.78);
+  box-shadow:
+    0 34px 120px rgba(0,0,0,.62),
+    0 0 48px rgba(255,52,75,.28),
+    inset 0 0 34px rgba(255,52,75,.14);
+}
+
 .fragment-riddle{
   position:relative;
   z-index:1;
@@ -2854,6 +3159,140 @@ button.multisource-card:focus-visible{
   background:
     radial-gradient(circle at 26% 18%, rgba(88,224,255,.11), transparent 34%),
     rgba(4,7,16,.86);
+}
+
+.note-rebuild-field{
+  position:relative;
+  z-index:1;
+  width:100%;
+  max-width:760px;
+  margin:18px auto 0;
+  aspect-ratio:1 / 1;
+  overflow:hidden;
+  border:1px solid rgba(88,224,255,.18);
+  border-radius:8px;
+  background:
+    radial-gradient(circle at 66% 24%, rgba(88,224,255,.08), transparent 20%),
+    radial-gradient(circle at 30% 72%, rgba(255,222,89,.06), transparent 18%),
+    linear-gradient(180deg, rgba(255,255,255,.025), transparent 18%, rgba(255,255,255,.018) 72%, transparent),
+    #000;
+  box-shadow:
+    inset 0 0 46px rgba(88,224,255,.07),
+    inset 0 0 90px rgba(0,0,0,.8),
+    0 0 36px rgba(88,224,255,.11);
+  isolation:isolate;
+}
+
+.note-rebuild-field::before,
+.note-rebuild-field::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+}
+
+.note-rebuild-field::before{
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,.035) 0 1px, transparent 1px 6px),
+    linear-gradient(90deg, rgba(88,224,255,.08), transparent 28%, transparent 72%, rgba(255,107,186,.06));
+  opacity:.26;
+  mix-blend-mode:screen;
+  animation:noteFieldScan 5.8s linear infinite;
+}
+
+.note-rebuild-field::after{
+  background:
+    linear-gradient(104deg, transparent 0 44%, rgba(255,255,255,.26) 44.2% 44.38%, transparent 44.7%),
+    linear-gradient(0deg, transparent 0 68%, rgba(88,224,255,.18) 68.2% 68.5%, transparent 68.9%);
+  opacity:.16;
+  mix-blend-mode:screen;
+  animation:noteFieldTear 3.6s steps(2, end) infinite;
+}
+
+.note-rebuild-field .note-token{
+  position:absolute;
+  left:calc(var(--x) * 1%);
+  top:calc(var(--y) * 1%);
+  z-index:1;
+  display:block;
+  width:calc(var(--w) * 1%);
+  height:calc(var(--h) * 1%);
+  max-height:none;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+  object-fit:fill;
+  opacity:0;
+  pointer-events:none;
+  transform:
+    translate(-50%, -50%)
+    translate3d(var(--from-x), var(--from-y), 0)
+    rotate(calc(var(--from-rot) + var(--asset-rot, 0deg)))
+    scale(.4);
+  filter:
+    drop-shadow(0 0 9px rgba(88,224,255,.22))
+    brightness(1.04)
+    contrast(1.08);
+}
+
+.date-rift.is-open .note-rebuild-field .note-token{
+  animation:
+    noteTokenDock 1.34s cubic-bezier(.19, .83, .33, 1) var(--delay) both,
+    noteTokenFlicker 4.6s steps(2, end) calc(var(--delay) + 1.5s) infinite;
+}
+
+.note-rebuild-field .note-drag{
+  filter:
+    drop-shadow(0 0 10px rgba(255,222,89,.26))
+    brightness(1.08)
+    contrast(1.08);
+}
+
+.note-rebuild-field .note-hold{
+  --asset-rot:90deg;
+  width:calc(var(--h) * 1%);
+  height:calc(var(--w) * 1%);
+  filter:
+    drop-shadow(0 0 12px rgba(88,224,255,.16))
+    brightness(1.02)
+    contrast(1.06)
+    saturate(1.04);
+}
+
+.note-answer{
+  opacity:0;
+  transform:translateY(10px);
+}
+
+.note-answer label{
+  color:var(--yellow);
+}
+
+.note-answer input{
+  letter-spacing:5px;
+}
+
+.note-answer-status{
+  opacity:0;
+}
+
+.date-rift.is-open .note-answer{
+  animation:noteQuestionWake .52s steps(4, end) 3.05s both;
+}
+
+.date-rift.is-open .note-answer-status{
+  animation:noteQuestionWake .48s steps(3, end) 3.18s both;
+}
+
+.date-rift.is-solved .note-answer,
+.date-rift.is-solved .note-answer-status{
+  opacity:1;
+  transform:none;
+  animation:none;
 }
 
 .date-format-grid{
@@ -2923,6 +3362,114 @@ button.multisource-card:focus-visible{
 
 .fragment-proof-grid span:nth-child(4){
   color:var(--green);
+}
+
+.fragment-standby-grid{
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:8px;
+  margin-top:18px;
+}
+
+.fragment-standby-grid span{
+  min-height:54px;
+  display:grid;
+  place-items:center;
+  padding:8px;
+  border:1px solid rgba(255,222,89,.24);
+  border-radius:6px;
+  color:rgba(247,251,255,.76);
+  background:
+    linear-gradient(180deg, rgba(255,222,89,.1), rgba(88,224,255,.035)),
+    rgba(5,8,18,.72);
+  font-size:11px;
+  letter-spacing:1px;
+  text-align:center;
+  text-shadow:
+    1px 0 rgba(255,107,186,.46),
+    -1px 0 rgba(88,224,255,.44);
+}
+
+.dif-ledger{
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  gap:8px;
+  margin-top:18px;
+}
+
+.dif-ledger span{
+  position:relative;
+  min-height:68px;
+  display:grid;
+  place-items:center;
+  padding:10px 8px 8px;
+  overflow:hidden;
+  border:1px solid rgba(88,224,255,.28);
+  border-radius:6px;
+  color:rgba(247,251,255,.82);
+  background:
+    linear-gradient(180deg, rgba(88,224,255,.11), rgba(255,255,255,.025)),
+    rgba(5,8,18,.74);
+  box-shadow:
+    inset 0 0 24px rgba(88,224,255,.08),
+    0 0 18px rgba(0,0,0,.18);
+}
+
+.dif-ledger span::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);
+  opacity:.22;
+  transform:translateX(-120%);
+  animation:difLedgerSweep 3.6s ease-in-out infinite;
+}
+
+.dif-ledger span:nth-child(2)::before{
+  animation-delay:.38s;
+}
+
+.dif-ledger span:nth-child(3)::before{
+  animation-delay:.76s;
+}
+
+.dif-ledger span:nth-child(4){
+  border-color:rgba(255,222,89,.48);
+  color:var(--yellow);
+  background:
+    linear-gradient(180deg, rgba(255,222,89,.12), rgba(88,224,255,.035)),
+    rgba(5,8,18,.78);
+}
+
+.dif-ledger span:nth-child(4)::before{
+  animation-delay:1.14s;
+}
+
+.dif-ledger b{
+  position:relative;
+  z-index:1;
+  font-size:24px;
+  line-height:1;
+  font-weight:500;
+  letter-spacing:.8px;
+  text-shadow:
+    1px 0 rgba(255,107,186,.5),
+    -1px 0 rgba(88,224,255,.55);
+}
+
+.dif-ledger small{
+  position:absolute;
+  right:7px;
+  bottom:6px;
+  z-index:1;
+  color:rgba(247,251,255,.42);
+  font-size:10px;
+  letter-spacing:1px;
 }
 
 .fragment-answer{
@@ -3059,6 +3606,17 @@ button.multisource-card:focus-visible{
   opacity:1;
   transform:translateY(0);
   animation:readableResultReveal .38s steps(3, end) both;
+}
+
+@keyframes difLedgerSweep{
+  0%,
+  58%{
+    transform:translateX(-120%);
+  }
+  76%,
+  100%{
+    transform:translateX(120%);
+  }
 }
 
 .fragment-two-rift .fragment-result{
@@ -4035,6 +4593,78 @@ button.multisource-card:focus-visible{
   }
 }
 
+@keyframes shardFourReveal{
+  0%{
+    opacity:0;
+    transform:translate3d(0, -18px, 0) rotate(5deg) scale(.72);
+    filter:brightness(3.1) contrast(2.9) blur(7px);
+    clip-path:polygon(12% 8%, 96% 0, 98% 90%, 72% 84%, 52% 74%, 35% 78%, 18% 88%, 0 82%);
+  }
+
+  18%{
+    opacity:1;
+    transform:translate3d(12px, 6px, 0) rotate(-2deg) scale(1.06);
+    filter:brightness(.48) contrast(2.8) saturate(1.9);
+  }
+
+  42%{
+    transform:translate3d(-7px, -4px, 0) rotate(1deg) scale(.98);
+    filter:brightness(2.4) contrast(2.3);
+    clip-path:polygon(0 0, 100% 0, 100% 100%, 73% 94%, 52% 88%, 36% 87%, 20% 98%, 0 90%);
+  }
+
+  68%{
+    transform:none;
+    filter:brightness(.9) contrast(1.42);
+  }
+
+  100%{
+    opacity:1;
+    transform:none;
+    filter:none;
+  }
+}
+
+@keyframes shardFourCircuit{
+  0%,
+  100%{
+    opacity:.34;
+    transform:translateX(-8px);
+  }
+
+  28%{
+    opacity:.88;
+    transform:translateX(9px);
+  }
+
+  30%{
+    opacity:.2;
+    transform:translateX(-4px);
+  }
+
+  64%{
+    opacity:.62;
+    transform:translateY(5px);
+  }
+}
+
+@keyframes shardFourCorePulse{
+  0%,
+  100%{
+    opacity:.38;
+    filter:none;
+  }
+
+  45%{
+    opacity:.84;
+    filter:brightness(1.8) contrast(1.6);
+  }
+
+  48%{
+    opacity:.18;
+  }
+}
+
 @keyframes palaceScan{
   0%{
     transform:translateY(-110%);
@@ -4062,6 +4692,172 @@ button.multisource-card:focus-visible{
   39%,
   100%{
     transform:translateX(86%);
+  }
+}
+
+@keyframes noteFieldScan{
+  0%{
+    transform:translateY(-16%);
+  }
+
+  100%{
+    transform:translateY(16%);
+  }
+}
+
+@keyframes noteFieldTear{
+  0%,
+  74%,
+  100%{
+    opacity:.14;
+    transform:none;
+  }
+
+  76%{
+    opacity:.34;
+    transform:translate3d(7px, -2px, 0);
+  }
+
+  78%{
+    opacity:.18;
+    transform:translate3d(-5px, 3px, 0);
+  }
+}
+
+@keyframes noteTokenDock{
+  0%{
+    opacity:0;
+    transform:
+      translate(-50%, -50%)
+      translate3d(var(--from-x), var(--from-y), 0)
+      rotate(calc(var(--from-rot) + var(--asset-rot, 0deg)))
+      scale(.4);
+    filter:blur(7px) brightness(2.9) contrast(2.6) saturate(1.7);
+  }
+
+  28%{
+    opacity:1;
+    transform:
+      translate(-50%, -50%)
+      translate3d(calc(var(--from-x) * .26), calc(var(--from-y) * .26), 0)
+      rotate(calc(var(--from-rot) + var(--asset-rot, 0deg)))
+      scale(1.14);
+    filter:blur(2px) brightness(.74) contrast(2.2) saturate(1.35);
+  }
+
+  46%{
+    transform:
+      translate(-50%, -50%)
+      translate3d(5px, -3px, 0)
+      rotate(calc(var(--rot) + var(--asset-rot, 0deg)))
+      scale(.98);
+    filter:brightness(2.2) contrast(2.2) saturate(1.35);
+  }
+
+  68%{
+    transform:
+      translate(-50%, -50%)
+      translate3d(-2px, 1px, 0)
+      rotate(calc(var(--rot) + var(--asset-rot, 0deg)))
+      scale(1.02);
+    filter:brightness(.9) contrast(1.34);
+  }
+
+  100%{
+    opacity:1;
+    transform:translate(-50%, -50%) rotate(calc(var(--rot) + var(--asset-rot, 0deg))) scale(1);
+  }
+}
+
+@keyframes noteTokenFlicker{
+  0%,
+  100%{
+    opacity:1;
+  }
+
+  48%{
+    opacity:.9;
+    filter:brightness(1.3) contrast(1.18);
+  }
+
+  52%{
+    opacity:1;
+  }
+}
+
+@keyframes noteQuestionWake{
+  0%{
+    opacity:0;
+    transform:translateY(10px);
+    filter:blur(8px) brightness(2.4) contrast(2);
+  }
+
+  52%{
+    opacity:1;
+    transform:translateY(-2px);
+    filter:brightness(.82) contrast(2.1);
+  }
+
+  100%{
+    opacity:1;
+    transform:none;
+    filter:none;
+  }
+}
+
+@keyframes finalDateImageDrift{
+  0%,
+  100%{
+    transform:scale(1.18) translate3d(0, 0, 0);
+  }
+  24%{
+    transform:scale(1.2) translate3d(-1.2%, .8%, 0);
+  }
+  52%{
+    transform:scale(1.19) translate3d(1%, -1%, 0);
+  }
+  76%{
+    transform:scale(1.21) translate3d(.6%, 1.1%, 0);
+  }
+}
+
+@keyframes finalDateSignalCut{
+  0%,
+  100%{
+    opacity:.14;
+    transform:translateX(0);
+  }
+  36%{
+    opacity:.26;
+    transform:translateX(-1.2%);
+  }
+  62%{
+    opacity:.18;
+    transform:translateX(1.4%);
+  }
+}
+
+@keyframes countdownTickFlash{
+  0%{
+    opacity:.76;
+    filter:brightness(1.55) contrast(1.28);
+    text-shadow:
+      5px 0 rgba(255,107,186,.86),
+      -5px 0 rgba(88,224,255,.9),
+      0 0 46px rgba(255,255,255,.42);
+    transform:translateX(-1px);
+  }
+
+  48%{
+    opacity:1;
+    filter:brightness(1.18) contrast(1.08);
+    transform:translateX(1px);
+  }
+
+  100%{
+    opacity:1;
+    filter:none;
+    transform:none;
   }
 }
 
@@ -4453,8 +5249,13 @@ button.multisource-card:focus-visible{
   }
 
   .fragment-proof-grid,
-  .date-format-grid{
+  .date-format-grid,
+  .dif-ledger{
     grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .fragment-standby-grid{
+    grid-template-columns:1fr;
   }
 
   .fragment-result{
@@ -4556,6 +5357,19 @@ button.multisource-card:focus-visible{
     max-height:46vh;
   }
 
+  .note-rift-panel{
+    width:100%;
+  }
+
+  .note-rebuild-field{
+    max-width:100%;
+    margin-top:14px;
+  }
+
+  .note-answer{
+    margin-top:14px;
+  }
+
   .settlement-plate span{
     left:8px;
     right:8px;
@@ -4572,6 +5386,49 @@ button.multisource-card:focus-visible{
 
   .signal-rift-panel h2{
     font-size:25px;
+  }
+
+  .final-date-rift{
+    padding:0;
+  }
+
+  .final-date-panel{
+    width:100%;
+    height:100dvh;
+    min-height:100dvh;
+    padding:0;
+  }
+
+  .final-date-obscured-bg{
+    inset:-10%;
+    filter:
+      brightness(.84)
+      contrast(1.3)
+      saturate(1.15);
+    transform:scale(1.18);
+  }
+
+  .final-date-countdown{
+    width:calc(100% - 24px);
+    min-height:190px;
+    padding:30px 10px;
+  }
+
+  .final-date-countdown p{
+    margin-bottom:14px;
+    font-size:12px;
+    letter-spacing:2px;
+  }
+
+  .final-date-countdown p span{
+    display:block;
+    margin:7px 0 0;
+    font-size:11px;
+  }
+
+  .final-date-countdown h2{
+    font-size:clamp(22px, 7.2vw, 42px);
+    line-height:1;
   }
 
   .fragment-rift.signal-rift{
