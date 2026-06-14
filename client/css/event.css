@@ -41,7 +41,7 @@ body{
       url("../assets/bg.webp") type("image/webp"),
       url("../assets/bg.png") type("image/png")
     ) center/cover fixed;
-  font-family:"Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
+  font-family:"PLCFont", "Microsoft YaHei", sans-serif;
   overflow-x:hidden;
   position:relative;
 }
@@ -3778,7 +3778,7 @@ button.multisource-card:focus-visible{
 .song-row span{
   min-width:0;
   word-break:break-word;
-  font-family:"Microsoft YaHei", "Yu Gothic", "Meiryo", sans-serif;
+  font-family:"PLCFont", "Microsoft YaHei", "Yu Gothic", "Meiryo", sans-serif;
 }
 
 .song-row strong{
