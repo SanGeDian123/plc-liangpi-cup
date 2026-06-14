@@ -7,24 +7,14 @@
 
   <title>PLC凉皮杯 - 赛事主页</title>
 
-  <link rel="preconnect" href="https://plc-liangpi-cup.onrender.com" crossorigin />
-  <link rel="preload" href="./assets/players-snapshot.json" as="fetch" type="application/json" crossorigin />
-  <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href="./assets/bg.png" as="image" />
-  <link rel="preload" href="./assets/zishiquhui-signal.png" as="image" />
-  <link rel="preload" href="./assets/zishiquhui-shard-01.png" as="image" />
-  <link rel="preload" href="./assets/zishiquhui-shard-02.png" as="image" />
-  <link rel="preload" href="./assets/zishiquhui-shard-03.png" as="image" />
-  <link rel="preload" href="./assets/zishiquhui-shard-04.png" as="image" />
-  <link rel="preload" href="./assets/phase-calibration-plate.png" as="image" />
-  <link rel="preload" href="./assets/R.png" as="image" />
-  <link rel="icon" type="image/png" href="./assets/logo1.png" />
+  <link rel="preload" href="./assets/bg.webp" as="image" />
+  <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
   <link rel="stylesheet" href="./css/event.css" />
 </head>
 <body>
   <header class="site-header">
     <a class="brand" href="#top" aria-label="PLC凉皮杯首页">
-      <img class="brand-logo" src="./assets/logo2.png" alt="" aria-hidden="true" />
+      <img class="brand-logo" src="./assets/logo2-160.webp" width="42" height="42" alt="" aria-hidden="true" decoding="async" />
       <strong>凉皮杯</strong>
     </a>
 
@@ -285,7 +275,7 @@
       <div class="final-signal-panel" aria-label="失真曲绘信号线索">
         <div class="final-art-stage">
           <button class="final-art-frame" id="openSignalRift" type="button" aria-label="校准失真曲绘信号">
-            <img src="./assets/zishiquhui-signal.png" alt="失真曲绘残片" draggable="false" />
+            <img data-src="./assets/zishiquhui-signal.webp" loading="lazy" decoding="async" alt="失真曲绘残片" draggable="false" />
             <span class="final-art-status">SIGNAL BLEED // 0711</span>
             <span class="final-art-prompt">tap to desync</span>
             <span class="glitch-slice slice-a" aria-hidden="true"></span>
@@ -307,7 +297,7 @@
               aria-label="读取右上残片"
               disabled
             >
-              <img src="./assets/zishiquhui-shard-01.png" alt="右上原始曲绘残片" draggable="false" />
+              <img data-src="./assets/zishiquhui-shard-01.webp" loading="lazy" decoding="async" alt="右上原始曲绘残片" draggable="false" />
             </button>
             <button
               class="artifact-shard shard-two"
@@ -316,7 +306,7 @@
               aria-label="读取左上残片"
               disabled
             >
-              <img src="./assets/zishiquhui-shard-02.png" alt="左上失真曲绘残片" draggable="false" />
+              <img data-src="./assets/zishiquhui-shard-02.webp" loading="lazy" decoding="async" alt="左上失真曲绘残片" draggable="false" />
               <span>02 // SEALED</span>
             </button>
             <button
@@ -326,7 +316,7 @@
               aria-label="读取左中残片"
               disabled
             >
-              <img src="./assets/zishiquhui-shard-03.png" alt="左中原始曲绘残片" draggable="false" />
+              <img data-src="./assets/zishiquhui-shard-03.webp" loading="lazy" decoding="async" alt="左中原始曲绘残片" draggable="false" />
               <span>03 // SEALED</span>
             </button>
             <button
@@ -336,7 +326,7 @@
               aria-label="读取第四残片"
               disabled
             >
-              <img src="./assets/zishiquhui-shard-04.png" alt="中央原始曲绘残片" draggable="false" />
+              <img data-src="./assets/zishiquhui-shard-04.webp" loading="lazy" decoding="async" alt="中央原始曲绘残片" draggable="false" />
               <span>04 // NOTE TRACE</span>
             </button>
             <span class="artifact-shard shard-five" aria-hidden="true"><span>05 // SEALED</span></span>
@@ -380,7 +370,7 @@
             </div>
 
             <button class="phase-plate" id="openPhasePlate" type="button" aria-label="放大相位校准板">
-              <img src="./assets/phase-calibration-plate.png" alt="六片相位校准板" draggable="false" />
+              <img data-src="./assets/phase-calibration-plate.webp" loading="lazy" decoding="async" alt="六片相位校准板" draggable="false" />
               <span>
                 点击相位板以放大。六片玻璃只负责映射颜色；读取顺序藏在下方三层记录里。
               </span>
@@ -422,7 +412,7 @@
             </div>
 
             <button class="settlement-plate" type="button" data-open-settlement-plate aria-label="放大结算图线索">
-              <img src="./assets/phigros-settlement-fragment-02.png" alt="Phigros 结算图线索" draggable="false" />
+              <img data-src="./assets/phigros-settlement-fragment-02.webp" loading="lazy" decoding="async" alt="Phigros 结算图线索" draggable="false" />
               <span>RESULT TRACE // ZOOM</span>
             </button>
 
@@ -461,7 +451,7 @@
             </div>
 
             <button class="palace-plate" type="button" data-open-palace-plate aria-label="放大 R 图像">
-              <img src="./assets/R.png" alt="R 图像线索" draggable="false" />
+              <img data-src="./assets/R.webp" loading="lazy" decoding="async" alt="R 图像线索" draggable="false" />
               <span>R // ZOOM</span>
             </button>
 
@@ -505,7 +495,7 @@
             <div class="multisource-grid" aria-label="三源校准">
               <button class="multisource-card visual-source" type="button" data-open-release-rift aria-label="放大构建截图">
                 <p>构建截图</p>
-                <img src="./assets/build-relay-map.png" alt="编译与部署日志图" draggable="false" />
+                <img data-src="./assets/build-relay-map.webp" loading="lazy" decoding="async" alt="编译与部署日志图" draggable="false" />
                 <span>Including：退出码、包体积、探针结果 Not Including：端口、耗时、PID。</span>
               </button>
 
@@ -581,7 +571,7 @@
     >
       <button class="modal-close" type="button" data-close-tracks-modal aria-label="关闭海选曲目">×</button>
 
-      <img class="modal-image" src="./assets/hxqm-new.png" alt="海选曲目总览" />
+      <img class="modal-image" data-src="./assets/hxqm-new.webp" loading="lazy" decoding="async" alt="海选曲目总览" />
 
       <div class="modal-content">
         <h2 id="tracksModalTitle">海选曲目总览</h2>
@@ -678,7 +668,7 @@
         底行六格。文件名即表。
       </p>
       <button class="settlement-plate fragment-settlement-plate" type="button" data-open-settlement-plate aria-label="放大结算图线索">
-        <img src="./assets/phigros-settlement-fragment-02.png" alt="Phigros 结算图线索" draggable="false" />
+        <img data-src="./assets/phigros-settlement-fragment-02.webp" loading="lazy" decoding="async" alt="Phigros 结算图线索" draggable="false" />
         <span>JUDGE LINE // FILE MAP</span>
       </button>
       <form class="fragment-answer" id="fragmentTwoAnswerForm">
@@ -824,7 +814,7 @@
       <button class="signal-rift-close" type="button" data-close-palace-rift aria-label="关闭 R 图像">×</button>
       <p class="signal-rift-code">R // PALACE TRACE</p>
       <h2 id="palaceRiftTitle">R</h2>
-      <img src="./assets/R.png" alt="放大的 R 图像线索" draggable="false" />
+      <img data-src="./assets/R.webp" loading="lazy" decoding="async" alt="放大的 R 图像线索" draggable="false" />
       <p class="phase-plate-note">
         6 / 4 / Π / 300 / 2 / 5 / ______
       </p>
@@ -842,7 +832,7 @@
       <button class="signal-rift-close" type="button" data-close-release-rift aria-label="关闭构建截图">×</button>
       <p class="signal-rift-code">RELEASE CHECK // BUILD LOG</p>
       <h2 id="releaseRiftTitle">上线前检查</h2>
-      <img src="./assets/build-relay-map.png" alt="放大的编译与部署日志图" draggable="false" />
+      <img data-src="./assets/build-relay-map.webp" loading="lazy" decoding="async" alt="放大的编译与部署日志图" draggable="false" />
       <p class="phase-plate-note">
         只取会决定上线结果的三项：退出码、包体积、健康检查状态。
       </p>
@@ -864,47 +854,47 @@
         Where are these notes from?
       </p>
       <div class="note-rebuild-field" aria-label="三种 note 复原图">
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:10; --y:7; --w:8; --h:1.1; --rot:0deg; --from-x:-34%; --from-y:-24%; --from-rot:-12deg; --delay:.04s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:38; --y:11; --w:7.5; --h:1.05; --rot:0deg; --from-x:22%; --from-y:-31%; --from-rot:9deg; --delay:.11s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:27; --y:15; --w:7.4; --h:1.05; --rot:0deg; --from-x:-8%; --from-y:-35%; --from-rot:-7deg; --delay:.18s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:17; --y:19; --w:7.6; --h:1.05; --rot:0deg; --from-x:-28%; --from-y:18%; --from-rot:10deg; --delay:.25s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:7.4; --y:23; --w:7.8; --h:1.05; --rot:0deg; --from-x:-32%; --from-y:34%; --from-rot:-8deg; --delay:.32s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:27; --y:27; --w:7.4; --h:1.05; --rot:0deg; --from-x:34%; --from-y:5%; --from-rot:7deg; --delay:.39s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:38; --y:31.5; --w:7.5; --h:1.05; --rot:0deg; --from-x:26%; --from-y:28%; --from-rot:-9deg; --delay:.46s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:7.8; --y:34.5; --w:7.8; --h:1.05; --rot:0deg; --from-x:-38%; --from-y:10%; --from-rot:12deg; --delay:.53s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:18; --y:39; --w:7.4; --h:1.05; --rot:0deg; --from-x:-20%; --from-y:36%; --from-rot:-11deg; --delay:.6s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:10; --y:7; --w:8; --h:1.1; --rot:0deg; --from-x:-34%; --from-y:-24%; --from-rot:-12deg; --delay:.04s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:38; --y:11; --w:7.5; --h:1.05; --rot:0deg; --from-x:22%; --from-y:-31%; --from-rot:9deg; --delay:.11s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:27; --y:15; --w:7.4; --h:1.05; --rot:0deg; --from-x:-8%; --from-y:-35%; --from-rot:-7deg; --delay:.18s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:17; --y:19; --w:7.6; --h:1.05; --rot:0deg; --from-x:-28%; --from-y:18%; --from-rot:10deg; --delay:.25s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:7.4; --y:23; --w:7.8; --h:1.05; --rot:0deg; --from-x:-32%; --from-y:34%; --from-rot:-8deg; --delay:.32s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:27; --y:27; --w:7.4; --h:1.05; --rot:0deg; --from-x:34%; --from-y:5%; --from-rot:7deg; --delay:.39s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:38; --y:31.5; --w:7.5; --h:1.05; --rot:0deg; --from-x:26%; --from-y:28%; --from-rot:-9deg; --delay:.46s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:7.8; --y:34.5; --w:7.8; --h:1.05; --rot:0deg; --from-x:-38%; --from-y:10%; --from-rot:12deg; --delay:.53s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:18; --y:39; --w:7.4; --h:1.05; --rot:0deg; --from-x:-20%; --from-y:36%; --from-rot:-11deg; --delay:.6s;" />
 
-        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:58; --y:8; --w:9.4; --h:7.6; --rot:0deg; --from-x:18%; --from-y:-36%; --from-rot:-4deg; --delay:.18s;" />
-        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:80; --y:8; --w:26.6; --h:7.6; --rot:0deg; --from-x:36%; --from-y:-28%; --from-rot:3deg; --delay:.25s;" />
-        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:52; --y:22; --w:6.8; --h:7.7; --rot:0deg; --from-x:-16%; --from-y:-18%; --from-rot:6deg; --delay:.34s;" />
-        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:63; --y:22; --w:9.1; --h:7.7; --rot:0deg; --from-x:12%; --from-y:-8%; --from-rot:-5deg; --delay:.41s;" />
-        <img class="note-token note-tap note-vertical" src="./assets/tap.png" alt="" draggable="false" style="--x:72; --y:22; --w:7.2; --h:1.05; --rot:90deg; --from-x:6%; --from-y:-22%; --from-rot:72deg; --delay:.48s;" />
-        <img class="note-token note-tap note-vertical" src="./assets/tap.png" alt="" draggable="false" style="--x:76.4; --y:22; --w:7.2; --h:1.05; --rot:90deg; --from-x:2%; --from-y:-25%; --from-rot:104deg; --delay:.55s;" />
-        <img class="note-token note-tap note-vertical" src="./assets/tap.png" alt="" draggable="false" style="--x:80.8; --y:22; --w:7.2; --h:1.05; --rot:90deg; --from-x:-3%; --from-y:-19%; --from-rot:78deg; --delay:.62s;" />
-        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:91; --y:22; --w:9.4; --h:7.7; --rot:0deg; --from-x:34%; --from-y:8%; --from-rot:5deg; --delay:.69s;" />
-        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:55; --y:36; --w:9.4; --h:7.7; --rot:0deg; --from-x:-14%; --from-y:24%; --from-rot:-4deg; --delay:.76s;" />
-        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:66.5; --y:36; --w:9.7; --h:7.7; --rot:0deg; --from-x:2%; --from-y:18%; --from-rot:4deg; --delay:.83s;" />
-        <img class="note-token note-hold" src="./assets/hold.png" alt="" draggable="false" style="--x:85; --y:36; --w:18.2; --h:7.7; --rot:0deg; --from-x:28%; --from-y:25%; --from-rot:-3deg; --delay:.9s;" />
+        <img class="note-token note-hold" data-src="./assets/hold.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:58; --y:8; --w:9.4; --h:7.6; --rot:0deg; --from-x:18%; --from-y:-36%; --from-rot:-4deg; --delay:.18s;" />
+        <img class="note-token note-hold" data-src="./assets/hold.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:80; --y:8; --w:26.6; --h:7.6; --rot:0deg; --from-x:36%; --from-y:-28%; --from-rot:3deg; --delay:.25s;" />
+        <img class="note-token note-hold" data-src="./assets/hold.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:52; --y:22; --w:6.8; --h:7.7; --rot:0deg; --from-x:-16%; --from-y:-18%; --from-rot:6deg; --delay:.34s;" />
+        <img class="note-token note-hold" data-src="./assets/hold.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:63; --y:22; --w:9.1; --h:7.7; --rot:0deg; --from-x:12%; --from-y:-8%; --from-rot:-5deg; --delay:.41s;" />
+        <img class="note-token note-tap note-vertical" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:72; --y:22; --w:7.2; --h:1.05; --rot:90deg; --from-x:6%; --from-y:-22%; --from-rot:72deg; --delay:.48s;" />
+        <img class="note-token note-tap note-vertical" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:76.4; --y:22; --w:7.2; --h:1.05; --rot:90deg; --from-x:2%; --from-y:-25%; --from-rot:104deg; --delay:.55s;" />
+        <img class="note-token note-tap note-vertical" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:80.8; --y:22; --w:7.2; --h:1.05; --rot:90deg; --from-x:-3%; --from-y:-19%; --from-rot:78deg; --delay:.62s;" />
+        <img class="note-token note-hold" data-src="./assets/hold.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:91; --y:22; --w:9.4; --h:7.7; --rot:0deg; --from-x:34%; --from-y:8%; --from-rot:5deg; --delay:.69s;" />
+        <img class="note-token note-hold" data-src="./assets/hold.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:55; --y:36; --w:9.4; --h:7.7; --rot:0deg; --from-x:-14%; --from-y:24%; --from-rot:-4deg; --delay:.76s;" />
+        <img class="note-token note-hold" data-src="./assets/hold.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:66.5; --y:36; --w:9.7; --h:7.7; --rot:0deg; --from-x:2%; --from-y:18%; --from-rot:4deg; --delay:.83s;" />
+        <img class="note-token note-hold" data-src="./assets/hold.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:85; --y:36; --w:18.2; --h:7.7; --rot:0deg; --from-x:28%; --from-y:25%; --from-rot:-3deg; --delay:.9s;" />
 
-        <img class="note-token note-drag" src="./assets/drag.png" alt="" draggable="false" style="--x:23; --y:59; --w:7.4; --h:1.05; --rot:0deg; --from-x:-32%; --from-y:30%; --from-rot:-10deg; --delay:.74s;" />
-        <img class="note-token note-drag" src="./assets/drag.png" alt="" draggable="false" style="--x:29; --y:62.5; --w:7.6; --h:1.05; --rot:0deg; --from-x:-24%; --from-y:36%; --from-rot:8deg; --delay:.81s;" />
-        <img class="note-token note-drag" src="./assets/drag.png" alt="" draggable="false" style="--x:33; --y:66.2; --w:7.4; --h:1.05; --rot:0deg; --from-x:-18%; --from-y:40%; --from-rot:-8deg; --delay:.88s;" />
-        <img class="note-token note-drag" src="./assets/drag.png" alt="" draggable="false" style="--x:37; --y:70.3; --w:7.3; --h:1.05; --rot:0deg; --from-x:-10%; --from-y:36%; --from-rot:11deg; --delay:.95s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:37; --y:77; --w:7.4; --h:1.05; --rot:0deg; --from-x:-8%; --from-y:42%; --from-rot:-7deg; --delay:1.02s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:36.5; --y:83; --w:7.4; --h:1.05; --rot:0deg; --from-x:-14%; --from-y:46%; --from-rot:6deg; --delay:1.09s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:36.2; --y:88; --w:7.4; --h:1.05; --rot:0deg; --from-x:-12%; --from-y:42%; --from-rot:-5deg; --delay:1.16s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:36.2; --y:93; --w:7.4; --h:1.05; --rot:0deg; --from-x:-16%; --from-y:40%; --from-rot:8deg; --delay:1.23s;" />
+        <img class="note-token note-drag" data-src="./assets/drag.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:23; --y:59; --w:7.4; --h:1.05; --rot:0deg; --from-x:-32%; --from-y:30%; --from-rot:-10deg; --delay:.74s;" />
+        <img class="note-token note-drag" data-src="./assets/drag.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:29; --y:62.5; --w:7.6; --h:1.05; --rot:0deg; --from-x:-24%; --from-y:36%; --from-rot:8deg; --delay:.81s;" />
+        <img class="note-token note-drag" data-src="./assets/drag.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:33; --y:66.2; --w:7.4; --h:1.05; --rot:0deg; --from-x:-18%; --from-y:40%; --from-rot:-8deg; --delay:.88s;" />
+        <img class="note-token note-drag" data-src="./assets/drag.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:37; --y:70.3; --w:7.3; --h:1.05; --rot:0deg; --from-x:-10%; --from-y:36%; --from-rot:11deg; --delay:.95s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:37; --y:77; --w:7.4; --h:1.05; --rot:0deg; --from-x:-8%; --from-y:42%; --from-rot:-7deg; --delay:1.02s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:36.5; --y:83; --w:7.4; --h:1.05; --rot:0deg; --from-x:-14%; --from-y:46%; --from-rot:6deg; --delay:1.09s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:36.2; --y:88; --w:7.4; --h:1.05; --rot:0deg; --from-x:-12%; --from-y:42%; --from-rot:-5deg; --delay:1.16s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:36.2; --y:93; --w:7.4; --h:1.05; --rot:0deg; --from-x:-16%; --from-y:40%; --from-rot:8deg; --delay:1.23s;" />
 
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:71.5; --y:61.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:30%; --from-y:20%; --from-rot:-8deg; --delay:1s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:80; --y:65.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:28%; --from-y:26%; --from-rot:8deg; --delay:1.07s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:58; --y:68.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:8%; --from-y:26%; --from-rot:-9deg; --delay:1.14s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:91; --y:72; --w:7.4; --h:1.05; --rot:0deg; --from-x:36%; --from-y:28%; --from-rot:7deg; --delay:1.21s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:79.8; --y:77; --w:7.4; --h:1.05; --rot:0deg; --from-x:22%; --from-y:32%; --from-rot:-8deg; --delay:1.28s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:64; --y:82; --w:7.4; --h:1.05; --rot:0deg; --from-x:10%; --from-y:38%; --from-rot:10deg; --delay:1.35s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:92.5; --y:86; --w:7.4; --h:1.05; --rot:0deg; --from-x:26%; --from-y:36%; --from-rot:-6deg; --delay:1.42s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:69; --y:89.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:10%; --from-y:40%; --from-rot:7deg; --delay:1.49s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:85; --y:92.8; --w:7.4; --h:1.05; --rot:0deg; --from-x:22%; --from-y:42%; --from-rot:-8deg; --delay:1.56s;" />
-        <img class="note-token note-tap" src="./assets/tap.png" alt="" draggable="false" style="--x:58; --y:97.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:6%; --from-y:34%; --from-rot:8deg; --delay:1.63s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:71.5; --y:61.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:30%; --from-y:20%; --from-rot:-8deg; --delay:1s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:80; --y:65.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:28%; --from-y:26%; --from-rot:8deg; --delay:1.07s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:58; --y:68.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:8%; --from-y:26%; --from-rot:-9deg; --delay:1.14s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:91; --y:72; --w:7.4; --h:1.05; --rot:0deg; --from-x:36%; --from-y:28%; --from-rot:7deg; --delay:1.21s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:79.8; --y:77; --w:7.4; --h:1.05; --rot:0deg; --from-x:22%; --from-y:32%; --from-rot:-8deg; --delay:1.28s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:64; --y:82; --w:7.4; --h:1.05; --rot:0deg; --from-x:10%; --from-y:38%; --from-rot:10deg; --delay:1.35s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:92.5; --y:86; --w:7.4; --h:1.05; --rot:0deg; --from-x:26%; --from-y:36%; --from-rot:-6deg; --delay:1.42s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:69; --y:89.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:10%; --from-y:40%; --from-rot:7deg; --delay:1.49s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:85; --y:92.8; --w:7.4; --h:1.05; --rot:0deg; --from-x:22%; --from-y:42%; --from-rot:-8deg; --delay:1.56s;" />
+        <img class="note-token note-tap" data-src="./assets/tap.png" loading="lazy" decoding="async" alt="" draggable="false" style="--x:58; --y:97.5; --w:7.4; --h:1.05; --rot:0deg; --from-x:6%; --from-y:34%; --from-rot:8deg; --delay:1.63s;" />
       </div>
 
       <form class="fragment-answer note-answer" id="noteGateForm">
@@ -938,7 +928,7 @@
       <button class="signal-rift-close" type="button" data-close-settlement-rift aria-label="关闭结算图">×</button>
       <p class="signal-rift-code">PHIGROS RESULT // CORRUPTED CLEAR</p>
       <h2 id="settlementRiftTitle">RESULT TRACE</h2>
-      <img src="./assets/phigros-settlement-fragment-02.png" alt="放大的 Phigros 结算图线索" draggable="false" />
+      <img data-src="./assets/phigros-settlement-fragment-02.webp" loading="lazy" decoding="async" alt="放大的 Phigros 结算图线索" draggable="false" />
       <p class="phase-plate-note">
         4 KEYS / 6 CELLS / FILE MAP
       </p>
@@ -956,7 +946,7 @@
       <button class="signal-rift-close" type="button" data-close-phase-plate aria-label="关闭相位校准板">×</button>
       <p class="signal-rift-code">PHASE PLATE // COLOR MAP</p>
       <h2 id="phasePlateTitle">把门牌翻成颜色。</h2>
-      <img src="./assets/phase-calibration-plate.png" alt="放大的六片相位校准板" draggable="false" />
+      <img data-src="./assets/phase-calibration-plate.webp" loading="lazy" decoding="async" alt="放大的六片相位校准板" draggable="false" />
       <p class="phase-plate-note">
         不按按钮位置读。先用下方记录确认门牌顺序，再回到按钮小字找对应颜色。
       </p>

@@ -3,6 +3,7 @@ const openTracksButton = document.getElementById("openTracksModal");
 const selectionCountdown = document.getElementById("selectionCountdown");
 const tipsRoller = document.getElementById("tipsRoller");
 const rankingPreviewList = document.getElementById("rankingPreviewList");
+const rankingPreviewSection = document.getElementById("rankingPreview");
 const signalRift = document.getElementById("signalRift");
 const openSignalRiftButton = document.getElementById("openSignalRift");
 const finalArtFrame = document.querySelector(".final-art-frame");
@@ -87,6 +88,24 @@ const dateRiftCloseTargets = document.querySelectorAll("[data-close-date-rift]")
 const finalDateRiftCloseTargets = document.querySelectorAll("[data-close-final-date-rift]");
 const signalGateButtons = document.querySelectorAll("[data-signal-key]");
 const signalGateDots = document.querySelectorAll("[data-gate-dot]");
+
+function loadDeferredImages(root = document) {
+  root.querySelectorAll("img[data-src]").forEach((image) => {
+    image.src = image.dataset.src;
+    image.removeAttribute("data-src");
+  });
+}
+
+function runWhenIdle(callback, timeout = 1600) {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(callback, {
+      timeout
+    });
+    return;
+  }
+
+  setTimeout(callback, Math.min(timeout, 700));
+}
 
 let modalCloseTimer = null;
 let signalRiftCloseTimer = null;
@@ -203,6 +222,7 @@ function openTracksModal() {
     return;
   }
 
+  loadDeferredImages(tracksModal);
   clearTimeout(modalCloseTimer);
   lastFocusedElement = document.activeElement;
 
@@ -283,6 +303,7 @@ function openPhasePlateRift() {
     return;
   }
 
+  loadDeferredImages(phasePlateRift);
   clearTimeout(phasePlateCloseTimer);
   phasePlateLastFocusedElement = document.activeElement;
 
@@ -324,6 +345,7 @@ function openSettlementRift() {
     return;
   }
 
+  loadDeferredImages(settlementRift);
   clearTimeout(settlementRiftCloseTimer);
   settlementRiftLastFocusedElement = document.activeElement;
 
@@ -365,6 +387,7 @@ function openPalaceRift() {
     return;
   }
 
+  loadDeferredImages(palaceRift);
   clearTimeout(palaceRiftCloseTimer);
   palaceRiftLastFocusedElement = document.activeElement;
 
@@ -406,6 +429,7 @@ function openReleaseRift() {
     return;
   }
 
+  loadDeferredImages(releaseRift);
   clearTimeout(releaseRiftCloseTimer);
   releaseRiftLastFocusedElement = document.activeElement;
 
@@ -447,6 +471,7 @@ function openDateRift() {
     return;
   }
 
+  loadDeferredImages(dateRift);
   clearTimeout(dateRiftCloseTimer);
   dateRiftLastFocusedElement = document.activeElement;
 
@@ -553,6 +578,7 @@ function openFinalDateRift() {
     return;
   }
 
+  loadDeferredImages(finalDateRift);
   clearTimeout(finalDateRiftCloseTimer);
   finalDateRiftLastFocusedElement = document.activeElement;
 
@@ -964,6 +990,7 @@ function revealFinalSignal({ animate = true, scroll = true } = {}) {
     return;
   }
 
+  loadDeferredImages(finalSignalSection);
   finalSignalSection.classList.remove("is-locked");
   finalSignalSection.classList.toggle("is-revealed", animate);
   finalSignalSection.setAttribute("aria-hidden", "false");
@@ -1059,6 +1086,7 @@ function openRetryPuzzle() {
     return;
   }
 
+  loadDeferredImages(retryPuzzle);
   retryPuzzle.classList.remove("is-failed", "is-resolving");
   retryPuzzle.classList.add("is-open");
   retryPuzzle.setAttribute("aria-hidden", "false");
@@ -1101,6 +1129,7 @@ function openArtistGatePuzzle() {
   hidePuzzlePanel(palaceGatePuzzle);
   hidePuzzlePanel(multisourceGatePuzzle);
 
+  loadDeferredImages(artistGatePuzzle);
   artistGatePuzzle.classList.remove("is-complete", "is-failed", "is-resolving");
   artistGatePuzzle.classList.add("is-open");
   artistGatePuzzle.setAttribute("aria-hidden", "false");
@@ -1439,6 +1468,7 @@ function openFragmentRift() {
     return;
   }
 
+  loadDeferredImages(fragmentRift);
   clearTimeout(fragmentRiftCloseTimer);
   fragmentRiftLastFocusedElement = document.activeElement;
 
@@ -1596,6 +1626,7 @@ function openPalaceGatePuzzle() {
   hidePuzzlePanel(artistGatePuzzle);
   hidePuzzlePanel(multisourceGatePuzzle);
 
+  loadDeferredImages(palaceGatePuzzle);
   palaceGatePuzzle.classList.remove("is-complete", "is-failed", "is-resolving");
   palaceGatePuzzle.classList.add("is-open");
   palaceGatePuzzle.setAttribute("aria-hidden", "false");
@@ -1636,6 +1667,7 @@ function revealMultisourceGate({ fromCache = false } = {}) {
 
   hidePuzzlePanel(palaceGatePuzzle);
 
+  loadDeferredImages(multisourceGatePuzzle);
   multisourceGatePuzzle?.classList.remove("is-complete", "is-failed", "is-resolving");
   multisourceGatePuzzle?.classList.add("is-open");
   multisourceGatePuzzle?.setAttribute("aria-hidden", "false");
@@ -1909,6 +1941,7 @@ function openFragmentTwoRift() {
     return;
   }
 
+  loadDeferredImages(fragmentTwoRift);
   clearTimeout(fragmentTwoRiftCloseTimer);
   fragmentTwoRiftLastFocusedElement = document.activeElement;
 
@@ -2019,6 +2052,7 @@ function openFragmentThreeRift() {
     return;
   }
 
+  loadDeferredImages(fragmentThreeRift);
   clearTimeout(fragmentThreeRiftCloseTimer);
   fragmentThreeRiftLastFocusedElement = document.activeElement;
 
@@ -2214,6 +2248,7 @@ function openFragmentFourRift() {
     return;
   }
 
+  loadDeferredImages(fragmentFourRift);
   clearTimeout(fragmentFourRiftCloseTimer);
   fragmentFourRiftLastFocusedElement = document.activeElement;
 
@@ -2593,6 +2628,39 @@ async function loadRankingPreview() {
   }
 }
 
+let rankingPreviewRequested = false;
+
+function requestRankingPreview() {
+  if (rankingPreviewRequested) {
+    return;
+  }
+
+  rankingPreviewRequested = true;
+  loadRankingPreview();
+}
+
+function observeRankingPreview() {
+  if (!rankingPreviewList) {
+    return;
+  }
+
+  if (!("IntersectionObserver" in window) || !rankingPreviewSection) {
+    runWhenIdle(requestRankingPreview, 2200);
+    return;
+  }
+
+  const observer = new IntersectionObserver((entries) => {
+    if (entries.some((entry) => entry.isIntersecting)) {
+      observer.disconnect();
+      requestRankingPreview();
+    }
+  }, {
+    rootMargin: "480px 0px"
+  });
+
+  observer.observe(rankingPreviewSection);
+}
+
 async function loadTips() {
   if (!tipsRoller) {
     return;
@@ -2937,7 +3005,7 @@ if (readFragmentFourAnswerCache()) {
   });
 }
 
-loadTips();
+runWhenIdle(loadTips);
 setInterval(showNextTip, 5000);
 
-loadRankingPreview();
+observeRankingPreview();

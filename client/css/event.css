@@ -37,8 +37,11 @@ body{
   color:var(--text);
   background:
     linear-gradient(135deg, rgba(5,9,22,.72), rgba(9,12,28,.92)),
-    url("../assets/bg.png") center/cover fixed;
-  font-family:"PLCFont", "Microsoft YaHei", sans-serif;
+    image-set(
+      url("../assets/bg.webp") type("image/webp"),
+      url("../assets/bg.png") type("image/png")
+    ) center/cover fixed;
+  font-family:"Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", Arial, sans-serif;
   overflow-x:hidden;
   position:relative;
 }
@@ -937,7 +940,10 @@ main{
   width:104%;
   height:22%;
   pointer-events:none;
-  background:url("../assets/zishiquhui-signal.png") center/cover;
+  background:image-set(
+    url("../assets/zishiquhui-signal.webp") type("image/webp"),
+    url("../assets/zishiquhui-signal.png") type("image/png")
+  ) center/cover;
   opacity:.38;
   mix-blend-mode:screen;
   filter:
@@ -963,7 +969,10 @@ main{
 .fracture-piece{
   position:absolute;
   inset:-1px;
-  background:url("../assets/zishiquhui-signal.png") center/cover;
+  background:image-set(
+    url("../assets/zishiquhui-signal.webp") type("image/webp"),
+    url("../assets/zishiquhui-signal.png") type("image/png")
+  ) center/cover;
   opacity:.86;
   filter:
     brightness(1.15)
@@ -1046,7 +1055,10 @@ main{
   color:rgba(247,251,255,.72);
   background:
     linear-gradient(135deg, rgba(5,8,18,.72), rgba(5,8,18,.18)),
-    url("../assets/zishiquhui-signal.png") center/cover;
+    image-set(
+      url("../assets/zishiquhui-signal.webp") type("image/webp"),
+      url("../assets/zishiquhui-signal.png") type("image/png")
+    ) center/cover;
   opacity:0;
   filter:
     blur(1.2px)
@@ -2873,9 +2885,7 @@ button.multisource-card:focus-visible{
   inset:-5%;
   z-index:1;
   overflow:hidden;
-  background:
-    url("../assets/countdown-0620-obscured.png") center / cover no-repeat,
-    #000205;
+  background:#000205;
   opacity:.68;
   filter:
     brightness(.86)
@@ -2883,6 +2893,15 @@ button.multisource-card:focus-visible{
     saturate(1.2);
   transform:scale(1.1);
   animation:finalDateImageDrift 8s steps(5, end) infinite;
+}
+
+.final-date-rift.is-open .final-date-obscured-bg{
+  background:
+    image-set(
+      url("../assets/countdown-0620-obscured.webp") type("image/webp"),
+      url("../assets/countdown-0620-obscured.png") type("image/png")
+    ) center / cover no-repeat,
+    #000205;
 }
 
 .final-date-obscured-bg::before,
@@ -3759,7 +3778,7 @@ button.multisource-card:focus-visible{
 .song-row span{
   min-width:0;
   word-break:break-word;
-  font-family:"PLCFont", "Microsoft YaHei", "Yu Gothic", "Meiryo", sans-serif;
+  font-family:"Microsoft YaHei", "Yu Gothic", "Meiryo", sans-serif;
 }
 
 .song-row strong{
