@@ -13,6 +13,11 @@
   <link rel="stylesheet" href="./css/event.css" />
 </head>
 <body>
+  <div class="plc-restore-toast" id="plcRestoreToast" role="status" aria-live="polite" aria-hidden="true">
+    <span>PLC计划</span>
+    <strong>档案还原进度提升</strong>
+  </div>
+
   <header class="site-header">
     <a class="brand" href="#top" aria-label="PLC凉皮杯首页">
       <img class="brand-logo" src="./assets/logo2-160.webp" width="42" height="42" alt="" aria-hidden="true" decoding="async" />
@@ -216,9 +221,8 @@
 
       <a
         class="ranking-link"
-        href="https://plc-liangpi-cup.xyz"
-        target="_blank"
-        rel="noopener noreferrer"
+        id="openQualifierRanking"
+        href="./index.html#rankingList"
       >
         <span>查看完整排名</span>
       </a>
@@ -242,7 +246,10 @@
         <div class="signal-gate-console">
           <div class="gate-readout">
             <span>OFFSET TABLE</span>
-            <strong>+87ms</strong>
+            <div class="gate-readout-value">
+              <strong id="offsetTableValue">+87ms</strong>
+              <small class="offset-encrypted-time" id="offsetEncryptedTime" aria-live="polite"></small>
+            </div>
           </div>
 
           <div class="gate-progress" aria-hidden="true">
@@ -330,8 +337,25 @@
               <img data-src="./assets/zishiquhui-shard-04.webp" loading="lazy" decoding="async" alt="中央原始曲绘残片" draggable="false" />
               <span>04 // NOTE TRACE</span>
             </button>
-            <span class="artifact-shard shard-five" aria-hidden="true"><span>05 // SEALED</span></span>
+            <button
+              class="artifact-shard shard-five"
+              id="openFragmentFiveMainRift"
+              type="button"
+              aria-label="读取第五残片"
+              data-open-fragment-five-rift
+              disabled
+            >
+              <img data-src="./assets/zishiquhui-shard-05.webp" loading="lazy" decoding="async" alt="第五残片曲绘" draggable="false" />
+              <span>05 // LAYER 10</span>
+            </button>
             <span class="artifact-shard shard-six" aria-hidden="true"><span>06 // SEALED</span></span>
+          </div>
+          <div class="artifact-hitboxes" aria-label="残片入口">
+            <button class="artifact-hitbox hitbox-one" type="button" data-fragment-hitbox="one" aria-label="读取第一残片"></button>
+            <button class="artifact-hitbox hitbox-two" type="button" data-fragment-hitbox="two" aria-label="读取第二残片"></button>
+            <button class="artifact-hitbox hitbox-three" type="button" data-fragment-hitbox="three" aria-label="读取第三残片"></button>
+            <button class="artifact-hitbox hitbox-four" type="button" data-fragment-hitbox="four" aria-label="读取第四残片"></button>
+            <button class="artifact-hitbox hitbox-five" type="button" data-fragment-hitbox="five" aria-label="读取第五残片"></button>
           </div>
         </div>
 
@@ -554,8 +578,130 @@
           </div>
         </div>
       </div>
+
+      <div class="database-quick-entry" id="databaseQuickEntry" aria-hidden="true">
+        <div>
+          <p>DATABASE CACHE // QUICK ACCESS</p>
+          <h3>资料库索引已建立</h3>
+          <span>可跳过首次模拟流程，直接访问已恢复的资料目录。</span>
+        </div>
+        <button class="database-quick-button" id="quickDatabaseButton" type="button">
+          Access Database
+        </button>
+      </div>
+    </section>
+
+    <section class="section first-layer-echo-section" id="firstLayerEcho" aria-hidden="true">
+      <div class="section-title">
+        <p class="eyebrow">NOISE LOCK // LAYER 01</p>
+        <h2>第一层回声</h2>
+      </div>
+
+      <div class="final-signal-panel first-layer-echo-panel" aria-label="第一层回声封存曲绘">
+        <div class="first-layer-art-stage">
+          <div class="first-layer-art-frame" aria-label="第一层回声曲绘已封存">
+            <img data-src="./assets/first-layer-echo-art.png" loading="lazy" decoding="async" alt="第一层回声曲绘底图" draggable="false" />
+            <span class="first-layer-shards" aria-label="第一层回声曲绘碎片">
+              <button
+                class="first-layer-shard first-layer-shard-one"
+                id="openFragmentSevenRift"
+                type="button"
+                aria-label="读取第七残片"
+                disabled
+              >
+                <img data-src="./assets/first-layer-shard-01.webp" loading="lazy" decoding="async" alt="" draggable="false" />
+              </button>
+            </span>
+            <span class="first-layer-art-mask" aria-hidden="true"></span>
+            <span class="first-layer-question" aria-hidden="true">?</span>
+            <span class="first-layer-fragment-one" id="firstLayerFragmentOne" aria-hidden="true">FRAGMENT 07 // OPEN</span>
+            <span class="final-art-status">LAYER 01 // SEALED</span>
+          </div>
+        </div>
+
+        <div class="final-signal-copy first-layer-copy">
+          <p class="signal-kicker">AUDIO TRACE / FIRST LAYER LOCKED</p>
+          <h3>第一层回声已接入，解析仍被遮蔽。</h3>
+          <p>
+            新的声层正在从封存图像下方回流。可读信息被遮罩阻断，只有中心频段保持稳定。
+          </p>
+
+          <div class="signal-strip" aria-hidden="true">
+            <span>KEY: LAYER-01</span>
+            <span>CRC: UNKNOWN</span>
+            <span>PHASE: SEALED</span>
+            <span>SEED: ????????</span>
+          </div>
+
+          <dl class="signal-readout">
+            <div>
+              <dt>同步偏移</dt>
+              <dd>
+                <button class="first-layer-offset-button" id="firstLayerOffsetButton" type="button">--</button>
+              </dd>
+            </div>
+            <div>
+              <dt>下一项解析</dt>
+              <dd id="firstLayerNextAnalysis">等待回声稳定</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
     </section>
   </main>
+
+  <div class="first-layer-terminal" id="firstLayerTerminal" aria-hidden="true">
+    <div class="first-layer-terminal-backdrop" data-close-first-layer-terminal></div>
+    <section class="first-layer-terminal-panel" role="dialog" aria-modal="true" aria-labelledby="firstLayerTerminalTitle">
+      <header>
+        <span id="firstLayerTerminalTitle">LAYER01.EXE</span>
+        <button type="button" data-close-first-layer-terminal aria-label="关闭同步偏移终端">×</button>
+      </header>
+      <div class="first-layer-terminal-screen" id="firstLayerTerminalLog" aria-live="polite"></div>
+      <form class="first-layer-terminal-form" id="firstLayerTerminalForm">
+        <label for="firstLayerTerminalInput">PLEASE ENTER SYNC OFFSET (SECONDS)&gt;</label>
+        <input id="firstLayerTerminalInput" type="text" inputmode="numeric" autocomplete="off" maxlength="8" />
+        <button type="submit">RUN</button>
+      </form>
+      <p class="first-layer-terminal-status" id="firstLayerTerminalStatus" aria-live="polite"></p>
+    </section>
+  </div>
+
+  <div class="fragment-seven-dialogue-stage" id="fragmentSevenDialogueStage" aria-hidden="true">
+    <div class="boot-dialogue-stack" id="fragmentSevenDialogueStack"></div>
+  </div>
+
+  <div class="signal-rift fragment-rift fragment-seven-rift" id="fragmentSevenRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-fragment-seven-rift></div>
+    <section
+      class="signal-rift-panel fragment-rift-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="fragmentSevenRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-fragment-seven-rift aria-label="关闭第七残片窗口">×</button>
+      <p class="signal-rift-code">FRAGMENT 07 // LAYER 01 TRACE</p>
+      <h2 id="fragmentSevenRiftTitle">FRAGMENT 07</h2>
+      <figure class="fragment-seven-clue" aria-label="Fragment 07 archive image">
+        <img data-src="./assets/fragment-07-retribution-clue.webp" loading="lazy" decoding="async" alt="Corrupted Fragment 07 archive image" draggable="false" />
+      </figure>
+      <form class="fragment-answer" id="fragmentSevenAnswerForm">
+        <label for="fragmentSevenAnswerInput">ARCHIVE KEY</label>
+        <div>
+          <input
+            id="fragmentSevenAnswerInput"
+            type="text"
+            autocomplete="off"
+            maxlength="24"
+            placeholder="----------"
+          />
+          <button id="fragmentSevenAnswerSubmit" type="button">WRITE</button>
+        </div>
+      </form>
+      <p class="fragment-answer-status" id="fragmentSevenAnswerStatus" aria-live="polite"></p>
+      <p class="fragment-result" id="fragmentSevenResult" aria-hidden="true"></p>
+    </section>
+  </div>
 
   <footer class="site-footer">
     <span>PLC凉皮杯</span>
@@ -800,6 +946,19 @@
         <h2 id="finalDateRiftTitle">
           <time id="finalDateCountdown" datetime="2026-06-20T20:00:00+08:00">--:--:--:--</time>
         </h2>
+        <div class="final-date-boot-panel" id="finalDateBootPanel" aria-live="polite">
+          <div class="boot-loadout" id="bootLoadout" aria-hidden="true">
+            <span>ASSET LOAD</span>
+            <div class="boot-progress-track">
+              <i id="bootProgressBar"></i>
+            </div>
+            <b id="bootProgressText">0%</b>
+          </div>
+          <button class="boot-button" id="bootSequenceButton" type="button" disabled>BOOT</button>
+        </div>
+      </div>
+      <div class="boot-dialogue-stage" id="bootDialogueStage" aria-hidden="true">
+        <div class="boot-dialogue-stack" id="bootDialogueStack"></div>
       </div>
     </section>
   </div>
@@ -951,6 +1110,277 @@
       <p class="phase-plate-note">
         不按按钮位置读。先用下方记录确认门牌顺序，再回到按钮小字找对应颜色。
       </p>
+    </section>
+  </div>
+
+  <div class="qualifier-ranking-rift" id="qualifierRankingRift" aria-hidden="true">
+    <div class="qualifier-ranking-backdrop" data-close-qualifier-ranking></div>
+    <section class="qualifier-ranking-panel" role="dialog" aria-modal="true" aria-labelledby="qualifierRankingTitle">
+      <button class="qualifier-ranking-close" type="button" data-close-qualifier-ranking aria-label="关闭完整排名">×</button>
+      <div class="qualifier-ranking-heading">
+        <p class="eyebrow">QUALIFIER RANKING</p>
+        <h2 id="qualifierRankingTitle">海选排行榜</h2>
+      </div>
+
+      <form class="qualifier-ranking-form" id="qualifierRankingForm">
+        <div class="qualifier-ranking-table" aria-label="完整海选排行榜">
+          <article class="qualifier-row is-fixed">
+            <span>#1</span><strong>Mika_XBR</strong><b>2998597</b>
+          </article>
+          <article class="qualifier-row is-fixed">
+            <span>#2</span><strong>Circle.</strong><b>2998211</b>
+          </article>
+          <article class="qualifier-row is-fixed">
+            <span>#3</span><strong>XietiaoC</strong><b>2997961</b>
+          </article>
+          <article class="qualifier-row is-fixed">
+            <span>#4</span><strong>凉皮TieCaiRable</strong><b>2996499</b>
+          </article>
+          <article class="qualifier-row is-input">
+            <span>#5</span>
+            <label>
+              <span>Nickname</span>
+              <input id="qualifierName5" name="qualifierName5" type="text" autocomplete="off" />
+            </label>
+            <label>
+              <span>Score</span>
+              <input id="qualifierScore5" name="qualifierScore5" type="text" inputmode="numeric" autocomplete="off" />
+            </label>
+          </article>
+          <article class="qualifier-row is-fixed">
+            <span>#6</span><strong>APaTaSuYuE</strong><b>2995794</b>
+          </article>
+          <article class="qualifier-row is-input">
+            <span>#7</span>
+            <label>
+              <span>Nickname</span>
+              <input id="qualifierName7" name="qualifierName7" type="text" autocomplete="off" />
+            </label>
+            <label>
+              <span>Score</span>
+              <input id="qualifierScore7" name="qualifierScore7" type="text" inputmode="numeric" autocomplete="off" />
+            </label>
+          </article>
+          <article class="qualifier-row is-fixed">
+            <span>#8</span><strong>NsK113</strong><b>2991272</b>
+          </article>
+          <article class="qualifier-row is-fixed">
+            <span>#9</span><strong>ly07_</strong><b>2988235</b>
+          </article>
+          <article class="qualifier-row is-input">
+            <span>#10</span>
+            <label>
+              <span>Nickname</span>
+              <input id="qualifierName10" name="qualifierName10" type="text" autocomplete="off" />
+            </label>
+            <label>
+              <span>Score</span>
+              <input id="qualifierScore10" name="qualifierScore10" type="text" inputmode="numeric" autocomplete="off" />
+            </label>
+          </article>
+        </div>
+
+        <p class="qualifier-ranking-status" id="qualifierRankingStatus" aria-live="polite"></p>
+        <button class="qualifier-reboot-button" id="qualifierRankingSubmit" type="submit">REBOOT</button>
+      </form>
+
+      <div class="qualifier-reboot-stage" id="qualifierRebootStage" aria-hidden="true">
+        <div class="reboot-art" aria-label="四块残片曲绘">
+          <img class="reboot-art-base" src="./assets/zishiquhui-signal.webp" alt="" draggable="false" />
+          <img class="reboot-shard reboot-shard-one" src="./assets/zishiquhui-shard-01.webp" alt="" draggable="false" />
+          <img class="reboot-shard reboot-shard-two" src="./assets/zishiquhui-shard-02.webp" alt="" draggable="false" />
+          <img class="reboot-shard reboot-shard-three" src="./assets/zishiquhui-shard-03.webp" alt="" draggable="false" />
+          <img class="reboot-shard reboot-shard-four" src="./assets/zishiquhui-shard-04.webp" alt="" draggable="false" />
+          <img class="reboot-shard reboot-shard-five" src="./assets/zishiquhui-shard-05.webp" alt="" draggable="false" role="button" tabindex="0" aria-label="读取第五残片" data-open-fragment-five-rift />
+          <button class="fragment-five-entry" id="openFragmentFiveRift" type="button" data-open-fragment-five-rift>
+            <span>05 // LAYER 10</span>
+          </button>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="signal-rift fragment-rift fragment-five-rift" id="fragmentFiveRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-fragment-five-rift></div>
+    <section
+      class="signal-rift-panel fragment-rift-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="fragmentFiveRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-fragment-five-rift aria-label="关闭第五残片">×</button>
+      <p class="signal-rift-code">FRAGMENT 05 // LAYER TRACE</p>
+      <h2 id="fragmentFiveRiftTitle">第十层的门</h2>
+      <p class="fragment-riddle">
+        像素塔仍在向上坍塌。把每个光点读完，再补上第十层的中文名。
+      </p>
+      <div class="layer-ten-puzzle-art" aria-label="像素塔第十层线索图">
+        <img data-src="./assets/fragment-five-layer-10.webp" loading="lazy" decoding="async" alt="" draggable="false" />
+        <div class="layer-ten-clue-stack" aria-label="剧情光点">
+          <span style="--x:18%; --y:40%;">现实的避难所。</span>
+          <span style="--x:31%; --y:70%;">梦想的出发点。</span>
+          <span style="--x:55%; --y:58%;">在这里，你能成为任何人。</span>
+          <span style="--x:70%; --y:26%;">幽蓝抵达之刻，个人再度成为孤岛。</span>
+          <span style="--x:84%; --y:78%;">10 / ____</span>
+        </div>
+      </div>
+      <form class="fragment-answer" id="fragmentFiveAnswerForm">
+        <label for="fragmentFiveAnswerInput">第十层名称</label>
+        <div>
+          <input
+            id="fragmentFiveAnswerInput"
+            name="fragmentFiveAnswer"
+            type="text"
+            inputmode="text"
+            autocomplete="off"
+          />
+          <button id="fragmentFiveAnswerSubmit" type="button">写入</button>
+        </div>
+      </form>
+      <p class="fragment-answer-status" id="fragmentFiveAnswerStatus" aria-live="polite">
+        等待第十层名称。
+      </p>
+      <p class="fragment-result" id="fragmentFiveResult" aria-hidden="true"></p>
+      <button class="simulation-start-button" id="startSimulationButton" type="button" aria-hidden="true">
+        Start Simulation
+      </button>
+    </section>
+  </div>
+
+  <div class="saturn-simulation-loader" id="saturnSimulationLoader" aria-hidden="true">
+    <div class="saturn-loader-shell" aria-live="polite">
+      <div class="saturn-loader-bracket saturn-loader-bracket-left" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="saturn-loader-bracket saturn-loader-bracket-right" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+
+      <div class="saturn-loader-brand" aria-label="SATURN Virtual OS">
+        <strong data-text="SATURN">SATURN</strong>
+        <span>Virtual OS</span>
+      </div>
+
+      <div class="saturn-loader-console">
+        <div class="saturn-loader-line">
+          <span id="saturnLoaderStatus">主机系统已安装</span>
+          <b id="saturnLoaderCode"></b>
+        </div>
+        <div class="saturn-loader-progress" aria-hidden="true">
+          <span id="saturnLoaderProgress"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mobile-landscape-notice" id="mobileLandscapeNotice" aria-hidden="true">
+    <section class="mobile-landscape-card" role="status" aria-live="polite">
+      <span>ROTATE DEVICE</span>
+      <strong>请将手机旋转至横屏</strong>
+      <p>资料库将以横屏界面显示。请保持横屏，连接将在提示结束后继续。</p>
+      <b id="mobileLandscapeCountdown">5</b>
+    </section>
+  </div>
+
+  <div class="plc-database" id="plcDatabase" aria-hidden="true">
+    <section class="plc-db-panel plc-db-home is-active" id="plcDatabaseHome" aria-labelledby="plcDatabaseTitle">
+      <header class="plc-db-header">
+        <p id="plcDatabaseTitle">//COLLECTION</p>
+        <button class="plc-db-close" type="button" data-close-plc-database aria-label="关闭资料库">×</button>
+      </header>
+
+      <div class="plc-db-category-grid" aria-label="资料分类">
+        <button class="plc-db-category-card plc-db-category-card-primary" id="plcOpenFirstCategory" type="button">
+          <span class="plc-db-card-art" aria-hidden="true"></span>
+          <span class="plc-db-card-shade"></span>
+          <span class="plc-db-card-label">
+            <small>第一分类</small>
+            <strong>PLC计划</strong>
+          </span>
+          <span class="plc-db-card-progress" id="plcFirstCategoryProgress">完成度 0%</span>
+        </button>
+
+        <button class="plc-db-category-card plc-db-category-card-secondary" id="plcOpenSecondCategory" type="button">
+          <span class="plc-db-card-art" aria-hidden="true"></span>
+          <span class="plc-db-card-shade"></span>
+          <span class="plc-db-card-label">
+            <small>第二分类</small>
+            <strong>实验日志</strong>
+          </span>
+          <span class="plc-db-card-progress" id="plcSecondCategoryProgress">完成度 0%</span>
+        </button>
+
+        <button class="plc-db-category-card plc-db-category-card-secret" id="plcOpenSecretCategory" type="button" hidden aria-hidden="true">
+          <span class="plc-db-card-art" aria-hidden="true"></span>
+          <span class="plc-db-card-shade"></span>
+          <span class="plc-db-card-label">
+            <small>第三分类</small>
+            <strong>隐秘分类</strong>
+          </span>
+          <span class="plc-db-card-progress" id="plcSecretCategoryProgress">未收录</span>
+        </button>
+      </div>
+
+      <footer class="plc-db-total">
+        <p>收集品总完成度</p>
+        <div class="plc-db-total-bar" aria-hidden="true">
+          <span id="plcTotalProgressBar"></span>
+        </div>
+        <strong id="plcTotalProgressText">0%</strong>
+      </footer>
+
+      <button class="plc-db-replay-button" id="plcDatabaseReplayButton" type="button">
+        <span>OFF</span>
+        <strong>重演</strong>
+      </button>
+    </section>
+
+    <section class="plc-db-panel plc-db-detail" id="plcDatabaseDetail" aria-hidden="true">
+      <aside class="plc-db-folder">
+        <div class="plc-db-folder-info">
+          <p>FOLDER INFORMATION</p>
+          <div class="plc-db-folder-cover" aria-hidden="true">
+            <span></span>
+            <strong id="plcFolderTitle">第一分类</strong>
+            <em id="plcFolderProgress">完成度 0%</em>
+          </div>
+        </div>
+
+        <div class="plc-db-content-list">
+          <p>CONTENT</p>
+          <div class="plc-db-entry-list" id="plcDatabaseEntryList" role="listbox" aria-label="第一分类条目"></div>
+        </div>
+
+        <span class="plc-db-entry-count" id="plcDatabaseEntryCount">1/0</span>
+        <button class="plc-db-back" id="plcDatabaseBack" type="button">&lt; BACK</button>
+      </aside>
+
+      <main class="plc-db-file">
+        <header class="plc-db-file-header">
+          <p>FILE CONTENT</p>
+          <span>ANALYSIS COMPLETED.</span>
+          <button class="plc-db-close plc-db-close-detail" type="button" data-close-plc-database aria-label="关闭资料库">×</button>
+        </header>
+
+        <article class="plc-db-file-body">
+          <h2 id="plcDatabaseEntryTitle">PLC计划 #0</h2>
+          <dl class="plc-db-meta">
+            <div>
+              <dt>收集时间</dt>
+              <dd id="plcDatabaseEntryTime">--</dd>
+            </div>
+            <div>
+              <dt>保管单位</dt>
+              <dd id="plcDatabaseEntryKeeper">--</dd>
+            </div>
+            <div>
+              <dt>等级</dt>
+              <dd id="plcDatabaseEntryLevel">Main</dd>
+            </div>
+          </dl>
+          <div class="plc-db-entry-content" id="plcDatabaseEntryContent"></div>
+        </article>
+      </main>
     </section>
   </div>
 
