@@ -9412,6 +9412,53 @@ body.plc-database-open{
     padding:18px 12px;
   }
 
+  .first-layer-terminal{
+    padding:10px;
+  }
+
+  .first-layer-terminal-panel{
+    width:100%;
+    min-height:0;
+    max-height:calc(100vh - 20px);
+    max-height:calc(100dvh - 20px);
+    grid-template-rows:auto minmax(180px, 1fr) auto auto;
+  }
+
+  .first-layer-terminal-screen{
+    min-height:180px;
+    max-height:48vh;
+    max-height:48dvh;
+    padding:14px;
+    font-size:13px;
+  }
+
+  .first-layer-terminal-form{
+    grid-template-columns:1fr;
+    gap:8px;
+    padding:12px;
+  }
+
+  .first-layer-terminal-form label{
+    font-size:12px;
+  }
+
+  .first-layer-terminal-form input{
+    width:100%;
+    min-width:0;
+  }
+
+  .first-layer-terminal-form button{
+    width:100%;
+    min-width:0;
+    min-height:40px;
+    padding:0 10px;
+  }
+
+  .first-layer-terminal-status{
+    padding:0 12px 12px;
+    font-size:12px;
+  }
+
   .boot-dialogue-stack{
     width:calc(100% - 16px);
     height:72vh;
