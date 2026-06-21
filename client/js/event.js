@@ -4764,7 +4764,7 @@ function restoreLiveRankingPreview({ forceRefresh = false } = {}) {
   document.body.classList.remove("qualifier-mystery-stage");
 
   if (openQualifierRankingButton) {
-    openQualifierRankingButton.setAttribute("href", "./index.html#rankingList");
+    openQualifierRankingButton.setAttribute("href", "./#rankingList");
     openQualifierRankingButton.removeAttribute("target");
     openQualifierRankingButton.removeAttribute("rel");
   }
