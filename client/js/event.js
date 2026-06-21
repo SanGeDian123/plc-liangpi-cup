@@ -1,5 +1,10 @@
 const tracksModal = document.getElementById("tracksModal");
 const openTracksButton = document.getElementById("openTracksModal");
+const pacGroupModal = document.getElementById("pacGroupModal");
+const openPacGroupButton = document.getElementById("openPacGroupModal");
+const pacPromoSection = document.getElementById("pac-promo");
+const pacPromoToggle = document.getElementById("pacPromoToggle");
+const pacPromoContent = document.getElementById("pacPromoContent");
 const selectionCountdown = document.getElementById("selectionCountdown");
 const tipsRoller = document.getElementById("tipsRoller");
 const rankingPreviewList = document.getElementById("rankingPreviewList");
@@ -155,6 +160,7 @@ const fragmentFourAnswerSubmit = document.getElementById("fragmentFourAnswerSubm
 const fragmentFourAnswerStatus = document.getElementById("fragmentFourAnswerStatus");
 const fragmentFourResult = document.getElementById("fragmentFourResult");
 const modalCloseTargets = document.querySelectorAll("[data-close-tracks-modal]");
+const pacGroupCloseTargets = document.querySelectorAll("[data-close-pac-group-modal]");
 const signalRiftCloseTargets = document.querySelectorAll("[data-close-signal-rift]");
 const fragmentRiftCloseTargets = document.querySelectorAll("[data-close-fragment-rift]");
 const fragmentTwoRiftCloseTargets = document.querySelectorAll("[data-close-fragment-two-rift]");
@@ -188,6 +194,7 @@ function runWhenIdle(callback, timeout = 1600) {
 }
 
 let modalCloseTimer = null;
+let pacGroupModalCloseTimer = null;
 let signalRiftCloseTimer = null;
 let fragmentRiftCloseTimer = null;
 let fragmentTwoRiftCloseTimer = null;
@@ -859,6 +866,55 @@ function closeTracksModal() {
     if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
       lastFocusedElement.focus();
     }
+  }, 560);
+}
+
+function expandPacPromo() {
+  if (!pacPromoSection || !pacPromoToggle || !pacPromoContent) {
+    return;
+  }
+
+  if (pacPromoSection.classList.contains("is-expanded")) {
+    return;
+  }
+
+  pacPromoContent.hidden = false;
+  pacPromoToggle.setAttribute("aria-expanded", "true");
+  pacPromoSection.classList.remove("is-collapsed");
+  pacPromoSection.classList.add("is-expanded");
+}
+
+function openPacGroupModal(event) {
+  event?.preventDefault();
+
+  if (!pacGroupModal) {
+    return;
+  }
+
+  clearTimeout(pacGroupModalCloseTimer);
+  pacGroupModal.classList.remove("is-closing");
+  pacGroupModal.classList.add("is-open");
+  pacGroupModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  const closeButton = pacGroupModal.querySelector(".modal-close");
+  if (closeButton && typeof closeButton.focus === "function") {
+    closeButton.focus();
+  }
+}
+
+function closePacGroupModal() {
+  if (!pacGroupModal || !pacGroupModal.classList.contains("is-open")) {
+    return;
+  }
+
+  pacGroupModal.classList.add("is-closing");
+  pacGroupModal.classList.remove("is-open");
+  pacGroupModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+
+  pacGroupModalCloseTimer = setTimeout(() => {
+    pacGroupModal.classList.remove("is-closing");
   }, 560);
 }
 
@@ -7053,6 +7109,14 @@ if (openTracksButton) {
   openTracksButton.addEventListener("click", openTracksModal);
 }
 
+if (openPacGroupButton) {
+  openPacGroupButton.addEventListener("click", openPacGroupModal);
+}
+
+if (pacPromoToggle) {
+  pacPromoToggle.addEventListener("click", expandPacPromo);
+}
+
 if (openSignalRiftButton) {
   openSignalRiftButton.addEventListener("click", openSignalRift);
 }
@@ -7368,6 +7432,10 @@ modalCloseTargets.forEach((target) => {
   target.addEventListener("click", closeTracksModal);
 });
 
+pacGroupCloseTargets.forEach((target) => {
+  target.addEventListener("click", closePacGroupModal);
+});
+
 signalRiftCloseTargets.forEach((target) => {
   target.addEventListener("click", closeSignalRift);
 });
@@ -7443,6 +7511,7 @@ document.addEventListener("keydown", (event) => {
     closeFragmentTwoRift();
     closeFragmentRift();
     closeSignalRift();
+    closePacGroupModal();
     closeTracksModal();
   }
 });

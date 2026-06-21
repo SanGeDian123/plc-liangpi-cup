@@ -9,6 +9,8 @@
 
   <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="./assets/bg.webp" as="image" />
+  <link rel="preload" href="./assets/pac-2026-preliminary-bg.png" as="image" />
+  <link rel="preload" href="./assets/pac-2026-preliminary-character.png" as="image" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
   <link rel="stylesheet" href="./css/event.css" />
 </head>
@@ -68,6 +70,49 @@
           </div>
         </dl>
       </aside>
+    </section>
+
+    <section class="pac-promo-section is-collapsed" id="pac-promo" aria-label="PAC 2026 · 绝对混乱">
+      <button
+        class="pac-promo-toggle"
+        id="pacPromoToggle"
+        type="button"
+        aria-expanded="false"
+        aria-controls="pacPromoContent"
+      >
+        <span>PAC 2026 · 绝对混乱</span>
+      </button>
+
+      <article class="pac-promo-card" id="pacPromoContent" aria-labelledby="pacPromoTitle" hidden>
+        <div class="pac-promo-art" aria-hidden="true">
+          <div class="pac-promo-banner-frame">
+            <img class="pac-promo-bg" src="./assets/pac-2026-preliminary-bg.png" alt="" decoding="async" loading="eager" fetchpriority="high" />
+          </div>
+          <img class="pac-promo-character" src="./assets/pac-2026-preliminary-character.png" alt="" decoding="async" loading="eager" fetchpriority="high" />
+        </div>
+
+        <div class="pac-promo-panel">
+          <div class="pac-promo-copy">
+            <h2 class="pac-promo-title" id="pacPromoTitle">PAC 2026 · 绝对混乱</h2>
+            <p class="pac-promo-quote">
+              “潮落之后，岸◼已尽收◼#底；但另%个[变数]却悄€ ◼现#｛世界彻◼崩塌[绝对混乱]，/，～◼们必=【◼溯]……”
+            </p>
+            <p class="pac-promo-source">
+              —— Phigros Apex Competition 2026 : Preliminary Round 先行赛 [绝对混乱]
+            </p>
+            <p class="pac-promo-signoff">我们赛场上见！</p>
+          </div>
+          <div class="pac-promo-actions">
+            <a
+              class="pac-promo-button pac-promo-button-primary"
+              href="https://docs.qq.com/doc/DQXd3eUttQnJDd1NF"
+              target="_blank"
+              rel="noopener noreferrer"
+            >查看详情</a>
+            <button class="pac-promo-button pac-promo-button-secondary" id="openPacGroupModal" type="button">前往交流群</button>
+          </div>
+        </div>
+      </article>
     </section>
 
     <section class="notice-band" aria-label="重要信息">
@@ -740,6 +785,23 @@
 
         <p class="modal-countdown" id="selectionCountdown">海选倒计时：计算中...</p>
       </div>
+    </section>
+  </div>
+
+  <div class="modal pac-group-modal" id="pacGroupModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close-pac-group-modal></div>
+    <section
+      class="modal-panel pac-group-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="pacGroupModalTitle"
+    >
+      <button class="modal-close" type="button" data-close-pac-group-modal aria-label="关闭交流群窗口">×</button>
+      <p class="pac-group-kicker">PAC 2026 // QQ GROUP</p>
+      <h2 id="pacGroupModalTitle">加入交流群</h2>
+      <img class="pac-group-qr" src="./assets/pac-2026-group-qr.png" alt="PAC 2026 交流群二维码" decoding="async" />
+      <p class="pac-group-number">群号 <strong>938527515</strong></p>
+      <p class="pac-group-note">扫码进群，立即参赛 / 观赛。</p>
     </section>
   </div>
 
