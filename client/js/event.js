@@ -58,6 +58,12 @@ const plcFolderTitle = document.getElementById("plcFolderTitle");
 const plcRestoreToast = document.getElementById("plcRestoreToast");
 const databaseQuickEntry = document.getElementById("databaseQuickEntry");
 const quickDatabaseButton = document.getElementById("quickDatabaseButton");
+const decryptSkipButton = document.getElementById("decryptSkipButton");
+const decryptSkipStatus = document.getElementById("decryptSkipStatus");
+const decryptSkipConfirm = document.getElementById("decryptSkipConfirm");
+const decryptSkipConfirmButton = document.getElementById("decryptSkipConfirmButton");
+const decryptSkipCancelButton = document.getElementById("decryptSkipCancelButton");
+const decryptSkipConfirmCloseTargets = document.querySelectorAll("[data-close-decrypt-skip-confirm]");
 const qualifierRankingCloseTargets = document.querySelectorAll("[data-close-qualifier-ranking]");
 const fragmentFiveRiftCloseTargets = document.querySelectorAll("[data-close-fragment-five-rift]");
 const signalRift = document.getElementById("signalRift");
@@ -213,6 +219,7 @@ let releaseRiftCloseTimer = null;
 let dateRiftCloseTimer = null;
 let finalDateRiftCloseTimer = null;
 let lastFocusedElement = null;
+let decryptSkipConfirmLastFocusedElement = null;
 let signalRiftLastFocusedElement = null;
 let fragmentRiftLastFocusedElement = null;
 let fragmentTwoRiftLastFocusedElement = null;
@@ -318,6 +325,7 @@ const fragmentSevenAnswerStorageKey = "plc.event.fragment07.v1";
 const fragmentSevenAnswerCacheVersion = "2026-06-20-fragment-07-bpm-v1";
 const fragmentSevenIntroStorageKey = "plc.event.fragment07Intro.v1";
 const fragmentSevenIntroCacheVersion = "2026-06-20-fragment-07-intro-v1";
+const decryptSkipEndpointLabel = "第一层回声 / FRAGMENT 07";
 const fragmentSevenAnswer = "retribution";
 const fragmentSevenDialogueIntervalMs = 3200;
 const fragmentSevenDialogueTexts = [
@@ -584,6 +592,28 @@ const plcExperimentLogEntries = [
       "我抓住了虚空中四首乐曲掉落的音符，乐曲之首便是我想要的结果。",
       "它们掉落了一串密文，似乎有一种神秘的力量在指引着我：",
       "1BHagejhknWhRhNqIzYwJ2Q",
+    ].join("\n")
+  },
+      {
+    title: "商店里的柠檬水",
+    collectedAt: "26/6/22",
+    keeper: "Unknown",
+    level: "Side",
+    body: [
+      "在霓虹随处可见的街边商铺里，售卖一种名为“斯盖·“雷莫瓦特”·伯尔德”的柠檬水饮料。",
+      "当下世界，能有幸得到一瓶，哪怕付出再多代价也在所不惜。",
+      "斯盖·“雷莫瓦特”·伯尔德牌柠檬水，你值得拥有！",
+      "特惠促销，当前仅售998鸽币/瓶！！！",
+    ].join("\n")
+  },
+        {
+    title: "哎我是啥子欸嘿嘿",
+    collectedAt: "26/6/22",
+    keeper: "Unknown",
+    level: "Side",
+    body: [
+      "我的名字读起来好像是 撒子",
+      "哎我是啥子欸嘿嘿",
     ].join("\n")
   },
   {
@@ -5634,6 +5664,218 @@ function writeFragmentSevenIntroCache() {
   }));
 }
 
+function writeAllPlcDatabaseEntriesSeen() {
+  const seenSet = new Set();
+
+  Object.keys(plcDatabaseCategories).forEach((categoryKey) => {
+    getPlcDatabaseCategory(categoryKey).entries.forEach((_entry, index) => {
+      seenSet.add(getPlcDatabaseEntryKey(categoryKey, index));
+    });
+  });
+
+  writePlcDatabaseSeenSet(seenSet);
+}
+
+function writeCurrentDecryptionEndpointCache() {
+  [
+    writeSignalGateCache,
+    writeSignalRetryCache,
+    writeFragmentAnswerCache,
+    writeArtistGateCache,
+    writeFragmentTwoAnswerCache,
+    writePalaceGateCache,
+    writeMultisourceGateCache,
+    writeFragmentThreeAnswerCache,
+    writeNoteGateCache,
+    writeFragmentFourAnswerCache,
+    writeFinalBootDialogueCache,
+    writeFinalOffsetCache,
+    writeFragmentFiveEntryCache,
+    writeFragmentFiveAnswerCache,
+    writePlcDatabaseFullLoaderCache,
+    () => writePlcDatabaseReplayState(true),
+    writePlcDatabaseVerificationState,
+    writePlcSecretFragmentFourState,
+    writeFirstLayerEchoState,
+    writeFirstLayerFragmentOneState,
+    writeFragmentSevenIntroCache,
+    writeFragmentSevenAnswerCache,
+    writeAllPlcDatabaseEntriesSeen
+  ].forEach((writeStep) => {
+    writeStep();
+  });
+}
+
+function closeDecryptionSurfacesForSkip() {
+  clearSaturnSimulationTimers();
+  clearMobileLandscapeNoticeTimers();
+  clearQualifierRebootTimers();
+  clearFirstLayerTerminalTimers();
+  clearFragmentSevenDialogueTimers();
+  stopFinalDateCountdown();
+  closeDecryptSkipConfirm({
+    restoreFocus: false
+  });
+  closeMobileLandscapeNotice();
+  hideFragmentSevenDialogueStage();
+  closeFragmentSevenRift();
+  closeFirstLayerTerminal();
+  closePlcDatabase();
+  closeFragmentFiveRift();
+  closeQualifierRankingRift();
+  closeFinalDateRift();
+  closeDateRift();
+  closeReleaseRift();
+  closePalaceRift();
+  closeSettlementRift();
+  closePhasePlateRift();
+  closeFragmentFourRift();
+  closeFragmentThreeRift();
+  closeFragmentTwoRift();
+  closeFragmentRift();
+  closeSignalRift();
+}
+
+function renderCurrentDecryptionEndpoint({ scroll = true } = {}) {
+  reverseReplayMode = false;
+  reverseReplayStepIndex = 0;
+  document.body.classList.remove("reverse-replay-mode", "simulation-loader-open", "landscape-notice-open");
+  restoreLiveRankingPreview({
+    forceRefresh: true
+  });
+  completeSignalGate({
+    fromCache: true
+  });
+  revealFragmentAnswer({
+    fromCache: true
+  });
+  revealShardTwo({
+    fromCache: true
+  });
+  revealFragmentTwoAnswer({
+    fromCache: true
+  });
+  revealMultisourceGate({
+    fromCache: true
+  });
+  revealShardThree({
+    fromCache: true
+  });
+  revealFragmentThreeAnswer({
+    fromCache: true
+  });
+  revealNoteGateSolved({
+    fromCache: true
+  });
+  revealFragmentFourAnswer({
+    fromCache: true
+  });
+  restoreFinalOffsetProgress();
+  revealFragmentFiveAnswer({
+    fromCache: true
+  });
+  applyPlcDatabaseReplayState(true, {
+    restoreFirstLayer: false
+  });
+  updatePlcDatabaseProgress();
+  revealFirstLayerEcho({
+    animate: false,
+    scroll
+  });
+  revealFragmentSevenAnswer({
+    fromCache: true
+  });
+}
+
+function completeCurrentDecryptionPath({ scroll = true } = {}) {
+  writeCurrentDecryptionEndpointCache();
+  closeDecryptionSurfacesForSkip();
+  renderCurrentDecryptionEndpoint({
+    scroll
+  });
+}
+
+function closeDecryptSkipConfirm({ restoreFocus = true, statusText = "" } = {}) {
+  if (!decryptSkipConfirm?.classList.contains("is-open")) {
+    return;
+  }
+
+  decryptSkipConfirm.classList.remove("is-open");
+  decryptSkipConfirm.setAttribute("aria-hidden", "true");
+  decryptSkipConfirm.inert = true;
+  document.body.classList.remove("modal-open");
+
+  if (statusText && decryptSkipStatus) {
+    decryptSkipStatus.textContent = statusText;
+  }
+
+  if (
+    restoreFocus &&
+    decryptSkipConfirmLastFocusedElement &&
+    typeof decryptSkipConfirmLastFocusedElement.focus === "function"
+  ) {
+    decryptSkipConfirmLastFocusedElement.focus();
+  }
+}
+
+function openDecryptSkipConfirm(event) {
+  event?.preventDefault();
+
+  if (!decryptSkipConfirm) {
+    executeDecryptSkip();
+    return;
+  }
+
+  decryptSkipConfirmLastFocusedElement = document.activeElement;
+  decryptSkipConfirm.inert = false;
+  decryptSkipConfirm.classList.add("is-open");
+  decryptSkipConfirm.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+
+  if (decryptSkipStatus) {
+    decryptSkipStatus.textContent = "等待二次确认。";
+  }
+
+  window.setTimeout(() => {
+    const focusTarget = decryptSkipConfirmButton || decryptSkipCancelButton;
+    focusTarget?.focus({
+      preventScroll: true
+    });
+  }, 40);
+}
+
+function executeDecryptSkip() {
+  closeDecryptSkipConfirm({
+    restoreFocus: false
+  });
+
+  if (decryptSkipButton) {
+    decryptSkipButton.disabled = true;
+  }
+
+  if (decryptSkipStatus) {
+    decryptSkipStatus.textContent = "正在跳过剩余解密步骤...";
+  }
+
+  completeCurrentDecryptionPath({
+    scroll: true
+  });
+
+  if (decryptSkipStatus) {
+    decryptSkipStatus.textContent = "已抵达当前版本终点：" + decryptSkipEndpointLabel + "。";
+  }
+
+  window.setTimeout(() => {
+    if (decryptSkipButton) {
+      decryptSkipButton.disabled = false;
+    }
+  }, 900);
+}
+
+function handleDecryptSkipButtonClick(event) {
+  openDecryptSkipConfirm(event);
+}
+
 function isPlcDatabaseVerificationRequired() {
   return readPlcDatabaseReplayState() && !readPlcDatabaseVerificationState();
 }
@@ -7171,6 +7413,34 @@ if (quickDatabaseButton) {
   quickDatabaseButton.addEventListener("click", startDatabaseQuickLoader);
 }
 
+if (decryptSkipButton) {
+  decryptSkipButton.addEventListener("click", handleDecryptSkipButtonClick);
+}
+
+if (decryptSkipConfirm) {
+  decryptSkipConfirm.inert = true;
+}
+
+if (decryptSkipConfirmButton) {
+  decryptSkipConfirmButton.addEventListener("click", executeDecryptSkip);
+}
+
+if (decryptSkipCancelButton) {
+  decryptSkipCancelButton.addEventListener("click", () => {
+    closeDecryptSkipConfirm({
+      statusText: "已取消跳过。"
+    });
+  });
+}
+
+decryptSkipConfirmCloseTargets.forEach((target) => {
+  target.addEventListener("click", () => {
+    closeDecryptSkipConfirm({
+      statusText: "已取消跳过。"
+    });
+  });
+});
+
 if (firstLayerOffsetButton) {
   firstLayerOffsetButton.addEventListener("click", openFirstLayerTerminal);
 }
@@ -7490,6 +7760,13 @@ fragmentFiveRiftCloseTargets.forEach((target) => {
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    if (decryptSkipConfirm?.classList.contains("is-open")) {
+      closeDecryptSkipConfirm({
+        statusText: "已取消跳过。"
+      });
+      return;
+    }
+
     if (fragmentSevenDialogueStage?.classList.contains("is-active")) {
       finishFragmentSevenIntro();
       return;

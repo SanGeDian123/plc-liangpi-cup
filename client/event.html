@@ -693,7 +693,57 @@
         </div>
       </div>
     </section>
+
+    <section class="section decrypt-skip-section" aria-labelledby="decryptSkipTitle">
+      <div class="decrypt-skip-panel">
+        <div class="decrypt-skip-copy">
+          <p class="eyebrow">DECRYPTION OVERRIDE</p>
+          <h2 id="decryptSkipTitle">SKIP</h2>
+          <p>跳过主页当前版本剩余的所有解密步骤，直接抵达当前解密终点。</p>
+        </div>
+        <div class="decrypt-skip-actions">
+          <button class="decrypt-skip-button" id="decryptSkipButton" type="button">
+            SKIP
+          </button>
+          <p class="decrypt-skip-status" id="decryptSkipStatus" aria-live="polite">
+            点击后需要二次确认。
+          </p>
+        </div>
+      </div>
+    </section>
   </main>
+
+  <div class="decrypt-skip-confirm" id="decryptSkipConfirm" aria-hidden="true">
+    <div class="decrypt-skip-confirm-backdrop" data-close-decrypt-skip-confirm></div>
+    <section
+      class="decrypt-skip-confirm-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="decryptSkipConfirmTitle"
+    >
+      <button
+        class="decrypt-skip-confirm-close"
+        type="button"
+        data-close-decrypt-skip-confirm
+        aria-label="取消跳过解密"
+      >
+        ×
+      </button>
+      <p class="decrypt-skip-confirm-code">SECOND CONFIRM // DECRYPTION OVERRIDE</p>
+      <h2 id="decryptSkipConfirmTitle">确认跳过当前解密？</h2>
+      <p>
+        这会写入主页当前版本的全部解密完成状态，并直接抵达当前解密终点。
+      </p>
+      <div class="decrypt-skip-confirm-actions">
+        <button class="decrypt-skip-confirm-cancel" id="decryptSkipCancelButton" type="button">
+          取消
+        </button>
+        <button class="decrypt-skip-confirm-accept" id="decryptSkipConfirmButton" type="button">
+          确认 SKIP
+        </button>
+      </div>
+    </section>
+  </div>
 
   <div class="first-layer-terminal" id="firstLayerTerminal" aria-hidden="true">
     <div class="first-layer-terminal-backdrop" data-close-first-layer-terminal></div>
