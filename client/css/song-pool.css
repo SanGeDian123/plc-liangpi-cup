@@ -431,8 +431,34 @@ select{
     width:min(1180px, calc(100% - 20px));
   }
 
+  .pool-header{
+    flex-direction:row;
+    align-items:center;
+    gap:10px;
+    margin-top:8px;
+    padding:8px 10px;
+  }
+
+  .pool-brand{
+    gap:6px;
+    font-size:15px;
+  }
+
+  .pool-brand strong{
+    display:none;
+  }
+
+  .pool-brand img{
+    width:30px;
+    height:30px;
+  }
+
+  .pool-nav{
+    display:none;
+  }
+
   .pool-page{
-    padding-top:24px;
+    padding-top:18px;
   }
 
   .pool-title-block,
