@@ -305,7 +305,7 @@ body{
   height:86px;
   pointer-events:none;
   opacity:.72;
-  background:url("../assets/golden-dragon-flight.png") center/contain no-repeat;
+  background:url("../assets/golden-dragon-flight.png?v=20260628c") center/contain no-repeat;
   filter:
     drop-shadow(0 0 10px rgba(255,220,96,.45))
     drop-shadow(0 0 16px rgba(79,220,255,.22));
@@ -658,22 +658,22 @@ footer{
 
   .dragon-player-row{
     min-height:68px;
-    padding-left:72px;
-    padding-right:72px;
+    padding-left:74px;
+    padding-right:74px;
   }
 
   .dragon-player-row .dragon-row-wing{
-    width:132px;
+    width:124px;
     height:58px;
-    opacity:.52;
+    opacity:.9;
   }
 
   .dragon-player-row .dragon-row-wing-left{
-    left:-54px;
+    left:-16px;
   }
 
   .dragon-player-row .dragon-row-wing-right{
-    right:-54px;
+    right:-16px;
   }
 
   .group-divider{
