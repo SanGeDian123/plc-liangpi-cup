@@ -35,6 +35,12 @@ const PHI_BACKEND_URL = (
 ).replace(/\/+$/, "");
 const PHI_BACKEND_TIMEOUT_MS =
   Number(process.env.PHI_BACKEND_TIMEOUT_MS) || 15000;
+const DISPLAY_SETTINGS_PATH =
+  process.env.DISPLAY_SETTINGS_PATH ||
+  path.join(os.tmpdir(), "plc-liangpi-cup-display-settings.json");
+const DEFAULT_DISPLAY_SETTINGS = Object.freeze({
+  goldDragonPlayerIds: []
+});
 
 const playersCache = {
   players: [],
@@ -43,6 +49,12 @@ const playersCache = {
   snapshotLoaded: false,
   refreshPromise: null,
   lastError: null
+};
+const displaySettingsCache = {
+  loaded: false,
+  settings: {
+    ...DEFAULT_DISPLAY_SETTINGS
+  }
 };
 
 app.use(
@@ -282,6 +294,63 @@ function removePlayerFromCache(id) {
   persistPlayersSnapshot(playersCache.players).catch((error) => {
     console.warn("Players snapshot write failed", error.message);
   });
+}
+
+function normalizeGoldDragonPlayerIds(value) {
+  const ids = Array.isArray(value) ? value : [];
+  const normalized = ids
+    .map((id) => String(id || "").trim())
+    .filter(Boolean);
+
+  return Array.from(new Set(normalized));
+}
+
+function normalizeDisplaySettings(value = {}) {
+  return {
+    goldDragonPlayerIds: normalizeGoldDragonPlayerIds(
+      value.goldDragonPlayerIds
+    )
+  };
+}
+
+async function loadDisplaySettings() {
+  if (displaySettingsCache.loaded) {
+    return displaySettingsCache.settings;
+  }
+
+  try {
+    const raw = await fs.readFile(DISPLAY_SETTINGS_PATH, "utf8");
+    displaySettingsCache.settings = normalizeDisplaySettings(JSON.parse(raw));
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      console.warn("Display settings read failed", error.message);
+    }
+
+    displaySettingsCache.settings = {
+      ...DEFAULT_DISPLAY_SETTINGS
+    };
+  }
+
+  displaySettingsCache.loaded = true;
+  return displaySettingsCache.settings;
+}
+
+async function persistDisplaySettings(settings) {
+  const normalized = normalizeDisplaySettings(settings);
+
+  displaySettingsCache.loaded = true;
+  displaySettingsCache.settings = normalized;
+
+  await fs.mkdir(path.dirname(DISPLAY_SETTINGS_PATH), {
+    recursive: true
+  });
+  await fs.writeFile(
+    DISPLAY_SETTINGS_PATH,
+    `${JSON.stringify(normalized, null, 2)}\n`,
+    "utf8"
+  );
+
+  return normalized;
 }
 
 function checkAdmin(req, res, next) {
@@ -600,6 +669,48 @@ app.post("/admin/login", (req, res) => {
   res.status(401).json({
     message: "密码错误"
   });
+});
+
+app.get("/settings/display", async (req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.json(await loadDisplaySettings());
+});
+
+app.put("/admin/settings/display", checkAdmin, async (req, res) => {
+  try {
+    const currentSettings = await loadDisplaySettings();
+    let goldDragonPlayerIds = currentSettings.goldDragonPlayerIds;
+
+    if (Array.isArray(req.body?.goldDragonPlayerIds)) {
+      goldDragonPlayerIds = normalizeGoldDragonPlayerIds(
+        req.body.goldDragonPlayerIds
+      );
+    } else if (req.body?.playerId !== undefined) {
+      const playerId = String(req.body.playerId || "").trim();
+      const ids = new Set(goldDragonPlayerIds);
+
+      if (playerId && req.body?.enabled === true) {
+        ids.add(playerId);
+      } else if (playerId) {
+        ids.delete(playerId);
+      }
+
+      goldDragonPlayerIds = Array.from(ids);
+    }
+
+    const settings = await persistDisplaySettings({
+      ...currentSettings,
+      goldDragonPlayerIds
+    });
+
+    res.set("Cache-Control", "no-store");
+    res.json(settings);
+  } catch (error) {
+    res.status(500).json({
+      message: "Display settings update failed",
+      detail: error.message
+    });
+  }
 });
 
 app.get("/players", async (req, res) => {

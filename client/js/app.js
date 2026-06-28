@@ -1,5 +1,34 @@
 let currentCommentPlayerId = null;
 let commentRequestId = 0;
+let displaySettings = {
+  goldDragonPlayerIds: []
+};
+
+function applyDisplaySettings(settings = {}) {
+  displaySettings = {
+    goldDragonPlayerIds: Array.isArray(settings.goldDragonPlayerIds)
+      ? settings.goldDragonPlayerIds.map(String)
+      : []
+  };
+}
+
+async function loadDisplaySettings() {
+  try {
+    const res = await fetch(`${API_URL}/settings/display`);
+
+    if (!res.ok) {
+      throw new Error("Display settings request failed");
+    }
+
+    applyDisplaySettings(await res.json());
+  } catch (error) {
+    applyDisplaySettings();
+  }
+}
+
+function isGoldDragonPlayer(player) {
+  return displaySettings.goldDragonPlayerIds.includes(String(player?.id));
+}
 
 function updateCountdown() {
   const endTime = new Date("2026-07-03T23:59:00");
@@ -95,6 +124,7 @@ function renderTop3(players) {
     const div = document.createElement("div");
 
     div.className = "top-card " + (rank === 1 ? "first" : "");
+    div.dataset.rank = rank;
     div.onclick = () => openComments(p.id, p.nickname);
 
     div.innerHTML = `
@@ -126,11 +156,22 @@ function renderRanking(players) {
     }
 
     const div = document.createElement("div");
+    const hasGoldDragon = isGoldDragonPlayer(p);
+    const dragonRankClass =
+      rank >= 1 && rank <= 3 ? ` dragon-rank-${rank}` : " dragon-rank-other";
 
-    div.className = "rank-item";
+    div.className =
+      "rank-item" +
+      (hasGoldDragon ? ` dragon-player-row${dragonRankClass}` : "");
+    div.dataset.rank = rank;
     div.onclick = () => openComments(p.id, p.nickname);
 
     div.innerHTML = `
+      ${
+        hasGoldDragon
+          ? '<span class="dragon-row-wing dragon-row-wing-left" aria-hidden="true"></span><span class="dragon-row-wing dragon-row-wing-right" aria-hidden="true"></span>'
+          : ""
+      }
       <div>#${rank}</div>
       <div>${escapeHtml(p.nickname)}</div>
       <div>${p.score}</div>
@@ -162,6 +203,17 @@ function renderRanking(players) {
   });
 }
 
+function showCommentMessage(message, isError = false) {
+  const msg = document.getElementById("commentMsg");
+
+  if (!msg) {
+    return;
+  }
+
+  msg.innerText = message;
+  msg.classList.toggle("is-error", isError);
+}
+
 function getScoreRank(players, index) {
   const score = players[index]?.score;
   const tiedIndex = players.findIndex((player) => player.score === score);
@@ -182,6 +234,7 @@ async function openComments(playerId, nickname) {
     `<div class="empty-comment">评论加载中...</div>`;
 
   document.getElementById("commentContent").value = "";
+  showCommentMessage("");
   document.getElementById("commentModal").style.display = "flex";
 
   await loadComments(playerId, requestId);
@@ -193,6 +246,7 @@ function closeComments() {
 
   document.getElementById("commentModal").style.display = "none";
   document.getElementById("commentList").innerHTML = "";
+  showCommentMessage("");
 }
 
 async function loadComments(playerId, requestId = commentRequestId) {
@@ -231,12 +285,13 @@ async function submitComment() {
   const content = document.getElementById("commentContent").value.trim();
 
   if (!nickname || !content) {
-    alert("请输入昵称和评论内容");
+    showCommentMessage("请输入昵称和评论内容", true);
     return;
   }
 
   const playerId = currentCommentPlayerId;
 
+  showCommentMessage("评论发布中...");
   document.getElementById("commentList").innerHTML =
     `<div class="empty-comment">评论发布中...</div>`;
 
@@ -252,11 +307,12 @@ async function submitComment() {
   });
 
   if (!res.ok) {
-    alert("评论发布失败");
+    showCommentMessage("评论发布失败", true);
     return;
   }
 
   document.getElementById("commentContent").value = "";
+  showCommentMessage("评论已发布");
 
   await loadComments(playerId);
 }
@@ -271,4 +327,9 @@ function escapeHtml(text) {
 }
 
 window.PLCMusicPlayer?.init();
-loadPlayers();
+initLeaderboard();
+
+async function initLeaderboard() {
+  await loadDisplaySettings();
+  loadPlayers();
+}

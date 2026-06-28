@@ -1,4 +1,8 @@
 let adminToken = localStorage.getItem("adminToken");
+let pendingDeletePlayerId = null;
+let displaySettings = {
+  goldDragonPlayerIds: []
+};
 
 function showLogin() {
   document.getElementById("loginPanel").style.display = "block";
@@ -8,6 +12,31 @@ function showLogin() {
 function showAdmin() {
   document.getElementById("loginPanel").style.display = "none";
   document.getElementById("adminPanel").style.display = "block";
+}
+
+function setMessage(elementId, message, isError = false) {
+  const element = document.getElementById(elementId);
+
+  if (!element) {
+    return;
+  }
+
+  element.innerText = message;
+  element.classList.toggle("is-error", isError);
+}
+
+function showAdminMessage(message, isError = false) {
+  setMessage("adminMsg", message, isError);
+}
+
+function clearAdminSession() {
+  localStorage.removeItem("adminToken");
+  adminToken = null;
+  showLogin();
+}
+
+function isGoldDragonPlayerId(playerId) {
+  return displaySettings.goldDragonPlayerIds.includes(String(playerId));
 }
 
 async function adminLogin() {
@@ -53,21 +82,40 @@ async function loadAdmin() {
   }
 
   showAdmin();
+  await loadDisplaySettings();
 
   const res = await fetch(`${API_URL}/players`);
-  const players = await res.json();
 
+  if (!res.ok) {
+    showAdminMessage("选手列表加载失败，请稍后重试", true);
+    return;
+  }
+
+  const players = await res.json();
   const list = document.getElementById("adminList");
   list.innerHTML = "";
 
   players.forEach((p) => {
     const div = document.createElement("div");
     div.className = "admin-item";
+    const hasGoldDragon = isGoldDragonPlayerId(p.id);
 
     div.innerHTML = `
       <input value="${escapeHtml(p.nickname)}" id="name-${p.id}" placeholder="昵称">
       <input value="${escapeHtml(p.number || "")}" id="number-${p.id}" placeholder="编号">
       <input value="${p.score}" id="score-${p.id}" placeholder="成绩" type="number">
+      <div class="dragon-toggle-cell">
+        <span>金龙</span>
+        <label class="switch-control compact-switch" title="金龙模式">
+          <input
+            type="checkbox"
+            data-gold-dragon-player-id="${p.id}"
+            onchange="updatePlayerDragonEffect(${p.id}, this.checked)"
+            ${hasGoldDragon ? "checked" : ""}
+          >
+          <span aria-hidden="true"></span>
+        </label>
+      </div>
 
       <button onclick="updatePlayer(${p.id})">保存</button>
       <button class="danger" onclick="deletePlayer(${p.id})">删除</button>
@@ -77,13 +125,120 @@ async function loadAdmin() {
   });
 }
 
+async function loadDisplaySettings() {
+  try {
+    const res = await fetch(`${API_URL}/settings/display`);
+
+    if (!res.ok) {
+      throw new Error("settings request failed");
+    }
+
+    const settings = await res.json();
+
+    displaySettings = {
+      goldDragonPlayerIds: Array.isArray(settings.goldDragonPlayerIds)
+        ? settings.goldDragonPlayerIds.map(String)
+        : []
+    };
+  } catch (error) {
+    displaySettings = {
+      goldDragonPlayerIds: []
+    };
+    showAdminMessage("金龙模式状态加载失败，请刷新后台", true);
+  }
+}
+
+async function updatePlayerDragonEffect(playerId, enabled) {
+  const playerKey = String(playerId);
+  const toggle = document.querySelector(
+    `[data-gold-dragon-player-id="${playerKey}"]`
+  );
+  const previousValue = !enabled;
+
+  if (!adminToken) {
+    if (toggle) {
+      toggle.checked = previousValue;
+    }
+
+    clearAdminSession();
+    return;
+  }
+
+  if (toggle) {
+    toggle.disabled = true;
+  }
+
+  showAdminMessage(enabled ? "正在开启金龙模式..." : "正在关闭金龙模式...");
+
+  try {
+    const res = await fetch(`${API_URL}/admin/settings/display`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "x-admin-token": adminToken
+      },
+      body: JSON.stringify({
+        playerId: playerKey,
+        enabled
+      })
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        throw new Error("unauthorized");
+      }
+
+      if (toggle) {
+        toggle.checked = previousValue;
+      }
+
+      showAdminMessage("保存失败，请稍后重试", true);
+      return;
+    }
+
+    const settings = await res.json();
+    displaySettings = {
+      goldDragonPlayerIds: Array.isArray(settings.goldDragonPlayerIds)
+        ? settings.goldDragonPlayerIds.map(String)
+        : []
+    };
+
+    if (toggle) {
+      toggle.checked = isGoldDragonPlayerId(playerKey);
+    }
+
+    showAdminMessage(
+      isGoldDragonPlayerId(playerKey) ? "金龙模式已开启" : "金龙模式已关闭"
+    );
+  } catch (error) {
+    if (toggle) {
+      toggle.checked = previousValue;
+    }
+
+    const isUnauthorized = error.message === "unauthorized";
+
+    showAdminMessage(
+      isUnauthorized ? "登录已失效，请重新登录后台后再试" : "保存失败，请稍后重试",
+      true
+    );
+
+    if (isUnauthorized) {
+      clearAdminSession();
+    }
+  } finally {
+    if (toggle) {
+      toggle.disabled = false;
+    }
+  }
+}
+
 async function addPlayer() {
   const nickname = document.getElementById("nickname").value.trim();
   const number = document.getElementById("number").value.trim();
   const score = document.getElementById("score").value.trim();
 
   if (!nickname || !score) {
-    alert("请输入昵称和成绩");
+    showAdminMessage("请输入昵称和成绩", true);
     return;
   }
 
@@ -101,10 +256,8 @@ async function addPlayer() {
   });
 
   if (!res.ok) {
-    alert("新增失败，请重新登录后台");
-    localStorage.removeItem("adminToken");
-    adminToken = null;
-    showLogin();
+    showAdminMessage("新增失败，请重新登录后台", true);
+    clearAdminSession();
     return;
   }
 
@@ -112,6 +265,7 @@ async function addPlayer() {
   document.getElementById("number").value = "";
   document.getElementById("score").value = "";
 
+  showAdminMessage("选手已新增");
   loadAdmin();
 }
 
@@ -121,7 +275,7 @@ async function updatePlayer(id) {
   const score = document.getElementById(`score-${id}`).value.trim();
 
   if (!nickname || !score) {
-    alert("昵称和成绩不能为空");
+    showAdminMessage("昵称和成绩不能为空", true);
     return;
   }
 
@@ -139,18 +293,47 @@ async function updatePlayer(id) {
   });
 
   if (!res.ok) {
-    alert("保存失败，请重新登录后台");
-    localStorage.removeItem("adminToken");
-    adminToken = null;
-    showLogin();
+    showAdminMessage("保存失败，请重新登录后台", true);
+    clearAdminSession();
     return;
   }
 
+  showAdminMessage("选手信息已保存");
   loadAdmin();
 }
 
-async function deletePlayer(id) {
-  if (!confirm("确定删除该选手吗？此操作不可恢复。")) {
+function deletePlayer(id) {
+  pendingDeletePlayerId = id;
+
+  const dialog = document.getElementById("adminConfirmDialog");
+
+  if (!dialog) {
+    return;
+  }
+
+  dialog.classList.add("is-open");
+  dialog.setAttribute("aria-hidden", "false");
+  dialog.querySelector(".danger")?.focus();
+}
+
+function closeDeleteDialog() {
+  pendingDeletePlayerId = null;
+
+  const dialog = document.getElementById("adminConfirmDialog");
+
+  if (!dialog) {
+    return;
+  }
+
+  dialog.classList.remove("is-open");
+  dialog.setAttribute("aria-hidden", "true");
+}
+
+async function confirmDeletePlayer() {
+  const id = pendingDeletePlayerId;
+
+  if (!id) {
+    closeDeleteDialog();
     return;
   }
 
@@ -162,20 +345,19 @@ async function deletePlayer(id) {
   });
 
   if (!res.ok) {
-    alert("删除失败，请重新登录后台");
-    localStorage.removeItem("adminToken");
-    adminToken = null;
-    showLogin();
+    closeDeleteDialog();
+    showAdminMessage("删除失败，请重新登录后台", true);
+    clearAdminSession();
     return;
   }
 
+  closeDeleteDialog();
+  showAdminMessage("选手已删除");
   loadAdmin();
 }
 
 function logoutAdmin() {
-  localStorage.removeItem("adminToken");
-  adminToken = null;
-  showLogin();
+  clearAdminSession();
 }
 
 function escapeHtml(text) {
@@ -186,5 +368,11 @@ function escapeHtml(text) {
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    closeDeleteDialog();
+  }
+});
 
 loadAdmin();

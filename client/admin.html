@@ -33,12 +33,25 @@
     <input id="score" placeholder="成绩" type="number">
 
     <button onclick="addPlayer()">新增选手</button>
+    <p id="adminMsg" class="admin-msg" aria-live="polite"></p>
   </div>
 
   <h2>选手列表</h2>
 
   <div id="adminList"></div>
 
+</div>
+
+<div id="adminConfirmDialog" class="admin-dialog" aria-hidden="true">
+  <div class="admin-dialog-backdrop" onclick="closeDeleteDialog()"></div>
+  <section class="admin-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="adminConfirmTitle">
+    <h2 id="adminConfirmTitle">确认删除选手？</h2>
+    <p>删除后无法恢复，请确认是否继续。</p>
+    <div class="admin-dialog-actions">
+      <button type="button" class="ghost-btn" onclick="closeDeleteDialog()">取消</button>
+      <button type="button" class="danger" onclick="confirmDeletePlayer()">删除</button>
+    </div>
+  </section>
 </div>
 
 <script src="./js/api.js"></script>
