@@ -3583,6 +3583,41 @@ button.multisource-card:focus-visible{
   color:var(--yellow);
 }
 
+.format-song-pool-link{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  min-height:58px;
+  margin-top:16px;
+  padding:0 18px;
+  border:1px solid rgba(88,224,255,.28);
+  border-radius:8px;
+  background:rgba(88,224,255,.08);
+  transition:
+    transform .2s ease,
+    border-color .2s ease,
+    background .2s ease;
+}
+
+.format-song-pool-link span{
+  color:var(--muted);
+  font-size:14px;
+}
+
+.format-song-pool-link strong{
+  color:var(--text);
+  font-size:18px;
+  font-weight:400;
+}
+
+.format-song-pool-link:hover,
+.format-song-pool-link:focus-visible{
+  transform:translateY(-2px);
+  border-color:rgba(88,224,255,.64);
+  background:rgba(88,224,255,.13);
+}
+
 .format-panel:nth-child(2){
   background:
     linear-gradient(135deg, rgba(88,224,255,.08), rgba(255,255,255,.04)),

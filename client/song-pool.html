@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PLC凉皮杯比赛曲库，按赛事主页选曲规则整理。" />
+
+  <title>PLC凉皮杯 - 比赛曲库</title>
+
+  <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="./assets/bg.webp" as="image" />
+  <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
+  <link rel="stylesheet" href="./css/song-pool.css" />
+</head>
+<body>
+  <canvas id="particles" aria-hidden="true"></canvas>
+
+  <header class="pool-header">
+    <a class="pool-brand" href="./event" aria-label="返回赛事主页">
+      <img src="./assets/logo2-160.webp" width="42" height="42" alt="" aria-hidden="true" decoding="async" />
+      <strong>PLC凉皮杯</strong>
+    </a>
+
+    <nav class="pool-nav" aria-label="曲库页面导航">
+      <a href="./event">赛事主页</a>
+      <a href="./">海选榜</a>
+    </nav>
+  </header>
+
+  <main class="pool-page">
+    <section class="pool-workbench" aria-labelledby="poolTitle">
+      <div class="pool-title-block">
+        <p class="eyebrow">PLC Song Pool</p>
+        <h1 id="poolTitle">比赛曲库</h1>
+        <p class="pool-source" id="poolSource">读取曲库中...</p>
+      </div>
+
+      <div class="pool-rule-panel" aria-label="当前规则">
+        <span id="activeStageName">16进8阶段</span>
+        <strong id="activeStageCount">0 首</strong>
+      </div>
+
+      <div class="pool-controls" aria-label="曲库筛选">
+        <div class="stage-tabs" role="tablist" aria-label="比赛阶段">
+          <button class="is-active" type="button" role="tab" aria-selected="true" data-stage="round16">16进8</button>
+          <button type="button" role="tab" aria-selected="false" data-stage="top8">8强赛</button>
+        </div>
+
+        <label class="search-box" for="poolSearch">
+          <span>搜索</span>
+          <input id="poolSearch" type="search" autocomplete="off" placeholder="曲名 / 曲包" />
+        </label>
+
+        <label class="select-box" for="difficultyFilter">
+          <span>难度</span>
+          <select id="difficultyFilter">
+            <option value="all">全部</option>
+            <option value="IN">IN</option>
+            <option value="EZ HD IN">EZ HD IN</option>
+          </select>
+        </label>
+
+        <label class="select-box" for="packFilter">
+          <span>曲包</span>
+          <select id="packFilter">
+            <option value="all">全部曲包</option>
+          </select>
+        </label>
+      </div>
+    </section>
+
+    <section class="track-grid" id="trackGrid" aria-live="polite"></section>
+
+    <p class="empty-state" id="emptyState" hidden>没有找到符合条件的曲目。</p>
+  </main>
+
+  <script src="./js/song-pool-data.js"></script>
+  <script src="./js/song-pool.js"></script>
+  <script src="./js/particles.js"></script>
+</body>
+</html>
