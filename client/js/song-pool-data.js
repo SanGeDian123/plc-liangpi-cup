@@ -1,6 +1,6 @@
 window.PLC_SONG_POOL_DATA = {
   "sourceWorkbook": "Phigros 2.3.0_3.19.3.xlsx",
-  "sourceRange": "Phigros 2.3.0 至 3.19.3",
+  "sourceRange": "Phigros 2.3.0 至 3.20.0",
   "rules": {
     "round16": "2.3.0 起仅 IN；3.7.0 起 EZ HD IN",
     "top8": "3.0.0 起仅 IN；3.14.0 起 EZ HD IN"
@@ -2553,6 +2553,81 @@ window.PLC_SONG_POOL_DATA = {
       "stages": {
         "round16": "EZ HD IN",
         "top8": "EZ HD IN"
+      }
+    },
+    {
+      "id": 173,
+      "version": "3.20.0",
+      "releaseDate": "",
+      "order": 1,
+      "pack": "主线章节 第九章",
+      "title": "Implexrough",
+      "artist": "",
+      "note": "",
+      "sourceUrl": "",
+      "stages": {
+        "round16": "EZ HD IN AT",
+        "top8": "EZ HD IN AT"
+      }
+    },
+    {
+      "id": 174,
+      "version": "3.20.0",
+      "releaseDate": "",
+      "order": 2,
+      "pack": "主线章节 第九章",
+      "title": "About The Universe",
+      "artist": "",
+      "note": "",
+      "sourceUrl": "",
+      "stages": {
+        "round16": "EZ HD IN AT",
+        "top8": "EZ HD IN AT"
+      }
+    },
+    {
+      "id": 175,
+      "version": "3.20.0",
+      "releaseDate": "",
+      "order": 3,
+      "pack": "单曲",
+      "title": "Gungnir Fracture",
+      "artist": "",
+      "note": "",
+      "sourceUrl": "",
+      "stages": {
+        "round16": "EZ HD IN",
+        "top8": "EZ HD IN"
+      }
+    },
+    {
+      "id": 176,
+      "version": "3.20.0",
+      "releaseDate": "",
+      "order": 4,
+      "pack": "单曲",
+      "title": "夢の降る日に",
+      "artist": "",
+      "note": "",
+      "sourceUrl": "",
+      "stages": {
+        "round16": "EZ HD IN",
+        "top8": "EZ HD IN"
+      }
+    },
+    {
+      "id": 177,
+      "version": "3.20.0",
+      "releaseDate": "",
+      "order": 5,
+      "pack": "单曲",
+      "title": "Der Schneid",
+      "artist": "",
+      "note": "",
+      "sourceUrl": "",
+      "stages": {
+        "round16": "EZ HD IN AT",
+        "top8": "EZ HD IN AT"
       }
     }
   ]
