@@ -296,6 +296,83 @@ function checkAdmin(req, res, next) {
   next();
 }
 
+function normalizeSongLikeUserKey(value) {
+  const key = String(value || "").trim();
+
+  if (
+    key.length < 12 ||
+    key.length > 96 ||
+    !/^[a-zA-Z0-9._:-]+$/.test(key)
+  ) {
+    return "";
+  }
+
+  return key;
+}
+
+function normalizeSongPoolStage(value) {
+  const stage = String(value || "").trim();
+
+  return stage === "round16" || stage === "top8" ? stage : "";
+}
+
+function normalizeTrackId(value) {
+  const id = Number(value);
+
+  return Number.isInteger(id) && id > 0 ? id : 0;
+}
+
+function normalizeCommentParentId(value) {
+  const id = Number(value);
+
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+async function countSongLikes(trackId, stage) {
+  const { count, error } = await supabase
+    .from("song_likes")
+    .select("*", {
+      count: "exact",
+      head: true
+    })
+    .eq("track_id", trackId)
+    .eq("stage", stage);
+
+  if (error) {
+    throw error;
+  }
+
+  return count || 0;
+}
+
+function normalizeCommentText(value, maxLength) {
+  return String(value || "").trim().slice(0, maxLength);
+}
+
+function normalizeSongDifficulty(value) {
+  const difficulty = String(value || "").trim().toUpperCase();
+
+  return ["EZ", "HD", "IN", "AT"].includes(difficulty) ? difficulty : "";
+}
+
+function isSongPoolTableMissing(error) {
+  return error?.code === "PGRST205" || error?.code === "42P01";
+}
+
+function isSongPoolColumnMissing(error) {
+  return (
+    error?.code === "PGRST204" ||
+    error?.code === "42703" ||
+    /schema cache/i.test(error?.message || "")
+  );
+}
+
+function sendSongPoolTableMissing(res) {
+  return res.status(503).json({
+    message: "曲库数据库表尚未创建，请先执行 server/song-pool-schema.sql"
+  });
+}
+
 function normalizePhiBody(body = {}) {
   const normalized = { ...body };
 
@@ -679,6 +756,254 @@ app.post("/players/:id/comments", async (req, res) => {
     .select();
 
   if (error) {
+    return res.status(500).json(error);
+  }
+
+  res.json(data);
+});
+
+app.get("/song-pool/likes", async (req, res) => {
+  const stage = normalizeSongPoolStage(req.query.stage);
+  const userKey = normalizeSongLikeUserKey(req.query.userKey);
+
+  let likesQuery = supabase
+    .from("song_likes")
+    .select("track_id, stage")
+    .limit(10000);
+
+  if (stage) {
+    likesQuery = likesQuery.eq("stage", stage);
+  }
+
+  const { data: likeRows, error: likesError } = await likesQuery;
+
+  if (likesError) {
+    if (isSongPoolTableMissing(likesError)) {
+      res.set("Cache-Control", "no-store");
+      return res.json({
+        counts: [],
+        liked: []
+      });
+    }
+
+    return res.status(500).json(likesError);
+  }
+
+  const byTrack = new Map();
+
+  (likeRows || []).forEach((row) => {
+    const key = `${row.stage}:${row.track_id}`;
+    byTrack.set(key, (byTrack.get(key) || 0) + 1);
+  });
+
+  let liked = [];
+
+  if (userKey) {
+    let likedQuery = supabase
+      .from("song_likes")
+      .select("track_id, stage")
+      .eq("user_key", userKey)
+      .limit(10000);
+
+    if (stage) {
+      likedQuery = likedQuery.eq("stage", stage);
+    }
+
+    const { data: likedRows, error: likedError } = await likedQuery;
+
+    if (likedError) {
+      if (isSongPoolTableMissing(likedError)) {
+        res.set("Cache-Control", "no-store");
+        return res.json({
+          counts: [],
+          liked: []
+        });
+      }
+
+      return res.status(500).json(likedError);
+    }
+
+    liked = (likedRows || []).map((row) => ({
+      trackId: row.track_id,
+      stage: row.stage
+    }));
+  }
+
+  res.set("Cache-Control", "no-store");
+  res.json({
+    counts: Array.from(byTrack.entries()).map(([key, likes]) => {
+      const [rowStage, trackId] = key.split(":");
+
+      return {
+        trackId: Number(trackId),
+        stage: rowStage,
+        likes
+      };
+    }),
+    liked
+  });
+});
+
+app.post("/song-pool/tracks/:id/likes", async (req, res) => {
+  const trackId = normalizeTrackId(req.params.id);
+  const stage = normalizeSongPoolStage(req.body.stage);
+  const userKey = normalizeSongLikeUserKey(req.body.userKey);
+
+  if (!trackId || !stage || !userKey) {
+    return res.status(400).json({
+      message: "曲目、阶段或用户标识无效"
+    });
+  }
+
+  const { error } = await supabase
+    .from("song_likes")
+    .insert([
+      {
+        track_id: trackId,
+        stage,
+        user_key: userKey
+      }
+    ]);
+
+  if (error && error.code !== "23505") {
+    if (isSongPoolTableMissing(error)) {
+      return sendSongPoolTableMissing(res);
+    }
+
+    return res.status(500).json(error);
+  }
+
+  try {
+    const likes = await countSongLikes(trackId, stage);
+
+    return res.json({
+      trackId,
+      stage,
+      likes,
+      liked: true,
+      alreadyLiked: Boolean(error)
+    });
+  } catch (countError) {
+    return res.status(500).json(countError);
+  }
+});
+
+app.get("/song-pool/tracks/:id/comments", async (req, res) => {
+  const trackId = normalizeTrackId(req.params.id);
+  const stage = normalizeSongPoolStage(req.query.stage);
+
+  if (!trackId || !stage) {
+    return res.status(400).json({
+      message: "曲目或阶段无效"
+    });
+  }
+
+  const { data, error } = await supabase
+    .from("song_comments")
+    .select("id, track_id, stage, parent_comment_id, difficulty, nickname, content, created_at")
+    .eq("track_id", trackId)
+    .eq("stage", stage)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    if (isSongPoolTableMissing(error)) {
+      res.set("Cache-Control", "no-store");
+      return res.json([]);
+    }
+
+    if (isSongPoolColumnMissing(error)) {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("song_comments")
+        .select("id, track_id, stage, difficulty, nickname, content, created_at")
+        .eq("track_id", trackId)
+        .eq("stage", stage)
+        .order("created_at", { ascending: false });
+
+      if (fallbackError) {
+        return res.status(500).json(fallbackError);
+      }
+
+      res.set("Cache-Control", "no-store");
+      return res.json(
+        (fallbackData || []).map((comment) => ({
+          ...comment,
+          parent_comment_id: null
+        }))
+      );
+    }
+
+    return res.status(500).json(error);
+  }
+
+  res.set("Cache-Control", "no-store");
+  res.json(data);
+});
+
+app.post("/song-pool/tracks/:id/comments", async (req, res) => {
+  const trackId = normalizeTrackId(req.params.id);
+  const stage = normalizeSongPoolStage(req.body.stage);
+  const nickname = normalizeCommentText(req.body.nickname, 32);
+  const content = normalizeCommentText(req.body.content, 500);
+  const difficulty = normalizeSongDifficulty(req.body.difficulty);
+  const parentCommentId = normalizeCommentParentId(req.body.parentCommentId);
+
+  if (!trackId || !stage || !nickname || !content) {
+    return res.status(400).json({
+      message: "曲目、阶段、昵称和评论不能为空"
+    });
+  }
+
+  const { data, error } = await supabase
+    .from("song_comments")
+    .insert([
+      {
+        track_id: trackId,
+        stage,
+        parent_comment_id: parentCommentId,
+        difficulty: difficulty || null,
+        nickname,
+        content
+      }
+    ])
+    .select("id, track_id, stage, parent_comment_id, difficulty, nickname, content, created_at");
+
+  if (error) {
+    if (isSongPoolTableMissing(error)) {
+      return sendSongPoolTableMissing(res);
+    }
+
+    if (isSongPoolColumnMissing(error) && parentCommentId) {
+      return res.status(503).json({
+        message: "评论回复字段尚未创建，请重新执行 server/song-pool-schema.sql"
+      });
+    }
+
+    if (isSongPoolColumnMissing(error)) {
+      const { data: fallbackData, error: fallbackError } = await supabase
+        .from("song_comments")
+        .insert([
+          {
+            track_id: trackId,
+            stage,
+            difficulty: difficulty || null,
+            nickname,
+            content
+          }
+        ])
+        .select("id, track_id, stage, difficulty, nickname, content, created_at");
+
+      if (fallbackError) {
+        return res.status(500).json(fallbackError);
+      }
+
+      return res.json(
+        (fallbackData || []).map((comment) => ({
+          ...comment,
+          parent_comment_id: null
+        }))
+      );
+    }
+
     return res.status(500).json(error);
   }
 

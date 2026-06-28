@@ -66,6 +66,22 @@
             <option value="all">全部曲包</option>
           </select>
         </label>
+
+        <label class="select-box" for="sortBy">
+          <span>排序</span>
+          <select id="sortBy">
+            <option value="version">版本</option>
+            <option value="likes">赞数</option>
+          </select>
+        </label>
+
+        <label class="select-box" for="sortOrder">
+          <span>顺序</span>
+          <select id="sortOrder">
+            <option value="asc">正序</option>
+            <option value="desc">倒序</option>
+          </select>
+        </label>
       </div>
     </section>
 
@@ -74,6 +90,72 @@
     <p class="empty-state" id="emptyState" hidden>没有找到符合条件的曲目。</p>
   </main>
 
+  <div class="track-overview" id="trackOverview" hidden>
+    <section class="track-overview-panel" role="dialog" aria-modal="true" aria-labelledby="overviewTitle">
+      <button class="overview-close" id="overviewClose" type="button" aria-label="关闭总览">×</button>
+
+      <div class="overview-detail">
+        <p class="overview-kicker" id="overviewStage">16进8</p>
+        <h2 id="overviewTitle"></h2>
+
+        <div class="overview-stats" aria-label="曲目统计">
+          <span>总赞数</span>
+          <strong id="overviewLikes">0</strong>
+        </div>
+
+        <div class="overview-difficulty">
+          <span>难度</span>
+          <strong id="overviewDifficulty"></strong>
+        </div>
+
+        <button class="overview-like-button" id="overviewLikeButton" type="button">
+          <span>赞</span>
+          <strong id="overviewLikeCount">0</strong>
+        </button>
+
+        <p class="overview-like-note" id="overviewLikeNote">每个用户每首曲目每个阶段可赞一次。</p>
+      </div>
+
+      <div class="overview-comments">
+        <div class="comment-header">
+          <span>精选评论</span>
+          <strong id="overviewCommentCount">0</strong>
+        </div>
+
+        <div class="song-comment-list" id="songCommentList" aria-live="polite"></div>
+
+        <form class="song-comment-form" id="songCommentForm">
+          <div class="reply-target" id="songReplyTarget" hidden>
+            <span id="songReplyText"></span>
+            <button id="clearSongReply" type="button">取消回复</button>
+          </div>
+
+          <div class="comment-form-row">
+            <label for="songCommentNickname">
+              <span>昵称</span>
+              <input id="songCommentNickname" type="text" maxlength="32" autocomplete="nickname" required />
+            </label>
+
+            <label for="songCommentDifficulty">
+              <span>难度</span>
+              <select id="songCommentDifficulty">
+                <option value="">不选择难度</option>
+              </select>
+            </label>
+          </div>
+
+          <label for="songCommentContent">
+            <span>评论</span>
+            <textarea id="songCommentContent" maxlength="500" rows="4" required></textarea>
+          </label>
+
+          <button class="submit-song-comment" type="submit">发布评论</button>
+        </form>
+      </div>
+    </section>
+  </div>
+
+  <script src="./js/api.js"></script>
   <script src="./js/song-pool-data.js"></script>
   <script src="./js/song-pool.js"></script>
   <script src="./js/particles.js"></script>
