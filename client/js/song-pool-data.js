@@ -2556,36 +2556,6 @@ window.PLC_SONG_POOL_DATA = {
       }
     },
     {
-      "id": 173,
-      "version": "3.20.0",
-      "releaseDate": "",
-      "order": 1,
-      "pack": "主线章节九",
-      "title": "Implexrough",
-      "artist": "",
-      "note": "",
-      "sourceUrl": "",
-      "stages": {
-        "round16": "EZ HD IN AT",
-        "top8": "EZ HD IN AT"
-      }
-    },
-    {
-      "id": 174,
-      "version": "3.20.0",
-      "releaseDate": "",
-      "order": 2,
-      "pack": "主线章节九",
-      "title": "About The Universe",
-      "artist": "",
-      "note": "",
-      "sourceUrl": "",
-      "stages": {
-        "round16": "EZ HD IN AT",
-        "top8": "EZ HD IN AT"
-      }
-    },
-    {
       "id": 175,
       "version": "3.20.0",
       "releaseDate": "",
