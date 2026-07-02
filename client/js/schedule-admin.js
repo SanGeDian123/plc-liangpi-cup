@@ -21,9 +21,15 @@ let adminToken = localStorage.getItem("adminToken");
 
   const state = {
     accounts: [],
+    leaderboardPlayers: [],
+    leaderboardLoadError: "",
+    isLeaderboardLoading: false,
     matches: [],
     editingId: "",
     accountSearch: "",
+    playerBindingSearch: "",
+    bindingAccountId: "",
+    isBindingAccount: false,
     trackSearch: "",
     selectedParticipants: new Set(),
     customTrackIds: new Set(),
@@ -41,6 +47,12 @@ let adminToken = localStorage.getItem("adminToken");
     accountSource: document.getElementById("accountSource"),
     accountSearch: document.getElementById("accountSearch"),
     accountList: document.getElementById("accountList"),
+    accountBindingPanel: document.getElementById("accountBindingPanel"),
+    accountBindingTitle: document.getElementById("accountBindingTitle"),
+    accountBindingHint: document.getElementById("accountBindingHint"),
+    playerBindingSearch: document.getElementById("playerBindingSearch"),
+    playerBindingList: document.getElementById("playerBindingList"),
+    closeAccountBinding: document.getElementById("closeAccountBindingButton"),
     editorTitle: document.getElementById("editorTitle"),
     newMatch: document.getElementById("newMatchButton"),
     form: document.getElementById("matchForm"),
@@ -155,6 +167,115 @@ let adminToken = localStorage.getItem("adminToken");
     return String(value || "").trim().toLowerCase();
   }
 
+  function getPlayerLabel(player) {
+    return (
+      player.nickname ||
+      player.name ||
+      player.playerNickname ||
+      `排行榜账号 ${player.id}`
+    );
+  }
+
+  function getPlayerMeta(player) {
+    return [
+      player.number ? `编号 ${player.number}` : "",
+      Number.isFinite(Number(player.score)) ? `分数 ${player.score}` : "",
+      player.id ? `ID ${player.id}` : ""
+    ]
+      .filter(Boolean)
+      .join(" · ");
+  }
+
+  function getFilteredBindingPlayers() {
+    const needle = normalizeSearch(state.playerBindingSearch);
+
+    return state.leaderboardPlayers
+      .filter((player) => {
+        if (!needle) {
+          return true;
+        }
+
+        return [
+          player.id,
+          player.number,
+          player.nickname,
+          player.name,
+          player.playerNickname,
+          player.score
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(needle);
+      })
+      .slice(0, 80);
+  }
+
+  function renderAccountBindingPanel() {
+    const account = state.bindingAccountId ? getAccountById(state.bindingAccountId) : null;
+
+    els.accountBindingPanel.hidden = !account;
+    els.playerBindingList.innerHTML = "";
+
+    if (!account) {
+      return;
+    }
+
+    els.accountBindingTitle.textContent = `绑定：${account.nickname || account.email || account.userId}`;
+    els.accountBindingHint.textContent = "选择排行榜账号后会立即绑定到这个账号。";
+
+    if (account.playerId) {
+      els.playerBindingList.appendChild(
+        createElement("p", "empty-line", "这个账号已经绑定排行榜账号。")
+      );
+      return;
+    }
+
+    if (state.isLeaderboardLoading) {
+      els.playerBindingList.appendChild(
+        createElement("p", "empty-line", "正在读取排行榜账号...")
+      );
+      return;
+    }
+
+    if (state.leaderboardLoadError) {
+      els.playerBindingList.appendChild(
+        createElement("p", "empty-line", state.leaderboardLoadError)
+      );
+      return;
+    }
+
+    if (!state.leaderboardPlayers.length) {
+      els.playerBindingList.appendChild(
+        createElement("p", "empty-line", "暂无可绑定的排行榜账号")
+      );
+      return;
+    }
+
+    const players = getFilteredBindingPlayers();
+
+    if (!players.length) {
+      els.playerBindingList.appendChild(
+        createElement("p", "empty-line", "没有找到匹配的排行榜账号")
+      );
+      return;
+    }
+
+    players.forEach((player) => {
+      const item = createElement("div", "player-binding-item");
+      const main = createElement("div", "account-main");
+      main.appendChild(createElement("strong", "", getPlayerLabel(player)));
+      main.appendChild(createElement("span", "", getPlayerMeta(player) || "暂无排行榜信息"));
+
+      const button = createElement("button", "ghost-action", "绑定");
+      button.type = "button";
+      button.disabled = state.isBindingAccount;
+      button.addEventListener("click", () => bindAccountToPlayer(player.id));
+
+      item.append(main, button);
+      els.playerBindingList.appendChild(item);
+    });
+  }
+
   function renderAccounts() {
     const needle = normalizeSearch(state.accountSearch);
     const accounts = state.accounts.filter((account) => {
@@ -182,7 +303,8 @@ let adminToken = localStorage.getItem("adminToken");
     }
 
     accounts.forEach((account) => {
-      const item = createElement("label", "account-item");
+      const item = createElement("div", "account-item");
+      item.classList.toggle("is-bindable", !account.playerId);
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = state.selectedParticipants.has(account.userId);
@@ -208,11 +330,37 @@ let adminToken = localStorage.getItem("adminToken");
         main.appendChild(
           createElement("span", "", `绑定：${account.playerNickname} ${account.playerNumber || ""}`.trim())
         );
+      } else {
+        main.appendChild(createElement("span", "", "未绑定排行榜账号，点击可手动绑定"));
       }
 
-      item.append(checkbox, main);
+      if (!account.playerId) {
+        item.addEventListener("click", (event) => {
+          if (event.target === checkbox || event.target.closest("button")) {
+            return;
+          }
+
+          openAccountBinding(account.userId);
+        });
+      }
+
+      const bindButton = createElement(
+        "button",
+        account.playerId ? "ghost-action account-bind-action" : "primary-action account-bind-action",
+        account.playerId ? "已绑定" : "绑定"
+      );
+      bindButton.type = "button";
+      bindButton.disabled = Boolean(account.playerId);
+      bindButton.addEventListener("click", (event) => {
+        event.stopPropagation();
+        openAccountBinding(account.userId);
+      });
+
+      item.append(checkbox, main, bindButton);
       els.accountList.appendChild(item);
     });
+
+    renderAccountBindingPanel();
   }
 
   function renderParticipants() {
@@ -659,6 +807,96 @@ let adminToken = localStorage.getItem("adminToken");
     renderResultEditor();
   }
 
+  async function loadLeaderboardPlayers() {
+    state.isLeaderboardLoading = true;
+    state.leaderboardLoadError = "";
+    renderAccountBindingPanel();
+
+    try {
+      const response = await fetch(`${API_URL}/players`);
+      const payload = await response.json().catch(() => []);
+
+      if (!response.ok) {
+        throw new Error(payload.message || "排行榜账号读取失败");
+      }
+
+      const players = Array.isArray(payload) ? payload : payload.players;
+      state.leaderboardPlayers = Array.isArray(players)
+        ? players.filter((player) => player && player.id !== undefined && player.id !== null)
+        : [];
+    } catch (error) {
+      state.leaderboardPlayers = [];
+      state.leaderboardLoadError = error.message || "排行榜账号读取失败，请稍后重试";
+    } finally {
+      state.isLeaderboardLoading = false;
+      renderAccountBindingPanel();
+    }
+  }
+
+  function openAccountBinding(userId) {
+    const account = getAccountById(userId);
+
+    if (!account) {
+      return;
+    }
+
+    state.bindingAccountId = account.userId;
+    state.playerBindingSearch = "";
+    els.playerBindingSearch.value = "";
+    renderAccountBindingPanel();
+
+    if (!state.leaderboardPlayers.length && !state.isLeaderboardLoading) {
+      loadLeaderboardPlayers();
+    }
+
+    window.requestAnimationFrame(() => {
+      els.playerBindingSearch.focus();
+    });
+  }
+
+  function closeAccountBinding() {
+    state.bindingAccountId = "";
+    state.playerBindingSearch = "";
+    els.playerBindingSearch.value = "";
+    renderAccountBindingPanel();
+  }
+
+  async function bindAccountToPlayer(playerId) {
+    const account = getAccountById(state.bindingAccountId);
+
+    if (!account || !playerId || state.isBindingAccount) {
+      return;
+    }
+
+    state.isBindingAccount = true;
+    renderAccountBindingPanel();
+    setMessage(els.editorMsg, "正在绑定排行榜账号...");
+
+    try {
+      const payload = await fetchAdmin(`/admin/accounts/${encodeURIComponent(account.userId)}/binding`, {
+        method: "PUT",
+        body: JSON.stringify({
+          playerId
+        })
+      });
+      const binding = payload.binding || {};
+
+      state.accounts = state.accounts.map((item) =>
+        item.userId === account.userId ? { ...item, ...binding } : item
+      );
+      await Promise.all([loadAccounts(), loadMatches()]);
+      closeAccountBinding();
+      renderParticipants();
+      renderResultEditor();
+      setMessage(els.editorMsg, "排行榜账号已绑定。");
+    } catch (error) {
+      setMessage(els.editorMsg, error.message || "绑定失败", true);
+    } finally {
+      state.isBindingAccount = false;
+      renderAccountBindingPanel();
+    }
+  }
+
   async function loadDashboard() {
     if (!adminToken) {
       showLogin();
@@ -669,7 +907,7 @@ let adminToken = localStorage.getItem("adminToken");
     setMessage(els.editorMsg, "正在加载后台数据...");
 
     try {
-      await Promise.all([loadAccounts(), loadMatches()]);
+      await Promise.all([loadAccounts(), loadMatches(), loadLeaderboardPlayers()]);
       setMessage(els.editorMsg, "后台数据已同步。");
     } catch (error) {
       setMessage(els.editorMsg, error.message || "后台加载失败", true);
@@ -867,6 +1105,11 @@ let adminToken = localStorage.getItem("adminToken");
     els.accountSearch.addEventListener("input", (event) => {
       state.accountSearch = event.target.value;
       renderAccounts();
+    });
+    els.closeAccountBinding.addEventListener("click", closeAccountBinding);
+    els.playerBindingSearch.addEventListener("input", (event) => {
+      state.playerBindingSearch = event.target.value;
+      renderAccountBindingPanel();
     });
 
     els.participantCount.addEventListener("input", renderBpRule);

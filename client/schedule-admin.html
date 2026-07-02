@@ -10,7 +10,7 @@
   <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="./assets/bp-background.jpg" as="image" />
   <link rel="icon" type="image/png" href="./assets/logo1.png" />
-  <link rel="stylesheet" href="./css/schedule-admin.css?v=20260702c" />
+  <link rel="stylesheet" href="./css/schedule-admin.css?v=20260702d" />
 </head>
 <body>
   <main class="admin-shell">
@@ -50,6 +50,18 @@
           </div>
           <input id="accountSearch" class="search-input" type="search" placeholder="搜索账号 / 选手名" autocomplete="off" />
           <div class="account-list" id="accountList" aria-live="polite"></div>
+          <section class="account-binding-panel" id="accountBindingPanel" hidden>
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Manual Binding</p>
+                <h3 id="accountBindingTitle">绑定排行榜账号</h3>
+              </div>
+              <button class="ghost-action" id="closeAccountBindingButton" type="button">关闭</button>
+            </div>
+            <p id="accountBindingHint">选择一个排行榜账号完成绑定。</p>
+            <input id="playerBindingSearch" class="search-input" type="search" placeholder="搜索排行榜昵称 / 编号 / 分数" autocomplete="off" />
+            <div class="player-binding-list" id="playerBindingList" aria-live="polite"></div>
+          </section>
         </aside>
 
         <section class="editor-panel" aria-labelledby="editorTitle">
@@ -202,6 +214,6 @@
 
   <script src="./js/api.js"></script>
   <script src="./js/song-pool-data.js"></script>
-  <script src="./js/schedule-admin.js?v=20260702c"></script>
+  <script src="./js/schedule-admin.js?v=20260702d"></script>
 </body>
 </html>

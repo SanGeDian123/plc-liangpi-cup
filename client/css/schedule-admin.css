@@ -312,7 +312,8 @@ textarea:focus{
 .picked-account-list,
 .custom-track-list,
 .match-list,
-.result-entry-list{
+.result-entry-list,
+.player-binding-list{
   display:grid;
   gap:10px;
   margin-top:14px;
@@ -322,7 +323,8 @@ textarea:focus{
 .picked-account,
 .track-item,
 .match-card,
-.result-entry{
+.result-entry,
+.player-binding-item{
   display:grid;
   gap:8px;
   padding:12px;
@@ -332,8 +334,17 @@ textarea:focus{
 }
 
 .account-item{
-  grid-template-columns:auto minmax(0, 1fr);
+  grid-template-columns:auto minmax(0, 1fr) auto;
   align-items:center;
+}
+
+.account-item.is-bindable{
+  cursor:pointer;
+}
+
+.account-item.is-bindable:hover{
+  border-color:rgba(102,231,255,.28);
+  background:rgba(102,231,255,.08);
 }
 
 .account-item input,
@@ -341,6 +352,11 @@ textarea:focus{
 .difficulty-toggle-row input{
   width:auto;
   min-height:0;
+}
+
+.account-bind-action{
+  min-height:34px;
+  padding:7px 10px;
 }
 
 .account-main,
@@ -352,10 +368,36 @@ textarea:focus{
 
 .account-main strong,
 .track-main strong,
-.match-card strong{
+.match-card strong,
+.player-binding-item strong{
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
+}
+
+.account-binding-panel{
+  margin-top:16px;
+  padding:14px;
+  border:1px solid rgba(102,231,255,.16);
+  border-radius:8px;
+  background:rgba(102,231,255,.055);
+}
+
+.account-binding-panel p{
+  margin-top:8px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.6;
+}
+
+.player-binding-item{
+  grid-template-columns:minmax(0, 1fr) auto;
+  align-items:center;
+}
+
+.player-binding-item span{
+  color:var(--muted);
+  font-size:13px;
 }
 
 .account-main span,
@@ -578,6 +620,20 @@ textarea:focus{
   .picked-account-list,
   .result-entry{
     grid-template-columns:1fr;
+  }
+
+  .account-item,
+  .player-binding-item{
+    grid-template-columns:1fr;
+  }
+
+  .account-item input{
+    justify-self:start;
+  }
+
+  .account-bind-action,
+  .player-binding-item .ghost-action{
+    width:100%;
   }
 
   .match-card{

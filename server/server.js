@@ -855,6 +855,57 @@ function createBindingFromRequest(request, approvedAt) {
   };
 }
 
+function createManualBinding(account, player, approvedAt) {
+  const playerSnapshot = createPlayerBindingSnapshot(player);
+
+  return {
+    userId: account.userId,
+    email: normalizeTextValue(account.email, 180),
+    nickname: normalizeTextValue(account.nickname, 48),
+    ...playerSnapshot,
+    requestId: `manual:${crypto.randomUUID()}`,
+    approvedAt
+  };
+}
+
+async function syncScheduleParticipantsForBinding(binding) {
+  if (!binding?.userId) {
+    return;
+  }
+
+  const data = await loadScheduleDataWithAutoBp();
+  let changed = false;
+  const applyBinding = (value) => {
+    if (!value || value.userId !== binding.userId) {
+      return value;
+    }
+
+    const next = {
+      ...value,
+      email: binding.email || value.email,
+      nickname: binding.nickname || value.nickname,
+      playerId: binding.playerId,
+      playerNickname: binding.playerNickname,
+      playerNumber: binding.playerNumber
+    };
+
+    if (JSON.stringify(next) !== JSON.stringify(value)) {
+      changed = true;
+    }
+
+    return next;
+  };
+
+  data.matches.forEach((match) => {
+    match.participants = match.participants.map(applyBinding);
+    match.result.entries = match.result.entries.map(applyBinding);
+  });
+
+  if (changed) {
+    await persistScheduleData(data);
+  }
+}
+
 function normalizeSongCommentOwner(value = {}) {
   const commentId = normalizeTextValue(value.commentId, 80);
   const userId = normalizeTextValue(value.userId, 128);
@@ -2424,6 +2475,7 @@ app.post("/admin/binding-requests/:id/approve", checkAdmin, async (req, res) => 
   data.bindings[request.userId] = createBindingFromRequest(approvedRequest, now);
 
   await persistUserBindings(data);
+  await syncScheduleParticipantsForBinding(data.bindings[request.userId]);
 
   res.set("Cache-Control", "no-store");
   res.json({
@@ -2459,6 +2511,61 @@ app.post("/admin/binding-requests/:id/reject", checkAdmin, async (req, res) => {
   res.set("Cache-Control", "no-store");
   res.json({
     request: rejectedRequest
+  });
+});
+
+app.put("/admin/accounts/:userId/binding", checkAdmin, async (req, res) => {
+  const userId = normalizeTextValue(req.params.userId, 128);
+  const player = await findPlayerForBinding(req.body?.playerId);
+
+  if (!userId) {
+    return res.status(400).json({
+      message: "账号 ID 无效"
+    });
+  }
+
+  if (!player) {
+    return res.status(400).json({
+      message: "没有找到指定排行榜账号"
+    });
+  }
+
+  const accounts = await listKnownAccounts();
+  const account = accounts.accounts.find((item) => item.userId === userId);
+
+  if (!account) {
+    return res.status(404).json({
+      message: "没有找到这个账号"
+    });
+  }
+
+  if (account.playerId) {
+    return res.status(409).json({
+      message: "这个账号已经绑定排行榜账号"
+    });
+  }
+
+  const data = await loadUserBindings();
+  const now = new Date().toISOString();
+  const binding = createManualBinding(account, player, now);
+
+  data.requests = data.requests.map((request) =>
+    request.userId === userId && request.status === "pending"
+      ? {
+          ...request,
+          status: "rejected",
+          updatedAt: now
+        }
+      : request
+  );
+  data.bindings[userId] = binding;
+
+  await persistUserBindings(data);
+  await syncScheduleParticipantsForBinding(binding);
+
+  res.set("Cache-Control", "no-store");
+  res.json({
+    binding
   });
 });
 
