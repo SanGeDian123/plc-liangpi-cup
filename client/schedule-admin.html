@@ -10,7 +10,7 @@
   <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="./assets/bp-background.jpg" as="image" />
   <link rel="icon" type="image/png" href="./assets/logo1.png" />
-  <link rel="stylesheet" href="./css/schedule-admin.css?v=20260702b" />
+  <link rel="stylesheet" href="./css/schedule-admin.css?v=20260702c" />
 </head>
 <body>
   <main class="admin-shell">
@@ -34,7 +34,7 @@
           <h1>赛程管理</h1>
         </div>
         <div class="header-actions">
-          <a class="ghost-action" href="./schedule.html" target="_blank" rel="noreferrer">打开赛程页</a>
+          <a class="ghost-action" href="./schedule" target="_blank" rel="noreferrer">打开赛程页</a>
           <button class="ghost-action" id="logoutButton" type="button">退出</button>
         </div>
       </header>
@@ -98,6 +98,16 @@
             <label for="participantCount">
               <span>比赛人数</span>
               <input id="participantCount" type="number" min="1" max="8" value="2" />
+            </label>
+
+            <label class="toggle-field" for="randomPickEnabled">
+              <input id="randomPickEnabled" type="checkbox" checked />
+              <span>启用系统随机抽选</span>
+            </label>
+
+            <label for="randomPickCount">
+              <span>随机抽选数量</span>
+              <input id="randomPickCount" type="number" min="1" max="8" value="1" />
             </label>
 
             <label for="poolMode">
@@ -192,6 +202,6 @@
 
   <script src="./js/api.js"></script>
   <script src="./js/song-pool-data.js"></script>
-  <script src="./js/schedule-admin.js?v=20260702b"></script>
+  <script src="./js/schedule-admin.js?v=20260702c"></script>
 </body>
 </html>

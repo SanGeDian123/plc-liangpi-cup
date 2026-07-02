@@ -165,6 +165,23 @@ textarea:focus{
   box-shadow:0 0 0 3px rgba(102,231,255,.12);
 }
 
+.toggle-field{
+  grid-template-columns:auto minmax(0, 1fr);
+  align-items:center;
+  min-height:42px;
+  padding:10px 12px;
+  border:1px solid rgba(255,255,255,.14);
+  border-radius:8px;
+  background:rgba(0,0,0,.18);
+  color:var(--text);
+}
+
+.toggle-field input{
+  width:18px;
+  min-height:18px;
+  accent-color:var(--cyan);
+}
+
 .login-card form{
   display:grid;
   gap:14px;

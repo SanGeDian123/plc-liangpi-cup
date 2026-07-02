@@ -989,6 +989,26 @@ function normalizeParticipantCount(value, fallback = 2) {
   return Math.max(1, Math.min(8, count));
 }
 
+function normalizeRandomPickEnabled(value) {
+  if (value === false || value === "false" || value === "0" || value === 0) {
+    return false;
+  }
+
+  return true;
+}
+
+function normalizeRandomPickCount(value, fallback = 1) {
+  const count = Number(value);
+  const fallbackCount = Number(fallback);
+  const safeFallback = Number.isFinite(fallbackCount) ? fallbackCount : 1;
+
+  if (!Number.isFinite(count)) {
+    return Math.max(1, Math.min(8, Math.round(safeFallback)));
+  }
+
+  return Math.max(1, Math.min(8, Math.round(count)));
+}
+
 function normalizeDifficulty(value) {
   const difficulty = String(value || "").trim().toUpperCase();
 
@@ -1110,6 +1130,33 @@ function normalizeBpPresence(value = {}) {
 }
 
 function normalizeBpState(value = {}) {
+  const legacyRandomPick = value.randomPick
+    ? normalizeBpSelection(
+        {
+          ...value.randomPick,
+          userId: value.randomPick.userId || "system",
+          type: "random"
+        },
+        "random"
+      )
+    : null;
+  const randomPicks = Array.isArray(value.randomPicks)
+    ? value.randomPicks
+        .map((item) =>
+          normalizeBpSelection(
+            {
+              ...item,
+              userId: item?.userId || "system",
+              type: "random"
+            },
+            "random"
+          )
+        )
+        .filter(Boolean)
+    : legacyRandomPick
+      ? [legacyRandomPick]
+      : [];
+
   return {
     bans: Array.isArray(value.bans)
       ? value.bans.map((item) => normalizeBpSelection(item, "ban")).filter(Boolean)
@@ -1117,16 +1164,8 @@ function normalizeBpState(value = {}) {
     picks: Array.isArray(value.picks)
       ? value.picks.map((item) => normalizeBpSelection(item, "pick")).filter(Boolean)
       : [],
-    randomPick: value.randomPick
-      ? normalizeBpSelection(
-          {
-            ...value.randomPick,
-            userId: value.randomPick.userId || "system",
-            type: "random"
-          },
-          "random"
-        )
-      : null,
+    randomPick: randomPicks[0] || null,
+    randomPicks,
     confirmedBy: Array.from(
       new Set(
         (Array.isArray(value.confirmedBy) ? value.confirmedBy : [])
@@ -1181,6 +1220,19 @@ function normalizeScheduleMatch(value = {}, options = {}) {
     participants.length || 2
   );
   const poolMode = normalizeSchedulePoolMode(value.poolMode);
+  const randomPickEnabled = normalizeRandomPickEnabled(value.randomPickEnabled);
+  const randomPickCount = randomPickEnabled
+    ? normalizeRandomPickCount(value.randomPickCount, 1)
+    : 0;
+  const bp = normalizeBpState(value.bp);
+
+  if (!randomPickEnabled) {
+    bp.randomPicks = [];
+  } else if (bp.randomPicks.length > randomPickCount) {
+    bp.randomPicks = bp.randomPicks.slice(0, randomPickCount);
+  }
+
+  bp.randomPick = bp.randomPicks[0] || null;
 
   return {
     id: normalizeTextValue(value.id, 96) || crypto.randomUUID(),
@@ -1192,11 +1244,13 @@ function normalizeScheduleMatch(value = {}, options = {}) {
     visibility: normalizeScheduleVisibility(value.visibility),
     participantCount,
     poolMode,
+    randomPickEnabled,
+    randomPickCount,
     customTrackIds: normalizeTrackIdList(value.customTrackIds),
     customDifficulties: normalizeDifficultyList(value.customDifficulties),
     participants,
     result: normalizeScheduleResult(value.result),
-    bp: normalizeBpState(value.bp),
+    bp,
     createdAt: normalizeOptionalIsoDate(value.createdAt) || now,
     updatedAt: options.touch ? now : normalizeOptionalIsoDate(value.updatedAt) || now
   };
@@ -1463,6 +1517,12 @@ function getBpProgress(match) {
   const participantIds = match.participants.map((participant) => participant.userId);
   const banCount = 2;
   const pickCount = 1;
+  const randomPickCount = match.randomPickEnabled === false ? 0 : match.randomPickCount || 1;
+  const randomPicks = Array.isArray(match.bp.randomPicks)
+    ? match.bp.randomPicks
+    : match.bp.randomPick
+      ? [match.bp.randomPick]
+      : [];
   const countForUser = (items, userId) =>
     items.filter((item) => item.userId === userId).length;
   const allBansDone =
@@ -1471,6 +1531,7 @@ function getBpProgress(match) {
   const allPicksDone =
     participantIds.length > 0 &&
     participantIds.every((userId) => countForUser(match.bp.picks, userId) >= pickCount);
+  const randomPicksDone = randomPicks.length >= randomPickCount;
   const allConfirmed =
     participantIds.length > 0 &&
     participantIds.every((userId) => match.bp.confirmedBy.includes(userId));
@@ -1488,10 +1549,13 @@ function getBpProgress(match) {
     phase,
     banCount,
     pickCount,
+    randomPickCount,
     requiredBans: participantIds.length * banCount,
     requiredPicks: participantIds.length * pickCount,
+    requiredRandomPicks: randomPickCount,
     allBansDone,
     allPicksDone,
+    randomPicksDone,
     allConfirmed
   };
 }
@@ -1512,8 +1576,12 @@ function getMatchBpClosedMessage(match) {
   return "当前比赛状态不能进行 BP";
 }
 
-async function ensureRandomBpPick(match) {
-  if (match.bp.randomPick) {
+async function ensureRandomBpPicks(match) {
+  const targetCount = match.randomPickEnabled === false ? 0 : match.randomPickCount || 1;
+
+  if (targetCount <= 0) {
+    match.bp.randomPicks = [];
+    match.bp.randomPick = null;
     return;
   }
 
@@ -1523,60 +1591,74 @@ async function ensureRandomBpPick(match) {
     return;
   }
 
+  match.bp.randomPicks = Array.isArray(match.bp.randomPicks)
+    ? match.bp.randomPicks
+    : match.bp.randomPick
+      ? [match.bp.randomPick]
+      : [];
+
+  if (match.bp.randomPicks.length >= targetCount) {
+    match.bp.randomPicks = match.bp.randomPicks.slice(0, targetCount);
+    match.bp.randomPick = match.bp.randomPicks[0] || null;
+    return;
+  }
+
   const usedSelectionKeys = new Set(
-    [...match.bp.bans, ...match.bp.picks]
+    [...match.bp.bans, ...match.bp.picks, ...match.bp.randomPicks]
       .map(getBpSelectionKey)
       .filter(Boolean)
   );
   const poolTracks = await getMatchPoolTracks(match);
-  const inAtCandidates = poolTracks.flatMap((track) =>
-    track.difficulties
-      .filter(
-        (difficulty) =>
-          (difficulty === "IN" || difficulty === "AT") &&
-          !usedSelectionKeys.has(createBpSelectionKey(track.trackId, difficulty))
-      )
-      .map((difficulty) => ({
-        track,
-        difficulty
-      }))
-  );
-  const fallbackCandidates = poolTracks.flatMap((track) =>
-    track.difficulties
-      .filter(
-        (difficulty) =>
-          !usedSelectionKeys.has(createBpSelectionKey(track.trackId, difficulty))
-      )
-      .map((difficulty) => ({
-        track,
-        difficulty
-      }))
-  );
-  const candidates = inAtCandidates.length ? inAtCandidates : fallbackCandidates;
 
-  if (!candidates.length) {
-    return;
+  while (match.bp.randomPicks.length < targetCount) {
+    const createCandidates = (inAtOnly) =>
+      poolTracks.flatMap((track) =>
+        track.difficulties
+          .filter((difficulty) => {
+            if (inAtOnly && difficulty !== "IN" && difficulty !== "AT") {
+              return false;
+            }
+
+            return !usedSelectionKeys.has(
+              createBpSelectionKey(track.trackId, difficulty)
+            );
+          })
+          .map((difficulty) => ({
+            track,
+            difficulty
+          }))
+      );
+    const inAtCandidates = createCandidates(true);
+    const fallbackCandidates = createCandidates(false);
+    const candidates = inAtCandidates.length ? inAtCandidates : fallbackCandidates;
+
+    if (!candidates.length) {
+      break;
+    }
+
+    const candidate = candidates[crypto.randomInt(candidates.length)];
+    const { track, difficulty } = candidate;
+
+    if (!difficulty) {
+      break;
+    }
+
+    usedSelectionKeys.add(createBpSelectionKey(track.trackId, difficulty));
+    match.bp.randomPicks.push({
+      id: crypto.randomUUID(),
+      type: "random",
+      userId: "system",
+      nickname: `系统抽取${match.bp.randomPicks.length + 1}`,
+      trackId: track.trackId,
+      title: track.title,
+      artist: track.artist,
+      pack: track.pack,
+      difficulty,
+      createdAt: new Date().toISOString()
+    });
   }
 
-  const candidate = candidates[crypto.randomInt(candidates.length)];
-  const { track, difficulty } = candidate;
-
-  if (!difficulty) {
-    return;
-  }
-
-  match.bp.randomPick = {
-    id: crypto.randomUUID(),
-    type: "random",
-    userId: "system",
-    nickname: "系统抽取",
-    trackId: track.trackId,
-    title: track.title,
-    artist: track.artist,
-    pack: track.pack,
-    difficulty,
-    createdAt: new Date().toISOString()
-  };
+  match.bp.randomPick = match.bp.randomPicks[0] || null;
 }
 
 function canUserViewMatch(match, user) {
@@ -2562,7 +2644,7 @@ app.post("/schedule/matches/:id/bp/actions", requireUser, async (req, res) => {
   }
 
   delete match.bp.presence[participant.userId];
-  await ensureRandomBpPick(match);
+  await ensureRandomBpPicks(match);
 
   match.updatedAt = now;
 
@@ -2595,13 +2677,19 @@ app.post("/schedule/matches/:id/bp/confirm", requireUser, async (req, res) => {
     });
   }
 
-  await ensureRandomBpPick(match);
+  await ensureRandomBpPicks(match);
 
   const progress = getBpProgress(match);
 
-  if (!progress.allPicksDone || !match.bp.randomPick) {
+  if (!progress.allPicksDone) {
     return res.status(400).json({
       message: "选曲尚未完成"
+    });
+  }
+
+  if (!progress.randomPicksDone) {
+    return res.status(400).json({
+      message: "可随机抽选的谱面不足，请调整随机抽选数量或曲池范围"
     });
   }
 

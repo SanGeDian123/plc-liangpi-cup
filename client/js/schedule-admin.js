@@ -50,6 +50,8 @@ let adminToken = localStorage.getItem("adminToken");
     matchStatus: document.getElementById("matchStatus"),
     matchVisibility: document.getElementById("matchVisibility"),
     participantCount: document.getElementById("participantCount"),
+    randomPickEnabled: document.getElementById("randomPickEnabled"),
+    randomPickCount: document.getElementById("randomPickCount"),
     poolMode: document.getElementById("poolMode"),
     matchContent: document.getElementById("matchContent"),
     bpRuleSummary: document.getElementById("bpRuleSummary"),
@@ -239,8 +241,16 @@ let adminToken = localStorage.getItem("adminToken");
 
   function renderBpRule() {
     const count = Math.max(1, Math.min(8, Number(els.participantCount.value) || 2));
+    const randomEnabled = els.randomPickEnabled.checked;
+    const randomCount = randomEnabled
+      ? Math.max(1, Math.min(8, Number(els.randomPickCount.value) || 1))
+      : 0;
 
-    els.bpRuleSummary.textContent = `${count} 人：共禁用 ${count * 2} 首，选曲 ${count} 首，系统抽取 1 首。`;
+    els.randomPickCount.disabled = !randomEnabled;
+
+    els.bpRuleSummary.textContent = randomEnabled
+      ? `${count} 人：共禁用 ${count * 2} 首，选曲 ${count} 首，系统抽取 ${randomCount} 首。`
+      : `${count} 人：共禁用 ${count * 2} 首，选曲 ${count} 首，不进行系统随机抽选。`;
   }
 
   function getSongPoolData() {
@@ -473,6 +483,8 @@ let adminToken = localStorage.getItem("adminToken");
       status: els.matchStatus.value,
       visibility: els.matchVisibility.value,
       participantCount: Number(els.participantCount.value) || 2,
+      randomPickEnabled: els.randomPickEnabled.checked,
+      randomPickCount: Number(els.randomPickCount.value) || 1,
       poolMode: els.poolMode.value,
       customTrackIds: Array.from(state.customTrackIds),
       customDifficulties: els.customDifficulties
@@ -497,6 +509,8 @@ let adminToken = localStorage.getItem("adminToken");
     els.matchStatus.value = "scheduled";
     els.matchVisibility.value = "assigned";
     els.participantCount.value = "2";
+    els.randomPickEnabled.checked = true;
+    els.randomPickCount.value = "1";
     els.poolMode.value = "round16";
     els.matchContent.value = "";
     els.trackSearch.value = "";
@@ -527,6 +541,8 @@ let adminToken = localStorage.getItem("adminToken");
     els.matchStatus.value = match.status || "scheduled";
     els.matchVisibility.value = match.visibility || "assigned";
     els.participantCount.value = String(match.participantCount || 2);
+    els.randomPickEnabled.checked = match.randomPickEnabled !== false;
+    els.randomPickCount.value = String(match.randomPickCount || 1);
     els.poolMode.value = match.poolMode || "round16";
     els.matchContent.value = match.content || "";
     els.trackSearch.value = "";
@@ -588,6 +604,11 @@ let adminToken = localStorage.getItem("adminToken");
         },
         {
           text: `${match.participants?.length || 0}/${match.participantCount || 0}人`
+        },
+        {
+          text: match.randomPickEnabled === false
+            ? "无随机"
+            : `随机 ${match.randomPickCount || 1} 首`
         }
       ]);
       body.appendChild(meta);
@@ -849,6 +870,8 @@ let adminToken = localStorage.getItem("adminToken");
     });
 
     els.participantCount.addEventListener("input", renderBpRule);
+    els.randomPickEnabled.addEventListener("change", renderBpRule);
+    els.randomPickCount.addEventListener("input", renderBpRule);
     els.poolMode.addEventListener("change", renderCustomPool);
     els.trackSearch.addEventListener("input", (event) => {
       state.trackSearch = event.target.value;

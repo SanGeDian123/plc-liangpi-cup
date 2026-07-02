@@ -30,7 +30,8 @@
       done: false,
       running: false,
       timer: 0,
-      target: null
+      target: null,
+      targets: []
     },
     pollTimer: 0,
     lastPresenceAt: 0,
@@ -279,6 +280,12 @@
     });
   }
 
+  function formatRandomRule(match) {
+    return match.randomPickEnabled === false
+      ? "无系统随机"
+      : `系统随机 ${match.randomPickCount || 1} 首`;
+  }
+
   function renderMatchList() {
     els.matchList.innerHTML = "";
 
@@ -325,6 +332,9 @@
         },
         {
           text: `${match.participants?.length || 0}/${match.participantCount || 0}人`
+        },
+        {
+          text: formatRandomRule(match)
         }
       ]);
 
@@ -428,14 +438,43 @@
     });
   }
 
-  function getRandomPickRevealKey(match) {
-    const randomPick = match?.bp?.randomPick;
+  function getRandomPicks(match) {
+    if (match?.randomPickEnabled === false) {
+      return [];
+    }
 
-    if (!match?.id || !randomPick) {
+    const picks = Array.isArray(match?.bp?.randomPicks)
+      ? match.bp.randomPicks
+      : match?.bp?.randomPick
+        ? [match.bp.randomPick]
+        : [];
+    const progress = match?.bp?.progress || {};
+    const expected = Number(progress.randomPickCount ?? match?.randomPickCount ?? picks.length);
+    const limit = Number.isFinite(expected) && expected > 0 ? expected : picks.length;
+
+    return picks.slice(0, limit);
+  }
+
+  function isRandomPickReady(match, progress = match?.bp?.progress || {}) {
+    const required = Number(progress.randomPickCount ?? match?.randomPickCount ?? 1);
+
+    if (match?.randomPickEnabled === false || !required) {
+      return true;
+    }
+
+    return getRandomPicks(match).length >= required;
+  }
+
+  function getRandomPickRevealKey(match) {
+    const randomPicks = getRandomPicks(match);
+
+    if (!match?.id || !randomPicks.length) {
       return "";
     }
 
-    return `${match.id}:${randomPick.id || `${randomPick.trackId}:${randomPick.difficulty}`}`;
+    return `${match.id}:${randomPicks
+      .map((randomPick) => randomPick.id || `${randomPick.trackId}:${randomPick.difficulty}`)
+      .join("|")}`;
   }
 
   function queueRandomPickReveal(previousMatch, nextMatch) {
@@ -443,22 +482,24 @@
       return;
     }
 
+    const previousPicks = getRandomPicks(previousMatch);
+    const nextPicks = getRandomPicks(nextMatch);
     const previousKey = getRandomPickRevealKey(previousMatch);
     const nextKey = getRandomPickRevealKey(nextMatch);
 
-    if (!previousKey && nextKey) {
+    if (nextKey && (!previousKey || nextPicks.length > previousPicks.length)) {
       state.randomReveal.pendingKey = nextKey;
     }
   }
 
   function renderSummary(match) {
     const picks = match.bp?.picks || [];
-    const randomPick = match.bp?.randomPick;
+    const randomPicks = getRandomPicks(match);
     const progress = match.bp?.progress || {};
     const confirmed = match.bp?.confirmedBy?.length || 0;
     const total = match.participants?.length || 0;
 
-    els.summaryPanel.hidden = !randomPick && !picks.length;
+    els.summaryPanel.hidden = !randomPicks.length && !picks.length;
     els.summaryList.innerHTML = "";
     els.confirmProgress.textContent = `${confirmed}/${total} 已确认`;
 
@@ -471,9 +512,7 @@
       els.summaryList.appendChild(item);
     });
 
-    if (randomPick) {
-      const item = createElement("div", "summary-item is-random");
-      const title = createElement("strong", "random-roll-title", "");
+    if (randomPicks.length) {
       const revealKey = getRandomPickRevealKey(match);
       const shouldAnimate = state.randomReveal.pendingKey === revealKey;
 
@@ -485,42 +524,54 @@
           done: !shouldAnimate,
           running: false,
           timer: 0,
-          target: title
+          target: null,
+          targets: []
         };
       } else {
-        state.randomReveal.target = title;
+        state.randomReveal.targets = [];
       }
 
-      if (state.randomReveal.done) {
-        title.textContent = `${randomPick.title} [${randomPick.difficulty}]`;
-      } else {
-        title.textContent = "系统抽取中...";
-        item.classList.add("is-rolling");
-      }
+      randomPicks.forEach((randomPick, index) => {
+        const item = createElement("div", "summary-item is-random");
+        const title = createElement("strong", "random-roll-title", "");
 
-      item.appendChild(title);
-      item.appendChild(
-        createElement(
-          "div",
-          "summary-meta random-roll-label",
-          state.randomReveal.done
-            ? "随机抽取曲目"
-            : "正在随机抽取第3首曲目..."
-        )
-      );
-      els.summaryList.appendChild(item);
-      startRandomPickReveal(match, randomPick);
-    } else if (progress.allPicksDone) {
+        if (state.randomReveal.done) {
+          title.textContent = `${randomPick.title} [${randomPick.difficulty}]`;
+        } else {
+          title.textContent = "系统抽取中...";
+          item.classList.add("is-rolling");
+        }
+
+        state.randomReveal.targets.push({
+          element: title,
+          randomPick,
+          index
+        });
+        item.appendChild(title);
+        item.appendChild(
+          createElement(
+            "div",
+            "summary-meta random-roll-label",
+            state.randomReveal.done
+              ? `随机抽取曲目 ${index + 1}`
+              : `正在随机抽取第 ${index + 1} 首曲目...`
+          )
+        );
+        els.summaryList.appendChild(item);
+      });
+      startRandomPickReveal(match, randomPicks);
+    } else if (progress.allPicksDone && !isRandomPickReady(match, progress)) {
       els.summaryList.appendChild(createElement("p", "empty-line", "系统抽取曲目生成中..."));
     }
   }
 
-  function getRandomRollTitles(match, randomPick) {
+  function getRandomRollTitles(match, randomPicks) {
     const usedKeys = new Set(
-      [...(match.bp?.bans || []), ...(match.bp?.picks || [])]
+      [...(match.bp?.bans || []), ...(match.bp?.picks || []), ...randomPicks]
         .map((item) => getBpSelectionKey(item.trackId, item.difficulty))
         .filter(Boolean)
     );
+    const randomTrackIds = new Set(randomPicks.map((item) => Number(item.trackId)));
     const titles = getPoolTracks(match)
       .filter((track) =>
         track.difficulties.some(
@@ -528,44 +579,48 @@
             (difficulty === "IN" || difficulty === "AT") &&
             !usedKeys.has(getBpSelectionKey(track.id, difficulty))
         ) ||
-        Number(track.id) === Number(randomPick.trackId)
+        randomTrackIds.has(Number(track.id))
       )
       .map((track) => track.title)
       .filter(Boolean);
-    const uniqueTitles = Array.from(new Set([...titles, randomPick.title].filter(Boolean)));
+    const uniqueTitles = Array.from(
+      new Set([...titles, ...randomPicks.map((item) => item.title)].filter(Boolean))
+    );
 
-    return uniqueTitles.length ? uniqueTitles : [randomPick.title || "系统曲目"];
+    return uniqueTitles.length ? uniqueTitles : ["系统曲目"];
   }
 
-  function startRandomPickReveal(match, randomPick) {
+  function startRandomPickReveal(match, randomPicks) {
     const reveal = state.randomReveal;
 
-    if (reveal.done || reveal.running || !reveal.target) {
+    if (reveal.done || reveal.running || !reveal.targets?.length) {
       return;
     }
 
-    const titles = getRandomRollTitles(match, randomPick);
+    const titles = getRandomRollTitles(match, randomPicks);
     const totalSteps = 28;
     let step = 0;
 
     reveal.running = true;
 
     const tick = () => {
-      const target = state.randomReveal.target;
+      const targets = state.randomReveal.targets || [];
 
-      if (!target || state.randomReveal.key !== reveal.key) {
+      if (!targets.length || state.randomReveal.key !== reveal.key) {
         return;
       }
 
       if (step >= totalSteps) {
-        target.textContent = `${randomPick.title} [${randomPick.difficulty}]`;
-        target.closest(".summary-item")?.classList.remove("is-rolling");
+        targets.forEach(({ element, randomPick, index }) => {
+          element.textContent = `${randomPick.title} [${randomPick.difficulty}]`;
+          element.closest(".summary-item")?.classList.remove("is-rolling");
 
-        const label = target.parentElement?.querySelector(".random-roll-label");
+          const label = element.parentElement?.querySelector(".random-roll-label");
 
-        if (label) {
-          label.textContent = "随机抽取曲目";
-        }
+          if (label) {
+            label.textContent = `随机抽取曲目 ${index + 1}`;
+          }
+        });
 
         state.randomReveal.done = true;
         state.randomReveal.running = false;
@@ -574,8 +629,14 @@
         return;
       }
 
-      const title = titles[(step * 7 + Math.floor(Math.random() * titles.length)) % titles.length];
-      target.textContent = `${title} ...`;
+      targets.forEach(({ element, index }) => {
+        const title =
+          titles[
+            (step * 7 + index * 5 + Math.floor(Math.random() * titles.length)) %
+              titles.length
+          ];
+        element.textContent = `${title} ...`;
+      });
       step += 1;
 
       const ratio = step / totalSteps;
@@ -742,7 +803,7 @@
       !isBpOpen(match) ||
       progress.phase !== "confirm" ||
       confirmed ||
-      !match.bp?.randomPick;
+      !isRandomPickReady(match, progress);
 
     if (!match.viewer?.isParticipant) {
       els.actionQuota.textContent = "观众模式";
@@ -777,7 +838,13 @@
       setActionMessage("已禁用的谱面不会出现在可选列表中。");
     } else if (progress.phase === "confirm") {
       els.actionQuota.textContent = confirmed ? "已确认" : "等待确认";
-      setActionMessage(confirmed ? "你已确认本场选曲总结。" : "请确认下方选曲总结。");
+      setActionMessage(
+        !isRandomPickReady(match, progress)
+          ? "系统随机抽选尚未完成，请等待后台调整曲池或随机数量。"
+          : confirmed
+            ? "你已确认本场选曲总结。"
+            : "请确认下方选曲总结。"
+      );
     } else if (progress.phase === "summary") {
       els.actionQuota.textContent = "总结完成";
       setActionMessage("双方已确认本场 BP 结果。");
@@ -816,6 +883,7 @@
     els.bpMeta.textContent = [
       `比赛 ${formatDateTime(match.startsAt)}`,
       match.bpStartsAt ? `BP ${formatDateTime(match.bpStartsAt)}` : "BP手动开放",
+      formatRandomRule(match),
       match.content || "暂无比赛说明"
     ].join(" · ");
     els.bpStatus.textContent = STATUS_LABELS[match.status] || "未开始";
@@ -911,7 +979,8 @@
       done: false,
       running: false,
       timer: 0,
-      target: null
+      target: null,
+      targets: []
     };
     els.trackSearch.value = "";
     window.clearInterval(state.pollTimer);
@@ -932,7 +1001,8 @@
       done: false,
       running: false,
       timer: 0,
-      target: null
+      target: null,
+      targets: []
     };
     els.trackSearch.value = "";
     renderMatchList();

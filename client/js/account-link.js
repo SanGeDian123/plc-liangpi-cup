@@ -9,7 +9,7 @@
   let accountClient = null;
 
   function getUserPageUrl() {
-    return new URL("./user.html", window.location.href).href;
+    return new URL("./user", window.location.href).href;
   }
 
   function getUserNickname(user) {
