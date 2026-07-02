@@ -2556,6 +2556,36 @@ window.PLC_SONG_POOL_DATA = {
       }
     },
     {
+      "id": 173,
+      "version": "3.20.0",
+      "releaseDate": "",
+      "order": 1,
+      "pack": "单曲",
+      "title": "Credit",
+      "artist": "",
+      "note": "",
+      "sourceUrl": "",
+      "stages": {
+        "round16": "AT",
+        "top8": "AT"
+      }
+    },
+    {
+      "id": 174,
+      "version": "3.20.0",
+      "releaseDate": "",
+      "order": 2,
+      "pack": "单曲",
+      "title": "风屿",
+      "artist": "",
+      "note": "",
+      "sourceUrl": "",
+      "stages": {
+        "round16": "AT",
+        "top8": "AT"
+      }
+    },
+    {
       "id": 175,
       "version": "3.20.0",
       "releaseDate": "",
