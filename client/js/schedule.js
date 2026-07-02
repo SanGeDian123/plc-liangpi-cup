@@ -24,6 +24,8 @@
     trackSearch: "",
     selectedTrackId: "",
     selectedDifficulty: "",
+    trackOptionsSignature: "",
+    difficultyOptionsSignature: "",
     randomReveal: {
       key: "",
       pendingKey: "",
@@ -726,53 +728,118 @@
       .filter((track) => track.difficulties.length > 0);
   }
 
+  function getTrackOptionsSignature(action, tracks) {
+    return `${action || ""}|${tracks
+      .map((track) => `${track.id}:${track.difficulties.join("/")}`)
+      .join("|")}`;
+  }
+
+  function getDifficultyOptionsSignature(track) {
+    return track
+      ? `${track.id}:${track.difficulties.join("/")}`
+      : "";
+  }
+
   function renderDifficultyOptions() {
     const match = state.activeMatch;
     const trackId = Number(els.trackSelect.value);
     const action = getCurrentAction(match);
     const track = getAvailableTracks(match, action).find((item) => Number(item.id) === trackId);
-    const previousDifficulty = state.selectedDifficulty || els.difficultySelect.value;
-
-    els.difficultySelect.innerHTML = "";
+    const previousDifficulty = els.difficultySelect.value || state.selectedDifficulty;
+    const signature = getDifficultyOptionsSignature(track);
 
     if (!track) {
+      if (state.difficultyOptionsSignature !== signature || !els.difficultySelect.disabled) {
+        els.difficultySelect.innerHTML = "";
+        els.difficultySelect.appendChild(createElement("option", "", "无可选难度"));
+      }
+
       els.difficultySelect.disabled = true;
-      els.difficultySelect.appendChild(createElement("option", "", "无可选难度"));
       state.selectedDifficulty = "";
+      state.difficultyOptionsSignature = signature;
       return;
     }
 
+    const nextDifficulty = track.difficulties.includes(previousDifficulty)
+      ? previousDifficulty
+      : track.difficulties[0] || "";
+
+    if (
+      state.difficultyOptionsSignature === signature &&
+      !els.difficultySelect.disabled &&
+      els.difficultySelect.options.length === track.difficulties.length
+    ) {
+      if (els.difficultySelect.value !== nextDifficulty) {
+        els.difficultySelect.value = nextDifficulty;
+      }
+
+      state.selectedDifficulty = nextDifficulty;
+      return;
+    }
+
+    els.difficultySelect.innerHTML = "";
     track.difficulties.forEach((difficulty) => {
       const option = createElement("option", "", difficulty);
       option.value = difficulty;
       els.difficultySelect.appendChild(option);
     });
 
-    const nextDifficulty = track.difficulties.includes(previousDifficulty)
-      ? previousDifficulty
-      : track.difficulties[0] || "";
-
     els.difficultySelect.value = nextDifficulty;
     state.selectedDifficulty = nextDifficulty;
+    state.difficultyOptionsSignature = signature;
     els.difficultySelect.disabled = false;
   }
 
   function renderTrackOptions() {
     const match = state.activeMatch;
     const action = getCurrentAction(match);
-    const tracks = action ? getAvailableTracks(match, action).slice(0, 160) : [];
-    const previousTrackId = state.selectedTrackId || els.trackSelect.value;
+    const availableTracks = action ? getAvailableTracks(match, action) : [];
+    const previousTrackId = els.trackSelect.value || state.selectedTrackId;
+    let tracks = availableTracks.slice(0, 160);
+    const previousTrack = previousTrackId
+      ? availableTracks.find((track) => String(track.id) === String(previousTrackId))
+      : null;
 
-    els.trackSelect.innerHTML = "";
+    if (
+      previousTrack &&
+      !tracks.some((track) => String(track.id) === String(previousTrack.id))
+    ) {
+      tracks = tracks.concat(previousTrack);
+    }
+
+    const signature = getTrackOptionsSignature(action, tracks);
 
     if (!tracks.length) {
+      if (state.trackOptionsSignature !== signature || !els.trackSelect.disabled) {
+        els.trackSelect.innerHTML = "";
+        els.trackSelect.appendChild(createElement("option", "", action ? "没有可选曲目" : "等待 BP 阶段"));
+      }
+
       els.trackSelect.disabled = true;
-      els.trackSelect.appendChild(createElement("option", "", action ? "没有可选曲目" : "等待 BP 阶段"));
       state.selectedTrackId = "";
+      state.trackOptionsSignature = signature;
       renderDifficultyOptions();
       return;
     }
 
+    const selectedTrack = tracks.find((track) => String(track.id) === String(previousTrackId)) || tracks[0];
+    const nextTrackId = String(selectedTrack.id);
+
+    if (
+      state.trackOptionsSignature === signature &&
+      !els.trackSelect.disabled &&
+      els.trackSelect.options.length === tracks.length
+    ) {
+      if (els.trackSelect.value !== nextTrackId) {
+        els.trackSelect.value = nextTrackId;
+      }
+
+      state.selectedTrackId = nextTrackId;
+      renderDifficultyOptions();
+      return;
+    }
+
+    els.trackSelect.innerHTML = "";
     tracks.forEach((track) => {
       const option = createElement(
         "option",
@@ -783,10 +850,9 @@
       els.trackSelect.appendChild(option);
     });
 
-    const selectedTrack = tracks.find((track) => String(track.id) === String(previousTrackId)) || tracks[0];
-
-    els.trackSelect.value = String(selectedTrack.id);
-    state.selectedTrackId = String(selectedTrack.id);
+    els.trackSelect.value = nextTrackId;
+    state.selectedTrackId = nextTrackId;
+    state.trackOptionsSignature = signature;
     els.trackSelect.disabled = false;
     renderDifficultyOptions();
   }
@@ -972,6 +1038,8 @@
     state.trackSearch = "";
     state.selectedTrackId = "";
     state.selectedDifficulty = "";
+    state.trackOptionsSignature = "";
+    state.difficultyOptionsSignature = "";
     window.clearTimeout(state.randomReveal.timer);
     state.randomReveal = {
       key: "",
@@ -994,6 +1062,8 @@
     state.trackSearch = "";
     state.selectedTrackId = "";
     state.selectedDifficulty = "";
+    state.trackOptionsSignature = "";
+    state.difficultyOptionsSignature = "";
     window.clearTimeout(state.randomReveal.timer);
     state.randomReveal = {
       key: "",
