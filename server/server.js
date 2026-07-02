@@ -46,18 +46,30 @@ const PHI_BACKEND_URL = (
 ).replace(/\/+$/, "");
 const PHI_BACKEND_TIMEOUT_MS =
   Number(process.env.PHI_BACKEND_TIMEOUT_MS) || 15000;
+const RUNTIME_DATA_DIR =
+  process.env.RUNTIME_DATA_DIR || path.join(__dirname, "data");
 const DISPLAY_SETTINGS_PATH =
   process.env.DISPLAY_SETTINGS_PATH ||
-  path.join(os.tmpdir(), "plc-liangpi-cup-display-settings.json");
+  path.join(RUNTIME_DATA_DIR, "display-settings.json");
 const USER_BINDINGS_PATH =
   process.env.USER_BINDINGS_PATH ||
-  path.join(os.tmpdir(), "plc-liangpi-cup-user-bindings.json");
+  path.join(RUNTIME_DATA_DIR, "user-bindings.json");
 const USER_MESSAGES_PATH =
   process.env.USER_MESSAGES_PATH ||
-  path.join(os.tmpdir(), "plc-liangpi-cup-user-messages.json");
+  path.join(RUNTIME_DATA_DIR, "user-messages.json");
 const SCHEDULE_DATA_PATH =
   process.env.SCHEDULE_DATA_PATH ||
-  path.join(os.tmpdir(), "plc-liangpi-cup-schedule.json");
+  path.join(RUNTIME_DATA_DIR, "schedule.json");
+const SUPABASE_RUNTIME_BUCKET =
+  process.env.SUPABASE_RUNTIME_BUCKET ||
+  process.env.SUPABASE_STORAGE_BUCKET ||
+  "plc-runtime-data";
+const RUNTIME_STORAGE_KEYS = Object.freeze({
+  displaySettings: "runtime/display-settings.json",
+  userBindings: "runtime/user-bindings.json",
+  userMessages: "runtime/user-messages.json",
+  schedule: "runtime/schedule.json"
+});
 const SONG_POOL_DATA_PATH = path.join(
   __dirname,
   "..",
@@ -117,6 +129,10 @@ const scheduleCache = {
   }
 };
 let songPoolDataPromise = null;
+const runtimeStorageState = {
+  bucketReady: false,
+  bucketPromise: null
+};
 
 app.use(
   cors({
@@ -357,6 +373,201 @@ function removePlayerFromCache(id) {
   });
 }
 
+function cloneRuntimeDefault(value) {
+  return JSON.parse(JSON.stringify(value));
+}
+
+function isMissingStorageObjectError(error) {
+  const status = String(error?.status || error?.statusCode || "");
+  const message = String(error?.message || "");
+
+  return (
+    status === "404" ||
+    /not found|does not exist|object not found|resource not found/i.test(message)
+  );
+}
+
+async function ensureSupabaseRuntimeBucket() {
+  if (!supabaseAdmin) {
+    return false;
+  }
+
+  if (runtimeStorageState.bucketReady) {
+    return true;
+  }
+
+  if (!runtimeStorageState.bucketPromise) {
+    runtimeStorageState.bucketPromise = (async () => {
+      const { data, error } = await supabaseAdmin.storage.listBuckets();
+
+      if (error) {
+        throw error;
+      }
+
+      const exists = (data || []).some(
+        (bucket) => bucket.name === SUPABASE_RUNTIME_BUCKET
+      );
+
+      if (!exists) {
+        const { error: createError } = await supabaseAdmin.storage.createBucket(
+          SUPABASE_RUNTIME_BUCKET,
+          {
+            public: false
+          }
+        );
+
+        if (
+          createError &&
+          !/already exists|duplicate|exists/i.test(createError.message || "")
+        ) {
+          throw createError;
+        }
+      }
+
+      runtimeStorageState.bucketReady = true;
+      return true;
+    })().catch((error) => {
+      runtimeStorageState.bucketPromise = null;
+      throw error;
+    });
+  }
+
+  return runtimeStorageState.bucketPromise;
+}
+
+async function readLocalRuntimeJson(localPath, label) {
+  try {
+    const raw = await fs.readFile(localPath, "utf8");
+
+    return {
+      found: true,
+      data: JSON.parse(raw)
+    };
+  } catch (error) {
+    if (error.code !== "ENOENT") {
+      console.warn(`${label} local read failed`, error.message);
+    }
+
+    return {
+      found: false,
+      data: null
+    };
+  }
+}
+
+async function writeLocalRuntimeJson(localPath, data) {
+  await fs.mkdir(path.dirname(localPath), {
+    recursive: true
+  });
+  await fs.writeFile(localPath, `${JSON.stringify(data, null, 2)}\n`, "utf8");
+}
+
+async function readSupabaseRuntimeJson(storageKey, label) {
+  await ensureSupabaseRuntimeBucket();
+
+  const { data, error } = await supabaseAdmin.storage
+    .from(SUPABASE_RUNTIME_BUCKET)
+    .download(storageKey);
+
+  if (error) {
+    if (isMissingStorageObjectError(error)) {
+      return {
+        found: false,
+        data: null
+      };
+    }
+
+    throw error;
+  }
+
+  try {
+    return {
+      found: true,
+      data: JSON.parse(await data.text())
+    };
+  } catch (error) {
+    console.warn(`${label} Supabase JSON parse failed`, error.message);
+    throw error;
+  }
+}
+
+async function writeSupabaseRuntimeJson(storageKey, data) {
+  await ensureSupabaseRuntimeBucket();
+
+  const body = Buffer.from(`${JSON.stringify(data, null, 2)}\n`, "utf8");
+  const { error } = await supabaseAdmin.storage
+    .from(SUPABASE_RUNTIME_BUCKET)
+    .upload(storageKey, body, {
+      contentType: "application/json; charset=utf-8",
+      upsert: true
+    });
+
+  if (error) {
+    throw error;
+  }
+}
+
+async function loadRuntimeJson({
+  label,
+  storageKey,
+  localPath,
+  defaults,
+  normalize
+}) {
+  if (supabaseAdmin) {
+    try {
+      const remote = await readSupabaseRuntimeJson(storageKey, label);
+
+      if (remote.found) {
+        return normalize(remote.data);
+      }
+    } catch (error) {
+      console.warn(`${label} Supabase read failed`, error.message);
+    }
+  }
+
+  const local = await readLocalRuntimeJson(localPath, label);
+
+  if (local.found) {
+    const normalized = normalize(local.data);
+
+    if (supabaseAdmin) {
+      try {
+        await writeSupabaseRuntimeJson(storageKey, normalized);
+      } catch (error) {
+        console.warn(`${label} Supabase migration failed`, error.message);
+      }
+    }
+
+    return normalized;
+  }
+
+  return normalize(cloneRuntimeDefault(defaults));
+}
+
+async function persistRuntimeJson({
+  label,
+  storageKey,
+  localPath,
+  data,
+  normalize
+}) {
+  const normalized = normalize(data);
+
+  if (supabaseAdmin) {
+    await writeSupabaseRuntimeJson(storageKey, normalized);
+
+    writeLocalRuntimeJson(localPath, normalized).catch((error) => {
+      console.warn(`${label} local mirror write failed`, error.message);
+    });
+
+    return normalized;
+  }
+
+  await writeLocalRuntimeJson(localPath, normalized);
+  return normalized;
+}
+
 function normalizeGoldDragonPlayerIds(value) {
   const ids = Array.isArray(value) ? value : [];
   const normalized = ids
@@ -379,37 +590,29 @@ async function loadDisplaySettings() {
     return displaySettingsCache.settings;
   }
 
-  try {
-    const raw = await fs.readFile(DISPLAY_SETTINGS_PATH, "utf8");
-    displaySettingsCache.settings = normalizeDisplaySettings(JSON.parse(raw));
-  } catch (error) {
-    if (error.code !== "ENOENT") {
-      console.warn("Display settings read failed", error.message);
-    }
-
-    displaySettingsCache.settings = {
-      ...DEFAULT_DISPLAY_SETTINGS
-    };
-  }
+  displaySettingsCache.settings = await loadRuntimeJson({
+    label: "Display settings",
+    storageKey: RUNTIME_STORAGE_KEYS.displaySettings,
+    localPath: DISPLAY_SETTINGS_PATH,
+    defaults: DEFAULT_DISPLAY_SETTINGS,
+    normalize: normalizeDisplaySettings
+  });
 
   displaySettingsCache.loaded = true;
   return displaySettingsCache.settings;
 }
 
 async function persistDisplaySettings(settings) {
-  const normalized = normalizeDisplaySettings(settings);
+  const normalized = await persistRuntimeJson({
+    label: "Display settings",
+    storageKey: RUNTIME_STORAGE_KEYS.displaySettings,
+    localPath: DISPLAY_SETTINGS_PATH,
+    data: settings,
+    normalize: normalizeDisplaySettings
+  });
 
   displaySettingsCache.loaded = true;
   displaySettingsCache.settings = normalized;
-
-  await fs.mkdir(path.dirname(DISPLAY_SETTINGS_PATH), {
-    recursive: true
-  });
-  await fs.writeFile(
-    DISPLAY_SETTINGS_PATH,
-    `${JSON.stringify(normalized, null, 2)}\n`,
-    "utf8"
-  );
 
   return normalized;
 }
@@ -507,38 +710,29 @@ async function loadUserBindings() {
     return userBindingsCache.data;
   }
 
-  try {
-    const raw = await fs.readFile(USER_BINDINGS_PATH, "utf8");
-    userBindingsCache.data = normalizeUserBindings(JSON.parse(raw));
-  } catch (error) {
-    if (error.code !== "ENOENT") {
-      console.warn("User bindings read failed", error.message);
-    }
-
-    userBindingsCache.data = {
-      requests: [],
-      bindings: {}
-    };
-  }
+  userBindingsCache.data = await loadRuntimeJson({
+    label: "User bindings",
+    storageKey: RUNTIME_STORAGE_KEYS.userBindings,
+    localPath: USER_BINDINGS_PATH,
+    defaults: DEFAULT_USER_BINDINGS,
+    normalize: normalizeUserBindings
+  });
 
   userBindingsCache.loaded = true;
   return userBindingsCache.data;
 }
 
 async function persistUserBindings(data) {
-  const normalized = normalizeUserBindings(data);
+  const normalized = await persistRuntimeJson({
+    label: "User bindings",
+    storageKey: RUNTIME_STORAGE_KEYS.userBindings,
+    localPath: USER_BINDINGS_PATH,
+    data,
+    normalize: normalizeUserBindings
+  });
 
   userBindingsCache.loaded = true;
   userBindingsCache.data = normalized;
-
-  await fs.mkdir(path.dirname(USER_BINDINGS_PATH), {
-    recursive: true
-  });
-  await fs.writeFile(
-    USER_BINDINGS_PATH,
-    `${JSON.stringify(normalized, null, 2)}\n`,
-    "utf8"
-  );
 
   return normalized;
 }
@@ -739,38 +933,29 @@ async function loadUserMessages() {
     return userMessagesCache.data;
   }
 
-  try {
-    const raw = await fs.readFile(USER_MESSAGES_PATH, "utf8");
-    userMessagesCache.data = normalizeUserMessages(JSON.parse(raw));
-  } catch (error) {
-    if (error.code !== "ENOENT") {
-      console.warn("User messages read failed", error.message);
-    }
-
-    userMessagesCache.data = {
-      songCommentOwners: {},
-      notifications: []
-    };
-  }
+  userMessagesCache.data = await loadRuntimeJson({
+    label: "User messages",
+    storageKey: RUNTIME_STORAGE_KEYS.userMessages,
+    localPath: USER_MESSAGES_PATH,
+    defaults: DEFAULT_USER_MESSAGES,
+    normalize: normalizeUserMessages
+  });
 
   userMessagesCache.loaded = true;
   return userMessagesCache.data;
 }
 
 async function persistUserMessages(data) {
-  const normalized = normalizeUserMessages(data);
+  const normalized = await persistRuntimeJson({
+    label: "User messages",
+    storageKey: RUNTIME_STORAGE_KEYS.userMessages,
+    localPath: USER_MESSAGES_PATH,
+    data,
+    normalize: normalizeUserMessages
+  });
 
   userMessagesCache.loaded = true;
   userMessagesCache.data = normalized;
-
-  await fs.mkdir(path.dirname(USER_MESSAGES_PATH), {
-    recursive: true
-  });
-  await fs.writeFile(
-    USER_MESSAGES_PATH,
-    `${JSON.stringify(normalized, null, 2)}\n`,
-    "utf8"
-  );
 
   return normalized;
 }
@@ -1037,37 +1222,29 @@ async function loadScheduleData() {
     return scheduleCache.data;
   }
 
-  try {
-    const raw = await fs.readFile(SCHEDULE_DATA_PATH, "utf8");
-    scheduleCache.data = normalizeScheduleData(JSON.parse(raw));
-  } catch (error) {
-    if (error.code !== "ENOENT") {
-      console.warn("Schedule data read failed", error.message);
-    }
-
-    scheduleCache.data = {
-      matches: []
-    };
-  }
+  scheduleCache.data = await loadRuntimeJson({
+    label: "Schedule data",
+    storageKey: RUNTIME_STORAGE_KEYS.schedule,
+    localPath: SCHEDULE_DATA_PATH,
+    defaults: DEFAULT_SCHEDULE_DATA,
+    normalize: normalizeScheduleData
+  });
 
   scheduleCache.loaded = true;
   return scheduleCache.data;
 }
 
 async function persistScheduleData(data) {
-  const normalized = normalizeScheduleData(data);
+  const normalized = await persistRuntimeJson({
+    label: "Schedule data",
+    storageKey: RUNTIME_STORAGE_KEYS.schedule,
+    localPath: SCHEDULE_DATA_PATH,
+    data,
+    normalize: normalizeScheduleData
+  });
 
   scheduleCache.loaded = true;
   scheduleCache.data = normalized;
-
-  await fs.mkdir(path.dirname(SCHEDULE_DATA_PATH), {
-    recursive: true
-  });
-  await fs.writeFile(
-    SCHEDULE_DATA_PATH,
-    `${JSON.stringify(normalized, null, 2)}\n`,
-    "utf8"
-  );
 
   return normalized;
 }
@@ -3060,4 +3237,9 @@ loadInitialPlayersSnapshot().then(refreshPlayersInBackground);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
+  console.log(
+    supabaseAdmin
+      ? `Runtime data storage: Supabase Storage bucket "${SUPABASE_RUNTIME_BUCKET}"`
+      : `Runtime data storage: local JSON files in "${RUNTIME_DATA_DIR}"`
+  );
 });
