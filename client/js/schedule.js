@@ -1005,10 +1005,16 @@
       return;
     }
 
+    const requestedMatchId = state.activeMatchId;
+
     try {
       const payload = await fetchJson(
-        `/schedule/matches/${encodeURIComponent(state.activeMatchId)}`
+        `/schedule/matches/${encodeURIComponent(requestedMatchId)}`
       );
+
+      if (state.activeMatchId !== requestedMatchId) {
+        return;
+      }
 
       queueRandomPickReveal(state.activeMatch, payload.match);
       state.activeMatch = payload.match;
@@ -1018,6 +1024,10 @@
       renderMatchList();
       renderActiveMatch();
     } catch (error) {
+      if (state.activeMatchId !== requestedMatchId) {
+        return;
+      }
+
       setActionMessage(error.message || "比赛状态刷新失败", true);
     }
   }
