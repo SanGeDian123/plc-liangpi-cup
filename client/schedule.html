@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PLC凉皮杯赛程与在线 Ban/Pick。" />
+
+  <title>PLC凉皮杯 - 赛程</title>
+
+  <link rel="preconnect" href="https://kpjuerikmmajqyxcocos.supabase.co" crossorigin />
+  <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="./assets/bp-background.jpg" as="image" />
+  <link rel="icon" type="image/png" href="./assets/logo1.png" />
+  <link rel="stylesheet" href="./css/account-link.css?v=20260701b" />
+  <link rel="stylesheet" href="./css/schedule.css?v=20260702b" />
+  <link rel="stylesheet" href="./css/site-announcement.css" />
+</head>
+<body>
+  <header class="schedule-header">
+    <a class="schedule-brand" href="./event" aria-label="返回赛事主页">
+      <img src="./assets/logo2-160.webp" width="42" height="42" alt="" aria-hidden="true" decoding="async" />
+      <strong>PLC凉皮杯</strong>
+    </a>
+
+    <nav class="schedule-nav" aria-label="赛程页面导航">
+      <a href="./event">赛事主页</a>
+      <a href="./song-pool.html">比赛曲库</a>
+      <a href="./">海选榜</a>
+    </nav>
+
+    <a class="plc-account-link" href="./user.html" data-plc-account-link>
+      <span class="plc-account-label">账号</span>
+      <strong class="plc-account-name" data-plc-account-name>未登录</strong>
+    </a>
+  </header>
+
+  <main class="schedule-page">
+    <section class="schedule-hero" aria-labelledby="scheduleTitle">
+      <p class="eyebrow">PLC Match Center</p>
+      <h1 id="scheduleTitle">比赛赛程</h1>
+      <p id="scheduleSummary">正在同步赛事日程...</p>
+    </section>
+
+    <section class="schedule-layout">
+      <div class="match-list-panel" aria-labelledby="matchListTitle">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Schedule</p>
+            <h2 id="matchListTitle">可见比赛</h2>
+          </div>
+          <button class="icon-button" id="refreshMatchesButton" type="button" aria-label="刷新赛程" title="刷新赛程">↻</button>
+        </div>
+
+        <div class="match-list" id="matchList" aria-live="polite"></div>
+      </div>
+
+      <section class="bp-panel" id="bpPanel" aria-labelledby="bpTitle" hidden>
+        <div class="bp-empty" id="bpEmpty">
+          <span>BP</span>
+          <strong>选择一场比赛</strong>
+          <p>点击左侧赛程即可查看比赛内容、在线 Ban/Pick 状态和赛后结果。</p>
+        </div>
+
+        <div class="bp-workbench" id="bpWorkbench" hidden>
+          <button class="detail-back" id="backToMatchesButton" type="button">返回赛程</button>
+
+          <div class="bp-heading">
+            <div>
+              <p class="eyebrow" id="bpStageLabel">Ban/Pick</p>
+              <h2 id="bpTitle">比赛标题</h2>
+              <p id="bpMeta"></p>
+            </div>
+            <span class="status-pill" id="bpStatus">等待中</span>
+          </div>
+
+          <div class="participant-row" id="participantRow"></div>
+          <div class="identity-row" id="identityRow">
+            <div>
+              <span>我</span>
+              <strong id="myNickname">未登录</strong>
+            </div>
+            <div>
+              <span>对方</span>
+              <strong id="opponentNickname">等待分配</strong>
+            </div>
+          </div>
+
+          <div class="live-presence" id="livePresence" hidden></div>
+
+          <div class="bp-grid">
+            <section class="bp-section" aria-labelledby="banTitle">
+              <div class="section-heading">
+                <h3 id="banTitle">禁用谱面</h3>
+                <span id="banProgress">0/0</span>
+              </div>
+              <div class="selection-list" id="banList"></div>
+            </section>
+
+            <section class="bp-section" aria-labelledby="pickTitle">
+              <div class="section-heading">
+                <h3 id="pickTitle">选择谱面</h3>
+                <span id="pickProgress">0/0</span>
+              </div>
+              <div class="selection-list" id="pickList"></div>
+            </section>
+          </div>
+
+          <section class="action-panel" id="actionPanel" aria-labelledby="actionTitle">
+            <div class="section-heading">
+              <h3 id="actionTitle">你的操作</h3>
+              <span id="actionQuota">等待比赛开始</span>
+            </div>
+
+            <form class="bp-form" id="bpForm">
+              <label for="trackSearch">
+                <span>搜索曲目</span>
+                <input id="trackSearch" type="search" autocomplete="off" placeholder="输入曲名 / 曲包 / 曲师" />
+              </label>
+
+              <label for="trackSelect">
+                <span>曲目</span>
+                <select id="trackSelect"></select>
+              </label>
+
+              <label for="difficultySelect">
+                <span>难度</span>
+                <select id="difficultySelect"></select>
+              </label>
+
+              <button class="primary-action" id="submitBpButton" type="submit">提交</button>
+            </form>
+
+            <button class="primary-action confirm-action" id="confirmBpButton" type="button" hidden>确认选曲总结</button>
+            <p class="action-message" id="actionMessage" aria-live="polite"></p>
+          </section>
+
+          <section class="summary-panel" id="summaryPanel" aria-labelledby="summaryTitle" hidden>
+            <div class="section-heading">
+              <h3 id="summaryTitle">选曲总结</h3>
+              <span id="confirmProgress">0/0</span>
+            </div>
+            <div class="summary-list" id="summaryList"></div>
+          </section>
+
+          <section class="result-panel" id="resultPanel" aria-labelledby="resultTitle" hidden>
+            <div class="section-heading">
+              <h3 id="resultTitle">比赛结果</h3>
+              <span>赛后信息</span>
+            </div>
+            <div id="resultList" class="result-list"></div>
+          </section>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <script src="./js/api.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/account-link.js?v=20260701b"></script>
+  <script src="./js/song-pool-data.js"></script>
+  <script src="./js/schedule.js?v=20260702f"></script>
+  <script src="./js/site-announcement.js"></script>
+</body>
+</html>

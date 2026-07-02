@@ -1,0 +1,1099 @@
+(function () {
+  const STAGE_LABELS = {
+    round16: "16进8曲池",
+    top8: "8强赛曲池",
+    custom: "自定义曲池"
+  };
+  const STATUS_LABELS = {
+    scheduled: "未开始",
+    bp: "BP中",
+    live: "比赛中",
+    finished: "已结束"
+  };
+  const OUTCOME_LABELS = {
+    win: "胜",
+    loss: "负",
+    draw: "平",
+    pending: "待定"
+  };
+
+  const state = {
+    matches: [],
+    activeMatchId: "",
+    activeMatch: null,
+    trackSearch: "",
+    selectedTrackId: "",
+    selectedDifficulty: "",
+    randomReveal: {
+      key: "",
+      pendingKey: "",
+      done: false,
+      running: false,
+      timer: 0,
+      target: null
+    },
+    pollTimer: 0,
+    lastPresenceAt: 0,
+    isSubmitting: false
+  };
+
+  const els = {
+    layout: document.querySelector(".schedule-layout"),
+    matchListPanel: document.querySelector(".match-list-panel"),
+    summary: document.getElementById("scheduleSummary"),
+    refresh: document.getElementById("refreshMatchesButton"),
+    matchList: document.getElementById("matchList"),
+    bpPanel: document.getElementById("bpPanel"),
+    bpEmpty: document.getElementById("bpEmpty"),
+    bpWorkbench: document.getElementById("bpWorkbench"),
+    backToMatches: document.getElementById("backToMatchesButton"),
+    bpStageLabel: document.getElementById("bpStageLabel"),
+    bpTitle: document.getElementById("bpTitle"),
+    bpMeta: document.getElementById("bpMeta"),
+    bpStatus: document.getElementById("bpStatus"),
+    participantRow: document.getElementById("participantRow"),
+    myNickname: document.getElementById("myNickname"),
+    opponentNickname: document.getElementById("opponentNickname"),
+    livePresence: document.getElementById("livePresence"),
+    banProgress: document.getElementById("banProgress"),
+    pickProgress: document.getElementById("pickProgress"),
+    banList: document.getElementById("banList"),
+    pickList: document.getElementById("pickList"),
+    actionPanel: document.getElementById("actionPanel"),
+    actionQuota: document.getElementById("actionQuota"),
+    bpForm: document.getElementById("bpForm"),
+    trackSearch: document.getElementById("trackSearch"),
+    trackSelect: document.getElementById("trackSelect"),
+    difficultySelect: document.getElementById("difficultySelect"),
+    submitBp: document.getElementById("submitBpButton"),
+    confirmBp: document.getElementById("confirmBpButton"),
+    actionMessage: document.getElementById("actionMessage"),
+    summaryPanel: document.getElementById("summaryPanel"),
+    summaryList: document.getElementById("summaryList"),
+    confirmProgress: document.getElementById("confirmProgress"),
+    resultPanel: document.getElementById("resultPanel"),
+    resultList: document.getElementById("resultList")
+  };
+
+  function createElement(tag, className, text) {
+    const element = document.createElement(tag);
+
+    if (className) {
+      element.className = className;
+    }
+
+    if (text !== undefined) {
+      element.textContent = text;
+    }
+
+    return element;
+  }
+
+  function getAccessToken() {
+    return window.PLCAccount?.getAccessToken?.() || "";
+  }
+
+  async function fetchJson(path, options = {}) {
+    const headers = {
+      ...(options.headers || {})
+    };
+    const token = getAccessToken();
+
+    if (options.body && !headers["Content-Type"]) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${API_URL}${path}`, {
+      ...options,
+      headers
+    });
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      throw new Error(payload.message || "请求失败");
+    }
+
+    return payload;
+  }
+
+  function formatDateTime(value) {
+    const time = Date.parse(value || "");
+
+    if (!Number.isFinite(time)) {
+      return "时间待定";
+    }
+
+    return new Date(time).toLocaleString("zh-CN", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false
+    });
+  }
+
+  function normalizeText(value, fallback = "-") {
+    const text = String(value || "").trim();
+
+    return text || fallback;
+  }
+
+  function getSongPoolData() {
+    return window.PLC_SONG_POOL_DATA || {
+      tracks: []
+    };
+  }
+
+  function normalizeDifficulties(value) {
+    const values = Array.isArray(value)
+      ? value
+      : String(value || "")
+          .split(/[,\s/]+/)
+          .filter(Boolean);
+
+    return Array.from(
+      new Set(
+        values
+          .map((item) => String(item).trim().toUpperCase())
+          .filter((item) => ["EZ", "HD", "IN", "AT"].includes(item))
+      )
+    );
+  }
+
+  function isRemovedTrack(track) {
+    const note = String(track?.note || "");
+
+    return note.includes("移除") && !note.includes("常驻") && !note.includes("再收录");
+  }
+
+  function getTrackDifficulties(track, match) {
+    if (match.poolMode !== "custom") {
+      return normalizeDifficulties(track?.stages?.[match.poolMode]);
+    }
+
+    const stageDifficulties = normalizeDifficulties([
+      ...normalizeDifficulties(track?.stages?.round16),
+      ...normalizeDifficulties(track?.stages?.top8)
+    ]);
+    const customDifficulties = normalizeDifficulties(match.customDifficulties);
+
+    if (!customDifficulties.length) {
+      return stageDifficulties;
+    }
+
+    return stageDifficulties.filter((difficulty) =>
+      customDifficulties.includes(difficulty)
+    );
+  }
+
+  function getPoolTracks(match) {
+    const data = getSongPoolData();
+    const customIds = new Set((match.customTrackIds || []).map(Number));
+
+    return data.tracks
+      .filter((track) => {
+        if (isRemovedTrack(track)) {
+          return false;
+        }
+
+        if (match.poolMode === "custom") {
+          return customIds.has(Number(track.id));
+        }
+
+        return Boolean(track?.stages?.[match.poolMode]);
+      })
+      .map((track) => ({
+        ...track,
+        difficulties: getTrackDifficulties(track, match)
+      }))
+      .filter((track) => track.difficulties.length > 0);
+  }
+
+  function matchesSearch(track) {
+    if (!state.trackSearch) {
+      return true;
+    }
+
+    const needle = state.trackSearch.toLowerCase();
+    const haystack = [track.title, track.artist, track.pack]
+      .map((item) => String(item || "").toLowerCase())
+      .join(" ");
+
+    return haystack.includes(needle);
+  }
+
+  function getViewerUserId(match = state.activeMatch) {
+    return match?.viewer?.participant?.userId || window.PLCAccount?.getUser?.()?.id || "";
+  }
+
+  function getParticipantName(participant, fallback = "选手") {
+    return (
+      participant?.displayName ||
+      participant?.playerNickname ||
+      participant?.nickname ||
+      participant?.email?.split("@")[0] ||
+      fallback
+    );
+  }
+
+  function isBpOpen(match) {
+    return match?.status === "bp";
+  }
+
+  function getCurrentAction(match = state.activeMatch) {
+    if (!match?.viewer?.isParticipant || !isBpOpen(match)) {
+      return "";
+    }
+
+    const userId = getViewerUserId(match);
+    const progress = match.bp?.progress || {};
+
+    if (progress.phase === "ban") {
+      const bans = (match.bp.bans || []).filter((item) => item.userId === userId);
+
+      return bans.length < progress.banCount ? "ban" : "";
+    }
+
+    if (progress.phase === "pick") {
+      const picks = (match.bp.picks || []).filter((item) => item.userId === userId);
+
+      return picks.length < progress.pickCount ? "pick" : "";
+    }
+
+    return "";
+  }
+
+  function setActionMessage(message, isError = false) {
+    els.actionMessage.textContent = message || "";
+    els.actionMessage.classList.toggle("is-error", isError);
+  }
+
+  function renderTags(container, tags) {
+    tags.forEach((tag) => {
+      const element = createElement("span", `tag ${tag.className || ""}`.trim(), tag.text);
+      container.appendChild(element);
+    });
+  }
+
+  function renderMatchList() {
+    els.matchList.innerHTML = "";
+
+    if (!state.matches.length) {
+      const empty = createElement(
+        "p",
+        "empty-line",
+        "暂无可见比赛。登录并完成绑定后，可看到分配给你的赛事。"
+      );
+      els.matchList.appendChild(empty);
+      return;
+    }
+
+    state.matches.forEach((match) => {
+      const card = createElement("button", "match-card");
+      card.type = "button";
+      card.dataset.matchId = match.id;
+      card.classList.toggle("is-active", match.id === state.activeMatchId);
+
+      const top = createElement("div", "match-card-top");
+      const title = createElement("h3", "", match.title);
+      top.appendChild(title);
+      renderTags(top, [
+        {
+          text: STATUS_LABELS[match.status] || "未开始",
+          className: match.status === "finished" ? "is-finished" : ""
+        },
+        {
+          text: match.visibility === "public" ? "公开" : "定向",
+          className: match.visibility === "public" ? "is-public" : ""
+        }
+      ]);
+
+      const meta = createElement("div", "match-card-meta");
+      renderTags(meta, [
+        {
+          text: formatDateTime(match.startsAt)
+        },
+        {
+          text: match.bpStartsAt ? `BP ${formatDateTime(match.bpStartsAt)}` : "BP手动开放"
+        },
+        {
+          text: STAGE_LABELS[match.poolMode] || "曲池"
+        },
+        {
+          text: `${match.participants?.length || 0}/${match.participantCount || 0}人`
+        }
+      ]);
+
+      const content = createElement("p", "", match.content || "暂无比赛说明");
+
+      card.append(top, meta, content);
+      card.addEventListener("click", () => selectMatch(match.id));
+      els.matchList.appendChild(card);
+    });
+  }
+
+  function renderParticipantRow(match) {
+    els.participantRow.innerHTML = "";
+
+    if (!match.participants?.length) {
+      els.participantRow.appendChild(createElement("span", "empty-line", "后台尚未指定参赛账号"));
+      return;
+    }
+
+    const viewerUserId = getViewerUserId(match);
+
+    match.participants.forEach((participant, index) => {
+      const chip = createElement(
+        "span",
+        "participant-chip",
+        getParticipantName(participant, `选手${index + 1}`)
+      );
+      chip.classList.toggle("is-me", Boolean(participant.userId && participant.userId === viewerUserId));
+      els.participantRow.appendChild(chip);
+    });
+  }
+
+  function renderIdentityRow(match) {
+    const viewerUserId = getViewerUserId(match);
+    const participant = match.viewer?.participant;
+    const opponents = (match.participants || []).filter(
+      (item) => !viewerUserId || item.userId !== viewerUserId
+    );
+    const opponentLabel = els.opponentNickname.previousElementSibling;
+
+    if (participant) {
+      els.myNickname.textContent = getParticipantName(participant, "我");
+      els.opponentNickname.textContent =
+        opponents.map((item, index) => getParticipantName(item, `选手${index + 1}`)).join(" / ") ||
+        "等待分配";
+      opponentLabel.textContent = opponents.length > 1 ? "对手" : "对方";
+      return;
+    }
+
+    els.myNickname.textContent = window.PLCAccount?.getNickname?.() || "观众";
+    els.opponentNickname.textContent =
+      (match.participants || [])
+        .map((item, index) => getParticipantName(item, `选手${index + 1}`))
+        .join(" / ") || "等待分配";
+    opponentLabel.textContent = "参赛选手";
+  }
+
+  function renderPresence(match) {
+    if (!isBpOpen(match)) {
+      els.livePresence.hidden = true;
+      els.livePresence.textContent = "";
+      return;
+    }
+
+    const viewerUserId = getViewerUserId(match);
+    const active = (match.bp?.presence || []).filter(
+      (item) => !item.userId || item.userId !== viewerUserId
+    );
+
+    if (!active.length) {
+      els.livePresence.hidden = true;
+      els.livePresence.textContent = "";
+      return;
+    }
+
+    els.livePresence.hidden = false;
+    els.livePresence.textContent = active
+      .map((item) => `${normalizeText(item.nickname, "对手")}选手选择中...`)
+      .join(" ");
+  }
+
+  function renderSelectionList(container, selections, emptyText, typeClass) {
+    container.innerHTML = "";
+
+    if (!selections.length) {
+      container.appendChild(createElement("p", "empty-line", emptyText));
+      return;
+    }
+
+    selections.forEach((selection) => {
+      const item = createElement("div", `selection-item ${typeClass}`);
+      item.appendChild(
+        createElement("strong", "", `${selection.title || `曲目 ${selection.trackId}`} [${selection.difficulty}]`)
+      );
+
+      const meta = createElement("div", "selection-meta");
+      meta.appendChild(createElement("span", "", selection.nickname || "选手"));
+      meta.appendChild(createElement("span", "", selection.pack || "曲包未知"));
+      item.appendChild(meta);
+      container.appendChild(item);
+    });
+  }
+
+  function getRandomPickRevealKey(match) {
+    const randomPick = match?.bp?.randomPick;
+
+    if (!match?.id || !randomPick) {
+      return "";
+    }
+
+    return `${match.id}:${randomPick.id || `${randomPick.trackId}:${randomPick.difficulty}`}`;
+  }
+
+  function queueRandomPickReveal(previousMatch, nextMatch) {
+    if (!previousMatch || !nextMatch || previousMatch.id !== nextMatch.id) {
+      return;
+    }
+
+    const previousKey = getRandomPickRevealKey(previousMatch);
+    const nextKey = getRandomPickRevealKey(nextMatch);
+
+    if (!previousKey && nextKey) {
+      state.randomReveal.pendingKey = nextKey;
+    }
+  }
+
+  function renderSummary(match) {
+    const picks = match.bp?.picks || [];
+    const randomPick = match.bp?.randomPick;
+    const progress = match.bp?.progress || {};
+    const confirmed = match.bp?.confirmedBy?.length || 0;
+    const total = match.participants?.length || 0;
+
+    els.summaryPanel.hidden = !randomPick && !picks.length;
+    els.summaryList.innerHTML = "";
+    els.confirmProgress.textContent = `${confirmed}/${total} 已确认`;
+
+    picks.forEach((selection) => {
+      const item = createElement("div", "summary-item is-pick");
+      item.appendChild(createElement("strong", "", `${selection.title} [${selection.difficulty}]`));
+      item.appendChild(
+        createElement("div", "summary-meta", `${selection.nickname || "选手"} 选择 · ${selection.pack || "曲包未知"}`)
+      );
+      els.summaryList.appendChild(item);
+    });
+
+    if (randomPick) {
+      const item = createElement("div", "summary-item is-random");
+      const title = createElement("strong", "random-roll-title", "");
+      const revealKey = getRandomPickRevealKey(match);
+      const shouldAnimate = state.randomReveal.pendingKey === revealKey;
+
+      if (state.randomReveal.key !== revealKey) {
+        window.clearTimeout(state.randomReveal.timer);
+        state.randomReveal = {
+          key: revealKey,
+          pendingKey: shouldAnimate ? revealKey : "",
+          done: !shouldAnimate,
+          running: false,
+          timer: 0,
+          target: title
+        };
+      } else {
+        state.randomReveal.target = title;
+      }
+
+      if (state.randomReveal.done) {
+        title.textContent = `${randomPick.title} [${randomPick.difficulty}]`;
+      } else {
+        title.textContent = "系统抽取中...";
+        item.classList.add("is-rolling");
+      }
+
+      item.appendChild(title);
+      item.appendChild(
+        createElement(
+          "div",
+          "summary-meta random-roll-label",
+          state.randomReveal.done
+            ? "随机抽取曲目"
+            : "正在随机抽取第3首曲目..."
+        )
+      );
+      els.summaryList.appendChild(item);
+      startRandomPickReveal(match, randomPick);
+    } else if (progress.allPicksDone) {
+      els.summaryList.appendChild(createElement("p", "empty-line", "系统抽取曲目生成中..."));
+    }
+  }
+
+  function getRandomRollTitles(match, randomPick) {
+    const usedKeys = new Set(
+      [...(match.bp?.bans || []), ...(match.bp?.picks || [])]
+        .map((item) => getBpSelectionKey(item.trackId, item.difficulty))
+        .filter(Boolean)
+    );
+    const titles = getPoolTracks(match)
+      .filter((track) =>
+        track.difficulties.some(
+          (difficulty) =>
+            (difficulty === "IN" || difficulty === "AT") &&
+            !usedKeys.has(getBpSelectionKey(track.id, difficulty))
+        ) ||
+        Number(track.id) === Number(randomPick.trackId)
+      )
+      .map((track) => track.title)
+      .filter(Boolean);
+    const uniqueTitles = Array.from(new Set([...titles, randomPick.title].filter(Boolean)));
+
+    return uniqueTitles.length ? uniqueTitles : [randomPick.title || "系统曲目"];
+  }
+
+  function startRandomPickReveal(match, randomPick) {
+    const reveal = state.randomReveal;
+
+    if (reveal.done || reveal.running || !reveal.target) {
+      return;
+    }
+
+    const titles = getRandomRollTitles(match, randomPick);
+    const totalSteps = 28;
+    let step = 0;
+
+    reveal.running = true;
+
+    const tick = () => {
+      const target = state.randomReveal.target;
+
+      if (!target || state.randomReveal.key !== reveal.key) {
+        return;
+      }
+
+      if (step >= totalSteps) {
+        target.textContent = `${randomPick.title} [${randomPick.difficulty}]`;
+        target.closest(".summary-item")?.classList.remove("is-rolling");
+
+        const label = target.parentElement?.querySelector(".random-roll-label");
+
+        if (label) {
+          label.textContent = "随机抽取曲目";
+        }
+
+        state.randomReveal.done = true;
+        state.randomReveal.running = false;
+        state.randomReveal.timer = 0;
+        state.randomReveal.pendingKey = "";
+        return;
+      }
+
+      const title = titles[(step * 7 + Math.floor(Math.random() * titles.length)) % titles.length];
+      target.textContent = `${title} ...`;
+      step += 1;
+
+      const ratio = step / totalSteps;
+      const delay = 36 + Math.round(290 * ratio * ratio * ratio);
+      state.randomReveal.timer = window.setTimeout(tick, delay);
+    };
+
+    tick();
+  }
+
+  function renderResult(match) {
+    const result = match.result || {};
+    const entries = result.entries || [];
+
+    els.resultPanel.hidden = !entries.length && !result.summary;
+    els.resultPanel.classList.toggle("is-finished", Boolean(entries.length));
+    els.resultList.innerHTML = "";
+
+    if (result.summary) {
+      els.resultList.appendChild(createElement("p", "empty-line", result.summary));
+    }
+
+    entries.forEach((entry) => {
+      const item = createElement("div", "result-item");
+      const row = createElement("div", "result-row");
+      const name = createElement("strong", "", entry.playerNickname || entry.nickname || "选手");
+      const outcome = createElement(
+        "span",
+        entry.outcome === "win" ? "winner" : entry.outcome === "loss" ? "loser" : "",
+        OUTCOME_LABELS[entry.outcome] || "待定"
+      );
+      row.append(name, outcome);
+      item.appendChild(row);
+      item.appendChild(createElement("div", "selection-meta", `得分：${entry.score || "-"}`));
+
+      if (entry.note) {
+        item.appendChild(createElement("div", "selection-meta", entry.note));
+      }
+
+      els.resultList.appendChild(item);
+    });
+  }
+
+  function getBpSelectionKey(trackId, difficulty) {
+    const normalizedTrackId = Number(trackId);
+    const normalizedDifficulty = String(difficulty || "").trim().toUpperCase();
+
+    if (!Number.isInteger(normalizedTrackId) || normalizedTrackId <= 0 || !normalizedDifficulty) {
+      return "";
+    }
+
+    return `${normalizedTrackId}:${normalizedDifficulty}`;
+  }
+
+  function getUnavailableDifficultyKeys(match, action) {
+    const keys = new Set(
+      (match.bp?.bans || [])
+        .map((item) => getBpSelectionKey(item.trackId, item.difficulty))
+        .filter(Boolean)
+    );
+
+    if (action === "pick") {
+      (match.bp?.picks || []).forEach((item) => {
+        const key = getBpSelectionKey(item.trackId, item.difficulty);
+
+        if (key) {
+          keys.add(key);
+        }
+      });
+    }
+
+    return keys;
+  }
+
+  function getAvailableTracks(match, action) {
+    const unavailableKeys = getUnavailableDifficultyKeys(match, action);
+
+    return getPoolTracks(match)
+      .filter(matchesSearch)
+      .map((track) => ({
+        ...track,
+        difficulties: track.difficulties.filter(
+          (difficulty) =>
+            !unavailableKeys.has(getBpSelectionKey(track.id, difficulty))
+        )
+      }))
+      .filter((track) => track.difficulties.length > 0);
+  }
+
+  function renderDifficultyOptions() {
+    const match = state.activeMatch;
+    const trackId = Number(els.trackSelect.value);
+    const action = getCurrentAction(match);
+    const track = getAvailableTracks(match, action).find((item) => Number(item.id) === trackId);
+    const previousDifficulty = state.selectedDifficulty || els.difficultySelect.value;
+
+    els.difficultySelect.innerHTML = "";
+
+    if (!track) {
+      els.difficultySelect.disabled = true;
+      els.difficultySelect.appendChild(createElement("option", "", "无可选难度"));
+      state.selectedDifficulty = "";
+      return;
+    }
+
+    track.difficulties.forEach((difficulty) => {
+      const option = createElement("option", "", difficulty);
+      option.value = difficulty;
+      els.difficultySelect.appendChild(option);
+    });
+
+    const nextDifficulty = track.difficulties.includes(previousDifficulty)
+      ? previousDifficulty
+      : track.difficulties[0] || "";
+
+    els.difficultySelect.value = nextDifficulty;
+    state.selectedDifficulty = nextDifficulty;
+    els.difficultySelect.disabled = false;
+  }
+
+  function renderTrackOptions() {
+    const match = state.activeMatch;
+    const action = getCurrentAction(match);
+    const tracks = action ? getAvailableTracks(match, action).slice(0, 160) : [];
+    const previousTrackId = state.selectedTrackId || els.trackSelect.value;
+
+    els.trackSelect.innerHTML = "";
+
+    if (!tracks.length) {
+      els.trackSelect.disabled = true;
+      els.trackSelect.appendChild(createElement("option", "", action ? "没有可选曲目" : "等待 BP 阶段"));
+      state.selectedTrackId = "";
+      renderDifficultyOptions();
+      return;
+    }
+
+    tracks.forEach((track) => {
+      const option = createElement(
+        "option",
+        "",
+        `${track.title} · ${track.difficulties.join("/")}`
+      );
+      option.value = String(track.id);
+      els.trackSelect.appendChild(option);
+    });
+
+    const selectedTrack = tracks.find((track) => String(track.id) === String(previousTrackId)) || tracks[0];
+
+    els.trackSelect.value = String(selectedTrack.id);
+    state.selectedTrackId = String(selectedTrack.id);
+    els.trackSelect.disabled = false;
+    renderDifficultyOptions();
+  }
+
+  function renderActionPanel(match) {
+    const action = getCurrentAction(match);
+    const progress = match.bp?.progress || {};
+    const viewerUserId = getViewerUserId(match);
+    const confirmed = (match.bp?.confirmedBy || []).includes(viewerUserId);
+
+    els.bpForm.hidden = !action;
+    els.confirmBp.hidden =
+      !match.viewer?.isParticipant ||
+      !isBpOpen(match) ||
+      progress.phase !== "confirm" ||
+      confirmed ||
+      !match.bp?.randomPick;
+
+    if (!match.viewer?.isParticipant) {
+      els.actionQuota.textContent = "观众模式";
+      setActionMessage("你可以查看公开赛事进度和赛后结果。");
+      renderTrackOptions();
+      return;
+    }
+
+    if (!isBpOpen(match)) {
+      els.actionQuota.textContent =
+        match.status === "scheduled" ? "比赛未开始" : "BP未开放";
+      setActionMessage(
+        match.status === "scheduled"
+          ? match.bpStartsAt
+            ? `可以查看比赛详情，BP 将于 ${formatDateTime(match.bpStartsAt)} 自动开放。`
+            : "请等待本场比赛开放BP。"
+          : "当前比赛状态不能进行 Ban/Pick。"
+      );
+      renderTrackOptions();
+      return;
+    }
+
+    if (action === "ban") {
+      const used = (match.bp.bans || []).filter((item) => item.userId === viewerUserId).length;
+      els.actionQuota.textContent = `禁用 ${used}/${progress.banCount}`;
+      els.submitBp.textContent = "提交禁用";
+      setActionMessage("请选择曲目和难度；双方可同时禁用。");
+    } else if (action === "pick") {
+      const used = (match.bp.picks || []).filter((item) => item.userId === viewerUserId).length;
+      els.actionQuota.textContent = `选曲 ${used}/${progress.pickCount}`;
+      els.submitBp.textContent = "提交选曲";
+      setActionMessage("已禁用的谱面不会出现在可选列表中。");
+    } else if (progress.phase === "confirm") {
+      els.actionQuota.textContent = confirmed ? "已确认" : "等待确认";
+      setActionMessage(confirmed ? "你已确认本场选曲总结。" : "请确认下方选曲总结。");
+    } else if (progress.phase === "summary") {
+      els.actionQuota.textContent = "总结完成";
+      setActionMessage("双方已确认本场 BP 结果。");
+    } else if (progress.phase === "waiting") {
+      els.actionQuota.textContent = "等待参赛账号";
+      setActionMessage("后台尚未指定参赛账号。", true);
+    } else {
+      els.actionQuota.textContent = "等待其他选手";
+      setActionMessage("等待其他参赛选手完成当前阶段。");
+    }
+
+    renderTrackOptions();
+  }
+
+  function renderActiveMatch() {
+    const match = state.activeMatch;
+
+    if (!match) {
+      els.layout.classList.remove("is-detail");
+      els.matchListPanel.hidden = false;
+      els.bpPanel.hidden = true;
+      els.bpEmpty.hidden = false;
+      els.bpWorkbench.hidden = true;
+      return;
+    }
+
+    const progress = match.bp?.progress || {};
+
+    els.layout.classList.add("is-detail");
+    els.matchListPanel.hidden = true;
+    els.bpPanel.hidden = false;
+    els.bpEmpty.hidden = true;
+    els.bpWorkbench.hidden = false;
+    els.bpStageLabel.textContent = STAGE_LABELS[match.poolMode] || "Ban/Pick";
+    els.bpTitle.textContent = match.title;
+    els.bpMeta.textContent = [
+      `比赛 ${formatDateTime(match.startsAt)}`,
+      match.bpStartsAt ? `BP ${formatDateTime(match.bpStartsAt)}` : "BP手动开放",
+      match.content || "暂无比赛说明"
+    ].join(" · ");
+    els.bpStatus.textContent = STATUS_LABELS[match.status] || "未开始";
+    els.banProgress.textContent = `${match.bp?.bans?.length || 0}/${progress.requiredBans || 0}`;
+    els.pickProgress.textContent = `${match.bp?.picks?.length || 0}/${progress.requiredPicks || 0}`;
+
+    renderParticipantRow(match);
+    renderIdentityRow(match);
+    renderPresence(match);
+    renderSelectionList(els.banList, match.bp?.bans || [], "暂无禁用曲目", "is-ban");
+    renderSelectionList(els.pickList, match.bp?.picks || [], "暂无选择曲目", "is-pick");
+    renderSummary(match);
+    renderResult(match);
+    renderActionPanel(match);
+  }
+
+  async function loadMatches(showLoading = true) {
+    if (showLoading) {
+      els.summary.textContent = "正在同步赛事日程...";
+    }
+
+    try {
+      await window.PLCAccount?.ready;
+      const payload = await fetchJson("/schedule/matches");
+
+      state.matches = Array.isArray(payload.matches) ? payload.matches : [];
+      els.summary.textContent = state.matches.length
+        ? `当前有 ${state.matches.length} 场可见比赛。`
+        : "暂无可见比赛；公开赛事会直接显示，定向赛事需要登录对应账号。";
+
+      if (state.activeMatchId) {
+        const active = state.matches.find((match) => match.id === state.activeMatchId);
+
+        if (active) {
+          queueRandomPickReveal(state.activeMatch, active);
+          state.activeMatch = active;
+        } else {
+          goBackToMatches();
+        }
+      }
+
+      renderMatchList();
+      renderActiveMatch();
+    } catch (error) {
+      els.summary.textContent = error.message || "赛程加载失败，请稍后重试。";
+      state.matches = [];
+      renderMatchList();
+    }
+  }
+
+  async function fetchActiveMatch() {
+    if (!state.activeMatchId) {
+      return;
+    }
+
+    try {
+      const payload = await fetchJson(
+        `/schedule/matches/${encodeURIComponent(state.activeMatchId)}`
+      );
+
+      queueRandomPickReveal(state.activeMatch, payload.match);
+      state.activeMatch = payload.match;
+      state.matches = state.matches.map((match) =>
+        match.id === payload.match.id ? payload.match : match
+      );
+      renderMatchList();
+      renderActiveMatch();
+    } catch (error) {
+      setActionMessage(error.message || "比赛状态刷新失败", true);
+    }
+  }
+
+  function startPolling() {
+    window.clearInterval(state.pollTimer);
+
+    if (!state.activeMatchId) {
+      return;
+    }
+
+    state.pollTimer = window.setInterval(fetchActiveMatch, 2500);
+  }
+
+  function goBackToMatches() {
+    state.activeMatchId = "";
+    state.activeMatch = null;
+    state.trackSearch = "";
+    state.selectedTrackId = "";
+    state.selectedDifficulty = "";
+    window.clearTimeout(state.randomReveal.timer);
+    state.randomReveal = {
+      key: "",
+      pendingKey: "",
+      done: false,
+      running: false,
+      timer: 0,
+      target: null
+    };
+    els.trackSearch.value = "";
+    window.clearInterval(state.pollTimer);
+    renderMatchList();
+    renderActiveMatch();
+  }
+
+  async function selectMatch(matchId) {
+    state.activeMatchId = matchId;
+    state.activeMatch = state.matches.find((match) => match.id === matchId) || null;
+    state.trackSearch = "";
+    state.selectedTrackId = "";
+    state.selectedDifficulty = "";
+    window.clearTimeout(state.randomReveal.timer);
+    state.randomReveal = {
+      key: "",
+      pendingKey: "",
+      done: false,
+      running: false,
+      timer: 0,
+      target: null
+    };
+    els.trackSearch.value = "";
+    renderMatchList();
+    renderActiveMatch();
+    startPolling();
+    await fetchActiveMatch();
+  }
+
+  async function sendPresence(action) {
+    const match = state.activeMatch;
+
+    if (!match?.viewer?.isParticipant || !action) {
+      return;
+    }
+
+    const now = Date.now();
+
+    if (now - state.lastPresenceAt < 1800) {
+      return;
+    }
+
+    state.lastPresenceAt = now;
+
+    try {
+      await fetchJson(
+        `/schedule/matches/${encodeURIComponent(match.id)}/bp/presence`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            action
+          })
+        }
+      );
+    } catch (error) {
+      // Presence is a soft signal; the BP action itself remains authoritative.
+    }
+  }
+
+  async function submitBpAction(event) {
+    event.preventDefault();
+
+    const match = state.activeMatch;
+    const action = getCurrentAction(match);
+
+    if (!match || !action || state.isSubmitting) {
+      return;
+    }
+
+    const trackId = Number(els.trackSelect.value);
+    const difficulty = els.difficultySelect.value;
+    state.selectedTrackId = trackId ? String(trackId) : "";
+    state.selectedDifficulty = difficulty || "";
+
+    if (!trackId || !difficulty) {
+      setActionMessage("请选择曲目和难度。", true);
+      return;
+    }
+
+    state.isSubmitting = true;
+    els.submitBp.disabled = true;
+    setActionMessage(action === "ban" ? "正在提交禁用..." : "正在提交选曲...");
+
+    try {
+      const payload = await fetchJson(
+        `/schedule/matches/${encodeURIComponent(match.id)}/bp/actions`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            type: action,
+            trackId,
+            difficulty
+          })
+        }
+      );
+
+      queueRandomPickReveal(state.activeMatch, payload.match);
+      state.activeMatch = payload.match;
+      state.matches = state.matches.map((item) =>
+        item.id === payload.match.id ? payload.match : item
+      );
+      setActionMessage(action === "ban" ? "禁用已提交。" : "选曲已提交。");
+      renderMatchList();
+      renderActiveMatch();
+    } catch (error) {
+      setActionMessage(error.message || "提交失败，请稍后重试。", true);
+    } finally {
+      state.isSubmitting = false;
+      els.submitBp.disabled = false;
+    }
+  }
+
+  async function confirmBpSummary() {
+    const match = state.activeMatch;
+
+    if (!match || state.isSubmitting) {
+      return;
+    }
+
+    state.isSubmitting = true;
+    els.confirmBp.disabled = true;
+    setActionMessage("正在确认选曲总结...");
+
+    try {
+      const payload = await fetchJson(
+        `/schedule/matches/${encodeURIComponent(match.id)}/bp/confirm`,
+        {
+          method: "POST"
+        }
+      );
+
+      queueRandomPickReveal(state.activeMatch, payload.match);
+      state.activeMatch = payload.match;
+      state.matches = state.matches.map((item) =>
+        item.id === payload.match.id ? payload.match : item
+      );
+      setActionMessage("已确认选曲总结。");
+      renderMatchList();
+      renderActiveMatch();
+    } catch (error) {
+      setActionMessage(error.message || "确认失败，请稍后重试。", true);
+    } finally {
+      state.isSubmitting = false;
+      els.confirmBp.disabled = false;
+    }
+  }
+
+  function bindEvents() {
+    els.refresh.addEventListener("click", () => {
+      loadMatches();
+      fetchActiveMatch();
+    });
+
+    els.backToMatches.addEventListener("click", goBackToMatches);
+    els.bpForm.addEventListener("submit", submitBpAction);
+    els.confirmBp.addEventListener("click", confirmBpSummary);
+
+    els.trackSearch.addEventListener("input", (event) => {
+      state.trackSearch = event.target.value.trim();
+      renderTrackOptions();
+      sendPresence(getCurrentAction());
+    });
+
+    els.trackSearch.addEventListener("focus", () => sendPresence(getCurrentAction()));
+    els.trackSelect.addEventListener("focus", () => sendPresence(getCurrentAction()));
+    els.trackSelect.addEventListener("change", () => {
+      state.selectedTrackId = els.trackSelect.value;
+      renderDifficultyOptions();
+      sendPresence(getCurrentAction());
+    });
+    els.difficultySelect.addEventListener("focus", () => sendPresence(getCurrentAction()));
+    els.difficultySelect.addEventListener("change", () => {
+      state.selectedDifficulty = els.difficultySelect.value;
+      sendPresence(getCurrentAction());
+    });
+
+    window.PLCAccount?.onChange?.(() => {
+      loadMatches(false);
+      fetchActiveMatch();
+    });
+  }
+
+  bindEvents();
+  loadMatches();
+})();

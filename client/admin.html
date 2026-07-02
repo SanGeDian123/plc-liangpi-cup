@@ -6,7 +6,7 @@
   <title>PLC凉皮杯后台管理</title>
 
   <link rel="icon" type="image/png" href="./assets/logo1.png">
-  <link rel="stylesheet" href="./css/admin.css?v=20260628c">
+  <link rel="stylesheet" href="./css/admin.css?v=20260701a">
 </head>
 <body>
 
@@ -24,7 +24,10 @@
 
   <div class="admin-top">
     <h1>排行榜后台管理</h1>
-    <button class="logout-btn" onclick="logoutAdmin()">退出登录</button>
+    <div class="admin-actions">
+      <a class="logout-btn admin-link-button" href="./schedule-admin.html">赛程后台</a>
+      <button class="logout-btn" onclick="logoutAdmin()">退出登录</button>
+    </div>
   </div>
 
   <div class="form-card">
@@ -35,6 +38,10 @@
     <button onclick="addPlayer()">新增选手</button>
     <p id="adminMsg" class="admin-msg" aria-live="polite"></p>
   </div>
+
+  <h2>排行榜绑定审核</h2>
+  <div id="bindingReviewList" class="binding-review-list"></div>
+  <p id="bindingReviewMsg" class="admin-msg" aria-live="polite"></p>
 
   <h2>选手列表</h2>
 
@@ -55,7 +62,7 @@
 </div>
 
 <script src="./js/api.js"></script>
-<script src="./js/admin.js?v=20260628c"></script>
+<script src="./js/admin.js?v=20260701c"></script>
 
 </body>
 </html>

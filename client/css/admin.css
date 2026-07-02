@@ -125,6 +125,23 @@ button:disabled{
   background:rgba(255,255,255,.1);
 }
 
+.admin-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.admin-link-button{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:43px;
+  color:white;
+  text-decoration:none;
+}
+
 .admin-msg{
   min-height:22px;
   margin-top:10px;
@@ -220,6 +237,67 @@ button:disabled{
 
 .admin-item button{
   margin-top:0;
+}
+
+.binding-review-list{
+  display:grid;
+  gap:12px;
+}
+
+.binding-review-empty,
+.binding-review-item{
+  padding:16px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:18px;
+  background:rgba(255,255,255,.06);
+  backdrop-filter:blur(10px);
+}
+
+.binding-review-empty{
+  color:rgba(255,255,255,.68);
+}
+
+.binding-review-item{
+  display:grid;
+  grid-template-columns:minmax(180px, 1.3fr) minmax(120px, .9fr) 100px minmax(150px, 1fr) 150px;
+  gap:12px;
+  align-items:center;
+}
+
+.binding-review-main,
+.binding-review-item > div:not(.binding-review-actions){
+  min-width:0;
+}
+
+.binding-review-main strong,
+.binding-review-item strong{
+  display:block;
+  color:white;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.binding-review-main span,
+.binding-review-label{
+  display:block;
+  margin-top:5px;
+  color:rgba(255,255,255,.58);
+  font-size:13px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.binding-review-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+}
+
+.binding-review-actions button{
+  margin-top:0;
+  padding:11px 12px;
 }
 
 .dragon-toggle-cell{
@@ -320,8 +398,20 @@ button:disabled{
     align-items:flex-start;
   }
 
+  .admin-actions{
+    justify-content:flex-start;
+  }
+
   .admin-item{
     grid-template-columns:1fr;
+  }
+
+  .binding-review-item{
+    grid-template-columns:1fr;
+  }
+
+  .binding-review-actions{
+    grid-template-columns:1fr 1fr;
   }
 
   h1{

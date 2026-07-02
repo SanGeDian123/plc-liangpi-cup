@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PLC凉皮杯用户账号注册与登录。" />
+
+  <title>PLC凉皮杯 - 用户中心</title>
+
+  <link rel="preconnect" href="https://kpjuerikmmajqyxcocos.supabase.co" crossorigin />
+  <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="./assets/bg.png" as="image" />
+  <link rel="icon" type="image/png" href="./assets/logo1.png" />
+  <link rel="stylesheet" href="./css/user.css?v=20260701i" />
+  <link rel="stylesheet" href="./css/site-announcement.css" />
+</head>
+<body>
+  <div class="overlay"></div>
+  <canvas id="particles" aria-hidden="true"></canvas>
+
+  <header class="user-header">
+    <a class="user-brand" href="./event" aria-label="返回赛事主页">
+      <img src="./assets/logo2.png" alt="" aria-hidden="true" />
+      <strong>PLC凉皮杯</strong>
+    </a>
+
+    <div class="header-account" aria-live="polite">
+      <span>账号</span>
+      <strong id="headerNickname">未登录</strong>
+    </div>
+  </header>
+
+  <main class="user-page">
+    <section class="user-workbench" aria-labelledby="userTitle">
+      <div class="auth-panel" id="authPanel">
+        <p class="eyebrow">PLC Account</p>
+        <h1 id="userTitle">用户中心</h1>
+
+        <div class="auth-tabs" role="tablist" aria-label="账号操作">
+          <button class="auth-tab is-active" type="button" role="tab" aria-selected="true" data-auth-mode="login">登录</button>
+          <button class="auth-tab" type="button" role="tab" aria-selected="false" data-auth-mode="register">注册</button>
+        </div>
+
+        <form class="auth-form auth-pane is-active" id="loginForm" data-auth-pane="login">
+          <label for="loginEmail">邮箱</label>
+          <input id="loginEmail" name="email" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" required />
+
+          <label for="loginCode">验证码</label>
+          <input id="loginCode" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="邮箱收到的数字验证码" required />
+
+          <div class="auth-action-row">
+            <button class="secondary-action" id="sendLoginCodeButton" type="button">发送验证码</button>
+            <button class="primary-action" type="submit">验证登录</button>
+          </div>
+        </form>
+
+        <form class="auth-form auth-pane" id="registerForm" data-auth-pane="register">
+          <label for="registerNickname">昵称</label>
+          <input id="registerNickname" name="nickname" type="text" autocomplete="nickname" maxlength="24" placeholder="比赛中显示的昵称" required />
+
+          <label for="registerEmail">邮箱</label>
+          <input id="registerEmail" name="email" type="email" inputmode="email" autocomplete="email" placeholder="支持 QQ 邮箱" required />
+
+          <label for="registerCode">验证码</label>
+          <input id="registerCode" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="8" placeholder="邮箱收到的数字验证码" required />
+
+          <div class="auth-action-row">
+            <button class="secondary-action" id="sendRegisterCodeButton" type="button">发送验证码</button>
+            <button class="primary-action" type="submit">完成注册</button>
+          </div>
+        </form>
+
+        <p class="privacy-line">验证码由 Supabase Auth 发送到邮箱。验证码有效期和发送频率以赛事组 Auth 设置为准。</p>
+      </div>
+
+      <aside class="profile-panel" aria-labelledby="profileTitle">
+        <div class="profile-heading">
+          <p class="eyebrow">Session</p>
+          <h2 id="profileTitle">当前状态</h2>
+        </div>
+
+        <div class="profile-card" id="signedOutCard">
+          <span class="profile-badge">未登录</span>
+          <strong>登录后可在这里查看账号状态</strong>
+          <p>先发送邮箱验证码，再输入邮件里的数字验证码即可完成注册或登录。</p>
+        </div>
+
+        <div class="profile-card" id="signedInCard" hidden>
+          <span class="profile-badge is-online">已登录</span>
+          <dl class="profile-list">
+            <div>
+              <dt>邮箱</dt>
+              <dd id="profileEmail">-</dd>
+            </div>
+            <div>
+              <dt>昵称</dt>
+              <dd id="profileNickname">-</dd>
+            </div>
+            <div>
+              <dt>邮箱状态</dt>
+              <dd id="profileEmailStatus">-</dd>
+            </div>
+          </dl>
+
+          <section class="binding-panel" aria-labelledby="bindingTitle">
+            <div class="binding-heading">
+              <span class="profile-badge" id="bindingState">未绑定</span>
+              <h3 id="bindingTitle">排行榜绑定</h3>
+            </div>
+
+            <dl class="binding-result" id="bindingResult" hidden>
+              <div>
+                <dt>海选名</dt>
+                <dd id="boundPlayerName">-</dd>
+              </div>
+              <div>
+                <dt>成绩</dt>
+                <dd id="boundPlayerScore">-</dd>
+              </div>
+            </dl>
+
+            <p class="binding-hint" id="bindingHint">选择排行榜中属于你的成绩，提交后等待赛事组审核通过。</p>
+
+            <form class="binding-form" id="bindingForm">
+              <label for="playerSelect">排行榜成绩</label>
+              <select id="playerSelect" name="playerId" required>
+                <option value="">正在加载排行榜...</option>
+              </select>
+              <button class="primary-action" id="submitBindingButton" type="submit">提交绑定审核</button>
+            </form>
+          </section>
+
+          <section class="notification-panel" aria-labelledby="notificationTitle">
+            <div class="notification-heading">
+              <span class="profile-badge" id="notificationCount">0 未读</span>
+              <h3 id="notificationTitle">消息通知</h3>
+            </div>
+
+            <div class="notification-list" id="notificationList" aria-live="polite">
+              <div class="notification-empty">正在读取消息...</div>
+            </div>
+
+            <button class="secondary-action notification-read-all" id="markAllNotificationsButton" type="button">全部标为已读</button>
+          </section>
+
+          <button class="secondary-action" id="logoutButton" type="button">退出登录</button>
+        </div>
+      </aside>
+    </section>
+
+    <section class="status-panel" aria-live="polite">
+      <div class="status-line" id="authStatus">正在读取账号状态...</div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/api.js"></script>
+  <script src="./js/user.js?v=20260701i"></script>
+  <script src="./js/particles.js"></script>
+  <script src="./js/site-announcement.js"></script>
+</body>
+</html>

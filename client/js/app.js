@@ -3,6 +3,64 @@ let commentRequestId = 0;
 let displaySettings = {
   goldDragonPlayerIds: []
 };
+const ACCOUNT_SESSION_STORAGE = "plc-user-session";
+
+function getStoredAccountSession() {
+  try {
+    const rawSession = localStorage.getItem(ACCOUNT_SESSION_STORAGE);
+    const session = rawSession ? JSON.parse(rawSession) : null;
+
+    return session?.access_token && session?.user ? session : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function getSessionNickname(session) {
+  const user = session?.user;
+
+  return (
+    user?.user_metadata?.nickname ||
+    user?.user_metadata?.Nickname ||
+    user?.email?.split("@")[0] ||
+    ""
+  );
+}
+
+function getAccountSession() {
+  return window.PLCAccount?.getSession?.() || getStoredAccountSession();
+}
+
+function getAccountNickname() {
+  return window.PLCAccount?.getNickname?.() || getSessionNickname(getStoredAccountSession());
+}
+
+function getAccountToken() {
+  return window.PLCAccount?.getAccessToken?.() || getStoredAccountSession()?.access_token || "";
+}
+
+function syncCommentAccountNickname() {
+  const input = document.getElementById("commentNickname");
+
+  if (!input) {
+    return;
+  }
+
+  const nickname = getAccountNickname();
+
+  if (nickname) {
+    input.value = nickname;
+    input.placeholder = "账号昵称";
+    input.disabled = true;
+  } else {
+    if (input.disabled) {
+      input.value = "";
+    }
+
+    input.disabled = false;
+    input.placeholder = "请输入昵称";
+  }
+}
 
 function applyDisplaySettings(settings = {}) {
   displaySettings = {
@@ -234,6 +292,7 @@ async function openComments(playerId, nickname) {
     `<div class="empty-comment">评论加载中...</div>`;
 
   document.getElementById("commentContent").value = "";
+  syncCommentAccountNickname();
   showCommentMessage("");
   document.getElementById("commentModal").style.display = "flex";
 
@@ -281,7 +340,9 @@ async function loadComments(playerId, requestId = commentRequestId) {
 }
 
 async function submitComment() {
-  const nickname = document.getElementById("commentNickname").value.trim();
+  const accountNickname = getAccountNickname();
+  const nickname = accountNickname || document.getElementById("commentNickname").value.trim();
+  const token = getAccountToken();
   const content = document.getElementById("commentContent").value.trim();
 
   if (!nickname || !content) {
@@ -295,11 +356,17 @@ async function submitComment() {
   document.getElementById("commentList").innerHTML =
     `<div class="empty-comment">评论发布中...</div>`;
 
+  const headers = {
+    "Content-Type": "application/json"
+  };
+
+  if (getAccountSession() && token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
   const res = await fetch(`${API_URL}/players/${playerId}/comments`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers,
     body: JSON.stringify({
       nickname,
       content
@@ -307,7 +374,8 @@ async function submitComment() {
   });
 
   if (!res.ok) {
-    showCommentMessage("评论发布失败", true);
+    const payload = await res.json().catch(() => null);
+    showCommentMessage(payload?.message || "评论发布失败", true);
     return;
   }
 
@@ -327,6 +395,8 @@ function escapeHtml(text) {
 }
 
 window.PLCMusicPlayer?.init();
+window.PLCAccount?.ready?.then(syncCommentAccountNickname);
+window.PLCAccount?.onChange?.(syncCommentAccountNickname);
 initLeaderboard();
 
 async function initLeaderboard() {

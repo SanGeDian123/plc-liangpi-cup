@@ -12,7 +12,8 @@
   <link rel="preload" href="./assets/bg.png" as="image" />
   <link rel="icon" type="image/png" href="./assets/logo1.png" />
   <link rel="preload" href="./assets/golden-dragon-flight.png?v=20260628c" as="image" />
-  <link rel="stylesheet" href="./css/style.css?v=20260628c" />
+  <link rel="stylesheet" href="./css/style.css?v=20260701a" />
+  <link rel="stylesheet" href="./css/account-link.css?v=20260701b" />
   <link rel="stylesheet" href="./css/site-announcement.css" />
 </head>
 <body>
@@ -20,6 +21,11 @@
 <div class="overlay"></div>
 
 <canvas id="particles"></canvas>
+
+<a class="plc-account-link plc-account-link--floating" href="./user.html" data-plc-account-link>
+  <span class="plc-account-label">账号</span>
+  <strong class="plc-account-name" data-plc-account-name>未登录</strong>
+</a>
 
 <header class="hero">
   <h1>PLC凉皮杯</h1>
@@ -92,8 +98,10 @@
 
 <script src="./js/api.js"></script>
 <script src="./js/players-cache.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./js/account-link.js?v=20260701b"></script>
 <script src="./js/music-player.js?v=20260612i"></script>
-<script src="./js/app.js?v=20260628c"></script>
+<script src="./js/app.js?v=20260701d"></script>
 <script src="./js/particles.js"></script>
 <script src="./js/site-announcement.js"></script>
 

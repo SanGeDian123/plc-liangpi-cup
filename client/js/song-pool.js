@@ -10,6 +10,7 @@
 
   const USER_KEY_STORAGE = "plc.songPool.userKey.v1";
   const NICKNAME_STORAGE = "plc.songPool.nickname.v1";
+  const ACCOUNT_SESSION_STORAGE = "plc-user-session";
 
   const state = {
     stage: "round16",
@@ -59,7 +60,8 @@
     clearReply: document.getElementById("clearSongReply"),
     commentNickname: document.getElementById("songCommentNickname"),
     commentDifficulty: document.getElementById("songCommentDifficulty"),
-    commentContent: document.getElementById("songCommentContent")
+    commentContent: document.getElementById("songCommentContent"),
+    commentStatus: document.getElementById("songCommentStatus")
   };
 
   function escapeHtml(value) {
@@ -92,6 +94,40 @@
     }
   }
 
+  function getStoredAccountSession() {
+    try {
+      const rawSession = localStorage.getItem(ACCOUNT_SESSION_STORAGE);
+      const session = rawSession ? JSON.parse(rawSession) : null;
+
+      return session?.access_token && session?.user ? session : null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function getSessionNickname(session) {
+    const user = session?.user;
+
+    return (
+      user?.user_metadata?.nickname ||
+      user?.user_metadata?.Nickname ||
+      user?.email?.split("@")[0] ||
+      ""
+    );
+  }
+
+  function getAccountSession() {
+    return window.PLCAccount?.getSession?.() || getStoredAccountSession();
+  }
+
+  function getAccountNickname() {
+    return window.PLCAccount?.getNickname?.() || getSessionNickname(getStoredAccountSession());
+  }
+
+  function getAccountToken() {
+    return window.PLCAccount?.getAccessToken?.() || getStoredAccountSession()?.access_token || "";
+  }
+
   function getStoredNickname() {
     try {
       return localStorage.getItem(NICKNAME_STORAGE) || "";
@@ -105,6 +141,41 @@
       localStorage.setItem(NICKNAME_STORAGE, nickname);
     } catch (error) {
       // Ignore private-mode storage errors.
+    }
+  }
+
+  function setCommentStatus(message, tone = "") {
+    if (!els.commentStatus) {
+      return;
+    }
+
+    els.commentStatus.textContent = message;
+
+    if (tone) {
+      els.commentStatus.dataset.tone = tone;
+    } else {
+      delete els.commentStatus.dataset.tone;
+    }
+  }
+
+  function syncCommentAccountNickname() {
+    const nickname = getAccountNickname();
+
+    if (nickname) {
+      els.commentNickname.value = nickname;
+      els.commentNickname.placeholder = "账号昵称";
+      els.commentNickname.disabled = true;
+    } else {
+      const wasLocked = els.commentNickname.disabled;
+      els.commentNickname.disabled = false;
+
+      if (wasLocked) {
+        els.commentNickname.value = getStoredNickname();
+      } else {
+        els.commentNickname.value = els.commentNickname.value || getStoredNickname();
+      }
+
+      els.commentNickname.placeholder = "请输入昵称";
     }
   }
 
@@ -374,7 +445,9 @@
     state.currentComments = [];
     state.replyTarget = null;
     state.commentsRequestId += 1;
-    els.commentNickname.value = getStoredNickname();
+    syncCommentAccountNickname();
+    window.setTimeout(syncCommentAccountNickname, 300);
+    setCommentStatus("");
     els.commentContent.value = "";
     renderReplyTarget();
     els.overview.hidden = false;
@@ -580,7 +653,7 @@
       render();
       animateLike(track.id);
     } catch (error) {
-      alert(error.message || "点赞失败");
+      els.overviewLikeNote.textContent = error.message || "点赞失败";
     } finally {
       state.isLiking = false;
       renderOverview();
@@ -605,7 +678,9 @@
     event.preventDefault();
 
     const track = state.activeTrack;
-    const nickname = els.commentNickname.value.trim();
+    const accountNickname = getAccountNickname();
+    const nickname = accountNickname || els.commentNickname.value.trim();
+    const token = getAccountToken();
     const content = els.commentContent.value.trim();
     const difficulty = els.commentDifficulty.value;
 
@@ -614,22 +689,32 @@
     }
 
     if (!nickname || !content) {
-      alert("请输入昵称和评论内容");
+      setCommentStatus("请输入昵称和评论内容", "error");
       return;
     }
 
     state.isSubmittingComment = true;
     els.commentForm.classList.add("is-submitting");
-    storeNickname(nickname);
+    if (!accountNickname) {
+      storeNickname(nickname);
+    }
+    setCommentStatus("评论发布中...", "loading");
 
     try {
+      const headers = {
+        "Content-Type": "application/json"
+      };
+
+      if (getAccountSession() && token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
+
       await fetchJson(`${API_BASE}/song-pool/tracks/${track.id}/comments`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers,
         body: JSON.stringify({
           stage: state.stage,
+          trackTitle: track.title,
           nickname,
           content,
           difficulty,
@@ -641,9 +726,10 @@
       els.commentDifficulty.value = "";
       state.replyTarget = null;
       renderReplyTarget();
+      setCommentStatus("评论已发布", "success");
       await loadComments(track);
     } catch (error) {
-      alert(error.message || "评论发布失败");
+      setCommentStatus(error.message || "评论发布失败", "error");
     } finally {
       state.isSubmittingComment = false;
       els.commentForm.classList.remove("is-submitting");
@@ -768,6 +854,8 @@
     }
 
     els.source.textContent = `数据范围：${data.sourceRange.replace("Phigros ", "")}`;
+    window.PLCAccount?.ready?.then(syncCommentAccountNickname);
+    window.PLCAccount?.onChange?.(syncCommentAccountNickname);
     initEvents();
     render();
     loadLikes(state.stage);

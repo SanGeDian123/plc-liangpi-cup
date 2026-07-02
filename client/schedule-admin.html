@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PLC凉皮杯赛程后台管理。" />
+
+  <title>PLC凉皮杯 - 赛程后台</title>
+
+  <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="./assets/bp-background.jpg" as="image" />
+  <link rel="icon" type="image/png" href="./assets/logo1.png" />
+  <link rel="stylesheet" href="./css/schedule-admin.css?v=20260702b" />
+</head>
+<body>
+  <main class="admin-shell">
+    <section class="login-panel" id="loginPanel" aria-labelledby="loginTitle">
+      <div class="login-card">
+        <p class="eyebrow">PLC Admin</p>
+        <h1 id="loginTitle">赛程后台</h1>
+        <form id="loginForm">
+          <label for="adminPassword">管理员密码</label>
+          <input id="adminPassword" type="password" autocomplete="current-password" required />
+          <button class="primary-action" type="submit">进入后台</button>
+        </form>
+        <p class="admin-message" id="loginMsg" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <section class="dashboard" id="dashboard" hidden>
+      <header class="dashboard-header">
+        <div>
+          <p class="eyebrow">Schedule Console</p>
+          <h1>赛程管理</h1>
+        </div>
+        <div class="header-actions">
+          <a class="ghost-action" href="./schedule.html" target="_blank" rel="noreferrer">打开赛程页</a>
+          <button class="ghost-action" id="logoutButton" type="button">退出</button>
+        </div>
+      </header>
+
+      <section class="admin-grid">
+        <aside class="account-panel" aria-labelledby="accountTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Accounts</p>
+              <h2 id="accountTitle">账号列表</h2>
+            </div>
+            <span id="accountSource">读取中</span>
+          </div>
+          <input id="accountSearch" class="search-input" type="search" placeholder="搜索账号 / 选手名" autocomplete="off" />
+          <div class="account-list" id="accountList" aria-live="polite"></div>
+        </aside>
+
+        <section class="editor-panel" aria-labelledby="editorTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Match Editor</p>
+              <h2 id="editorTitle">新增比赛</h2>
+            </div>
+            <button class="ghost-action" id="newMatchButton" type="button">新建</button>
+          </div>
+
+          <form class="match-form" id="matchForm">
+            <label for="matchTitle">
+              <span>比赛标题</span>
+              <input id="matchTitle" type="text" maxlength="120" required />
+            </label>
+
+            <label for="matchStartsAt">
+              <span>比赛时间</span>
+              <input id="matchStartsAt" type="datetime-local" />
+            </label>
+
+            <label for="bpStartsAt">
+              <span>BP开放时间</span>
+              <input id="bpStartsAt" type="datetime-local" />
+            </label>
+
+            <label for="matchStatus">
+              <span>状态</span>
+              <select id="matchStatus">
+                <option value="scheduled">未开始</option>
+                <option value="bp">BP中</option>
+                <option value="live">比赛中</option>
+                <option value="finished">已结束</option>
+              </select>
+            </label>
+
+            <label for="matchVisibility">
+              <span>可见范围</span>
+              <select id="matchVisibility">
+                <option value="assigned">仅分配账号可见</option>
+                <option value="public">公开赛事</option>
+              </select>
+            </label>
+
+            <label for="participantCount">
+              <span>比赛人数</span>
+              <input id="participantCount" type="number" min="1" max="8" value="2" />
+            </label>
+
+            <label for="poolMode">
+              <span>选曲范围</span>
+              <select id="poolMode">
+                <option value="round16">16进8曲池</option>
+                <option value="top8">8强赛曲池</option>
+                <option value="custom">后台自定义曲池</option>
+              </select>
+            </label>
+
+            <label class="wide-field" for="matchContent">
+              <span>比赛内容</span>
+              <textarea id="matchContent" rows="4" maxlength="500" placeholder="赛制、房间、直播或注意事项"></textarea>
+            </label>
+
+            <section class="wide-field helper-panel" aria-labelledby="bpRuleTitle">
+              <h3 id="bpRuleTitle">BP 数量</h3>
+              <p id="bpRuleSummary">2 人：共禁用 4 首，选曲 2 首，系统抽取 1 首。</p>
+            </section>
+
+            <section class="wide-field participant-picker" aria-labelledby="participantPickerTitle">
+              <div class="section-heading">
+                <h3 id="participantPickerTitle">参赛账号</h3>
+                <span id="participantSummary">0 人</span>
+              </div>
+              <div class="picked-account-list" id="pickedAccountList"></div>
+            </section>
+
+            <section class="wide-field custom-pool" id="customPoolPanel" aria-labelledby="customPoolTitle" hidden>
+              <div class="section-heading">
+                <h3 id="customPoolTitle">自定义曲池</h3>
+                <span id="customPoolSummary">0 首</span>
+              </div>
+              <div class="difficulty-toggle-row" aria-label="自定义难度">
+                <label><input type="checkbox" name="customDifficulty" value="EZ" checked /> EZ</label>
+                <label><input type="checkbox" name="customDifficulty" value="HD" checked /> HD</label>
+                <label><input type="checkbox" name="customDifficulty" value="IN" checked /> IN</label>
+                <label><input type="checkbox" name="customDifficulty" value="AT" checked /> AT</label>
+              </div>
+              <input id="trackSearch" class="search-input" type="search" placeholder="搜索自定义曲池曲目" autocomplete="off" />
+              <div class="custom-track-list" id="customTrackList"></div>
+            </section>
+
+            <div class="wide-field form-actions">
+              <button class="primary-action" id="saveMatchButton" type="submit">保存比赛</button>
+              <button class="ghost-action" id="resetFormButton" type="button">清空表单</button>
+            </div>
+          </form>
+
+          <section class="result-editor" id="resultEditor" hidden aria-labelledby="resultEditorTitle">
+            <div class="section-heading">
+              <h3 id="resultEditorTitle">结果信息</h3>
+              <span>保存后比赛状态会变为已结束</span>
+            </div>
+            <label for="resultSummary">
+              <span>结果说明</span>
+              <textarea id="resultSummary" rows="3" maxlength="240"></textarea>
+            </label>
+            <div class="result-entry-list" id="resultEntryList"></div>
+            <button class="primary-action" id="saveResultButton" type="button">保存结果</button>
+          </section>
+
+          <p class="admin-message" id="editorMsg" aria-live="polite"></p>
+        </section>
+      </section>
+
+      <section class="matches-panel" aria-labelledby="matchesTitle">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Matches</p>
+            <h2 id="matchesTitle">已有比赛</h2>
+          </div>
+          <button class="ghost-action" id="reloadButton" type="button">刷新</button>
+        </div>
+        <div class="match-list" id="adminMatchList"></div>
+      </section>
+    </section>
+  </main>
+
+  <div class="admin-dialog" id="confirmDialog" aria-hidden="true">
+    <div class="admin-dialog-backdrop" data-close-dialog></div>
+    <section class="admin-dialog-panel" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <h2 id="confirmTitle">确认操作</h2>
+      <p id="confirmText">请确认是否继续。</p>
+      <div class="dialog-actions">
+        <button class="ghost-action" type="button" data-close-dialog>取消</button>
+        <button class="danger-action" id="confirmActionButton" type="button">确认</button>
+      </div>
+    </section>
+  </div>
+
+  <script src="./js/api.js"></script>
+  <script src="./js/song-pool-data.js"></script>
+  <script src="./js/schedule-admin.js?v=20260702b"></script>
+</body>
+</html>

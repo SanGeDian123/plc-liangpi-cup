@@ -29,6 +29,10 @@ function showAdminMessage(message, isError = false) {
   setMessage("adminMsg", message, isError);
 }
 
+function showBindingReviewMessage(message, isError = false) {
+  setMessage("bindingReviewMsg", message, isError);
+}
+
 function clearAdminSession() {
   localStorage.removeItem("adminToken");
   adminToken = null;
@@ -83,6 +87,11 @@ async function loadAdmin() {
 
   showAdmin();
   await loadDisplaySettings();
+  await loadBindingRequests();
+
+  if (!adminToken) {
+    return;
+  }
 
   const res = await fetch(`${API_URL}/players`);
 
@@ -146,6 +155,169 @@ async function loadDisplaySettings() {
     };
     showAdminMessage("金龙模式状态加载失败，请刷新后台", true);
   }
+}
+
+function formatBindingScore(score) {
+  const number = Number(score);
+  return Number.isFinite(number) ? String(number) : "-";
+}
+
+function formatBindingTime(value) {
+  const time = Date.parse(value || "");
+
+  if (!Number.isFinite(time)) {
+    return "-";
+  }
+
+  return new Date(time).toLocaleString("zh-CN", {
+    hour12: false
+  });
+}
+
+function renderBindingRequests(requests) {
+  const list = document.getElementById("bindingReviewList");
+
+  if (!list) {
+    return;
+  }
+
+  list.innerHTML = "";
+
+  if (!requests.length) {
+    const empty = document.createElement("div");
+    empty.className = "binding-review-empty";
+    empty.textContent = "暂无待审核绑定申请";
+    list.appendChild(empty);
+    return;
+  }
+
+  requests.forEach((request) => {
+    const item = document.createElement("div");
+    item.className = "binding-review-item";
+    item.innerHTML = `
+      <div class="binding-review-main">
+        <strong>${escapeHtml(request.nickname || "未设置昵称")}</strong>
+        <span>${escapeHtml(request.email || "无邮箱")}</span>
+      </div>
+      <div>
+        <span class="binding-review-label">海选名</span>
+        <strong>${escapeHtml(request.playerNickname || "-")}</strong>
+      </div>
+      <div>
+        <span class="binding-review-label">成绩</span>
+        <strong>${escapeHtml(formatBindingScore(request.playerScore))}</strong>
+      </div>
+      <div>
+        <span class="binding-review-label">提交时间</span>
+        <strong>${escapeHtml(formatBindingTime(request.updatedAt || request.createdAt))}</strong>
+      </div>
+    `;
+
+    const actions = document.createElement("div");
+    actions.className = "binding-review-actions";
+
+    const approveButton = document.createElement("button");
+    approveButton.type = "button";
+    approveButton.textContent = "通过";
+    approveButton.addEventListener("click", () => {
+      approveBindingRequest(request.id);
+    });
+
+    const rejectButton = document.createElement("button");
+    rejectButton.type = "button";
+    rejectButton.className = "danger";
+    rejectButton.textContent = "拒绝";
+    rejectButton.addEventListener("click", () => {
+      rejectBindingRequest(request.id);
+    });
+
+    actions.append(approveButton, rejectButton);
+    item.appendChild(actions);
+    list.appendChild(item);
+  });
+}
+
+async function loadBindingRequests() {
+  if (!adminToken) {
+    renderBindingRequests([]);
+    return;
+  }
+
+  showBindingReviewMessage("正在加载绑定审核...");
+
+  try {
+    const res = await fetch(`${API_URL}/admin/binding-requests`, {
+      headers: {
+        "x-admin-token": adminToken
+      }
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        clearAdminSession();
+        return;
+      }
+
+      throw new Error("binding-review-load-failed");
+    }
+
+    const data = await res.json();
+    const requests = Array.isArray(data.requests) ? data.requests : [];
+
+    renderBindingRequests(requests);
+    showBindingReviewMessage(
+      requests.length ? `当前有 ${requests.length} 条待审核申请` : "暂无待审核绑定申请"
+    );
+  } catch (error) {
+    renderBindingRequests([]);
+    showBindingReviewMessage("绑定审核加载失败，请稍后刷新后台", true);
+  }
+}
+
+async function reviewBindingRequest(id, action) {
+  if (!adminToken) {
+    clearAdminSession();
+    return;
+  }
+
+  const isApprove = action === "approve";
+  const actionText = isApprove ? "通过" : "拒绝";
+
+  showBindingReviewMessage(`正在${actionText}绑定申请...`);
+
+  try {
+    const res = await fetch(
+      `${API_URL}/admin/binding-requests/${encodeURIComponent(id)}/${action}`,
+      {
+        method: "POST",
+        headers: {
+          "x-admin-token": adminToken
+        }
+      }
+    );
+
+    if (!res.ok) {
+      if (res.status === 401) {
+        clearAdminSession();
+        return;
+      }
+
+      throw new Error("binding-review-update-failed");
+    }
+
+    showBindingReviewMessage(`绑定申请已${actionText}`);
+    await loadBindingRequests();
+  } catch (error) {
+    showBindingReviewMessage(`绑定申请${actionText}失败，请稍后重试`, true);
+  }
+}
+
+function approveBindingRequest(id) {
+  reviewBindingRequest(id, "approve");
+}
+
+function rejectBindingRequest(id) {
+  reviewBindingRequest(id, "reject");
 }
 
 async function updatePlayerDragonEffect(playerId, enabled) {

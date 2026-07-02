@@ -12,6 +12,7 @@
   <link rel="preload" href="./assets/bg.png" as="image" />
   <link rel="icon" type="image/png" href="./assets/logo1.png" />
   <link rel="stylesheet" href="./css/score.css" />
+  <link rel="stylesheet" href="./css/account-link.css?v=20260701b" />
   <link rel="stylesheet" href="./css/site-announcement.css" />
 </head>
 <body>
@@ -28,6 +29,11 @@
       <a href="https://plc-liangpi-cup.xyz/event">赛事主页</a>
       <a href="https://plc-liangpi-cup.xyz">海选榜</a>
     </nav>
+
+    <a class="plc-account-link" href="./user.html" data-plc-account-link>
+      <span class="plc-account-label">账号</span>
+      <strong class="plc-account-name" data-plc-account-name>未登录</strong>
+    </a>
   </header>
 
   <main class="score-page">
@@ -133,6 +139,8 @@
   </main>
 
   <script src="./js/api.js?v=20260608"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/account-link.js?v=20260701b"></script>
   <script src="./js/music-player.js?v=20260612i"></script>
   <script src="./js/score.js?v=20260612i"></script>
   <script src="./js/particles.js"></script>

@@ -532,6 +532,12 @@ footer{
   outline:none;
 }
 
+#commentNickname:disabled{
+  color:#ffe07d;
+  opacity:1;
+  cursor:not-allowed;
+}
+
 #commentContent{
   min-height:90px;
   resize:vertical;

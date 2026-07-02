@@ -11,6 +11,7 @@
   <link rel="preload" href="./assets/bg.webp" as="image" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
   <link rel="stylesheet" href="./css/song-pool.css" />
+  <link rel="stylesheet" href="./css/account-link.css?v=20260701b" />
   <link rel="stylesheet" href="./css/site-announcement.css" />
 </head>
 <body>
@@ -24,8 +25,14 @@
 
     <nav class="pool-nav" aria-label="曲库页面导航">
       <a href="./event">赛事主页</a>
+      <a href="./schedule.html">在线赛程</a>
       <a href="./">海选榜</a>
     </nav>
+
+    <a class="plc-account-link" href="./user.html" data-plc-account-link>
+      <span class="plc-account-label">账号</span>
+      <strong class="plc-account-name" data-plc-account-name>未登录</strong>
+    </a>
   </header>
 
   <main class="pool-page">
@@ -150,6 +157,7 @@
             <textarea id="songCommentContent" maxlength="500" rows="4" required></textarea>
           </label>
 
+          <p class="song-comment-status" id="songCommentStatus" aria-live="polite"></p>
           <button class="submit-song-comment" type="submit">发布评论</button>
         </form>
       </div>
@@ -157,8 +165,10 @@
   </div>
 
   <script src="./js/api.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="./js/account-link.js?v=20260701b"></script>
   <script src="./js/song-pool-data.js"></script>
-  <script src="./js/song-pool.js"></script>
+  <script src="./js/song-pool.js?v=20260701d"></script>
   <script src="./js/particles.js"></script>
   <script src="./js/site-announcement.js"></script>
 </body>
