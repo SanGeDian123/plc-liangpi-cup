@@ -288,9 +288,10 @@
     return "";
   }
 
-  function setActionMessage(message, isError = false) {
+  function setActionMessage(message, isError = false, isWaiting = false) {
     els.actionMessage.textContent = message || "";
     els.actionMessage.classList.toggle("is-error", isError);
+    els.actionMessage.classList.toggle("is-waiting", Boolean(message && isWaiting && !isError));
   }
 
   function renderTags(container, tags) {
@@ -904,12 +905,21 @@
       return;
     }
 
+    const wasOpen = els.bpSubmitDialog.classList.contains("is-open");
+
     state.pendingBpAction = null;
     setBpConfirmMessage("");
     window.clearTimeout(state.bpConfirmCloseTimer);
     els.bpSubmitDialog.classList.remove("is-open");
-    els.bpSubmitDialog.classList.add("is-closing");
     els.bpSubmitDialog.setAttribute("aria-hidden", "true");
+
+    if (!wasOpen) {
+      els.bpSubmitDialog.classList.remove("is-closing");
+      state.bpConfirmCloseTimer = 0;
+      return;
+    }
+
+    els.bpSubmitDialog.classList.add("is-closing");
     state.bpConfirmCloseTimer = window.setTimeout(() => {
       els.bpSubmitDialog.classList.remove("is-closing");
       state.bpConfirmCloseTimer = 0;
@@ -1107,7 +1117,7 @@
       setActionMessage("后台尚未指定参赛账号。", true);
     } else {
       els.actionQuota.textContent = "等待其他选手";
-      setActionMessage("等待其他参赛选手完成当前阶段。");
+      setActionMessage("等待其他参赛选手完成当前阶段。", false, true);
     }
 
     renderTrackOptions();
