@@ -1,5 +1,8 @@
 const SUPABASE_URL = "https://kpjuerikmmajqyxcocos.supabase.co";
 const SUPABASE_KEY = "sb_publishable_Jkj-377OvvQXVtiR-Vdikw_FJbPQ_zs";
+const SUPABASE_SCRIPT_URL = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
+const PARTICLES_SCRIPT_URL = "./js/particles.js?v=20260705a";
+const STORAGE_KEY = "plc-user-session";
 const USER_API_URL =
   typeof API_URL !== "undefined"
     ? API_URL
@@ -37,6 +40,8 @@ const notificationList = document.getElementById("notificationList");
 const markAllNotificationsButton = document.getElementById("markAllNotificationsButton");
 
 let authClient = null;
+let supabaseSdkPromise = null;
+let particlesScriptStarted = false;
 let currentSession = null;
 let leaderboardPlayers = [];
 let bindingLoadNonce = 0;
@@ -53,6 +58,98 @@ const pendingOtp = {
 
 function getRedirectUrl() {
   return window.location.href.split("#")[0].split("?")[0];
+}
+
+function readStoredSession() {
+  try {
+    const session = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    return session?.access_token && session?.user ? session : null;
+  } catch (error) {
+    return null;
+  }
+}
+
+function runWhenIdle(callback, timeout = 1200) {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(callback, {
+      timeout
+    });
+    return;
+  }
+
+  window.setTimeout(callback, Math.min(timeout, 600));
+}
+
+function loadSupabaseSdk() {
+  if (window.supabase?.createClient) {
+    return Promise.resolve(window.supabase);
+  }
+
+  if (supabaseSdkPromise) {
+    return supabaseSdkPromise;
+  }
+
+  supabaseSdkPromise = new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = SUPABASE_SCRIPT_URL;
+    script.async = true;
+    script.onload = () => {
+      if (window.supabase?.createClient) {
+        resolve(window.supabase);
+      } else {
+        supabaseSdkPromise = null;
+        reject(new Error("supabase-sdk-unavailable"));
+      }
+    };
+    script.onerror = () => {
+      supabaseSdkPromise = null;
+      reject(new Error("supabase-sdk-load-failed"));
+    };
+    document.head.appendChild(script);
+  });
+
+  return supabaseSdkPromise;
+}
+
+async function ensureAuthClient() {
+  if (authClient) {
+    return authClient;
+  }
+
+  await loadSupabaseSdk();
+
+  if (!window.supabase?.createClient) {
+    throw new Error("supabase-sdk-unavailable");
+  }
+
+  authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth: {
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      persistSession: true,
+      storageKey: STORAGE_KEY
+    }
+  });
+
+  authClient.auth.onAuthStateChange((_event, session) => {
+    renderSession(session);
+  });
+
+  return authClient;
+}
+
+function loadParticlesWhenIdle() {
+  if (particlesScriptStarted || !document.getElementById("particles")) {
+    return;
+  }
+
+  particlesScriptStarted = true;
+  runWhenIdle(() => {
+    const script = document.createElement("script");
+    script.src = PARTICLES_SCRIPT_URL;
+    script.async = true;
+    document.body.appendChild(script);
+  }, 1800);
 }
 
 function setStatus(message, tone = "") {
@@ -115,6 +212,10 @@ function switchAuthMode(mode) {
 
 function translateAuthError(error) {
   const message = String(error?.message || "");
+
+  if (/supabase-sdk/i.test(message)) {
+    return "Supabase 登录组件暂时加载失败，请检查网络后重试。";
+  }
 
   if (/Invalid login credentials/i.test(message)) {
     return "验证码不正确或已过期，请检查后再试。";
@@ -181,7 +282,8 @@ async function sendEmailCode(mode) {
   setStatus("正在发送邮箱验证码...", "loading");
 
   try {
-    const { error } = await authClient.auth.signInWithOtp({
+    const client = await ensureAuthClient();
+    const { error } = await client.auth.signInWithOtp({
       email,
       options: {
         shouldCreateUser: isRegister,
@@ -610,8 +712,9 @@ function handleNotificationListClick(event) {
   markNotificationRead(button.dataset.notificationRead);
 }
 
-function renderSession(session) {
+function renderSession(session, options = {}) {
   const user = session?.user || null;
+  const shouldLoadPanels = options.loadPanels !== false;
   currentSession = session || null;
 
   signedInCard.hidden = !user;
@@ -637,15 +740,43 @@ function renderSession(session) {
   profileEmail.textContent = user.email || "-";
   profileNickname.textContent = nickname;
   profileEmailStatus.textContent = user.email_confirmed_at ? "已确认" : "待确认";
+  if (!shouldLoadPanels) {
+    setBindingState("待同步", "loading");
+    bindingHint.textContent = "账号状态同步后加载绑定信息。";
+    setBindingFormDisabled(true);
+    notificationCount.textContent = "待同步";
+    notificationCount.dataset.tone = "loading";
+    notificationList.innerHTML = '<div class="notification-empty">账号状态同步后加载消息...</div>';
+    markAllNotificationsButton.disabled = true;
+    return;
+  }
+
   refreshBindingPanel();
   refreshNotificationsPanel();
 }
 
-async function refreshSessionStatus(message) {
-  const { data, error } = await authClient.auth.getSession();
+async function refreshSessionStatus(message, options = {}) {
+  let data;
 
-  if (error) {
-    renderSession(null);
+  try {
+    const client = await ensureAuthClient();
+    const result = await client.auth.getSession();
+    data = result.data;
+
+    if (result.error) {
+      throw result.error;
+    }
+  } catch (error) {
+    const storedSession = readStoredSession();
+    renderSession(storedSession, {
+      loadPanels: false
+    });
+
+    if (options.silent && !storedSession) {
+      setStatus("你还没有登录账号。");
+      return;
+    }
+
     setStatus(translateAuthError(error), "error");
     return;
   }
@@ -674,7 +805,8 @@ async function handleLogin(event) {
   setStatus("正在验证登录验证码...", "loading");
 
   try {
-    const { data, error } = await authClient.auth.verifyOtp({
+    const client = await ensureAuthClient();
+    const { data, error } = await client.auth.verifyOtp({
       email,
       token: code,
       type: "email"
@@ -710,7 +842,8 @@ async function handleRegister(event) {
   setStatus("正在验证注册验证码...", "loading");
 
   try {
-    const { data, error } = await authClient.auth.verifyOtp({
+    const client = await ensureAuthClient();
+    const { data, error } = await client.auth.verifyOtp({
       email,
       token: code,
       type: "email"
@@ -721,7 +854,7 @@ async function handleRegister(event) {
     }
 
     if (data.user && data.user.user_metadata?.nickname !== nickname) {
-      const { error: updateError } = await authClient.auth.updateUser({
+      const { error: updateError } = await client.auth.updateUser({
         data: {
           Nickname: nickname,
           nickname
@@ -750,7 +883,8 @@ async function handleLogout() {
   setStatus("正在退出登录...", "loading");
 
   try {
-    const { error } = await authClient.auth.signOut();
+    const client = await ensureAuthClient();
+    const { error } = await client.auth.signOut();
 
     if (error) {
       throw error;
@@ -766,19 +900,16 @@ async function handleLogout() {
 }
 
 function bootUserPage() {
-  if (!window.supabase?.createClient) {
-    setStatus("Supabase 客户端加载失败，请刷新页面后再试。", "error");
-    return;
+  if (window.supabase?.createClient) {
+    authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+      auth: {
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        persistSession: true,
+        storageKey: STORAGE_KEY
+      }
+    });
   }
-
-  authClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
-    auth: {
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-      persistSession: true,
-      storageKey: "plc-user-session"
-    }
-  });
 
   authTabs.forEach((tab) => {
     tab.addEventListener("click", () => {
@@ -795,11 +926,21 @@ function bootUserPage() {
   notificationList.addEventListener("click", handleNotificationListClick);
   markAllNotificationsButton.addEventListener("click", markAllNotificationsRead);
 
-  authClient.auth.onAuthStateChange((_event, session) => {
+  authClient?.auth.onAuthStateChange((_event, session) => {
     renderSession(session);
   });
 
-  refreshSessionStatus();
+  const storedSession = readStoredSession();
+  renderSession(storedSession, {
+    loadPanels: false
+  });
+  setStatus(storedSession ? "正在同步账号状态..." : "你还没有登录账号。");
+  loadParticlesWhenIdle();
+  runWhenIdle(() => {
+    refreshSessionStatus(undefined, {
+      silent: true
+    });
+  }, 900);
 }
 
 bootUserPage();

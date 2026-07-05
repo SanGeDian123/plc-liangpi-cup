@@ -848,6 +848,16 @@ button{
 }
 
 @media(max-width:980px){
+  body::before{
+    filter:blur(12px) saturate(1.02);
+  }
+
+  .schedule-header,
+  .match-list-panel,
+  .bp-panel{
+    backdrop-filter:none;
+  }
+
   .schedule-header{
     align-items:flex-start;
     flex-wrap:wrap;
@@ -937,6 +947,19 @@ button{
   .bp-submit-dialog-actions{
     display:grid;
     grid-template-columns:1fr;
+  }
+}
+
+@media(pointer:coarse){
+  body::before{
+    filter:blur(10px) saturate(1.02);
+  }
+
+  .schedule-header,
+  .match-list-panel,
+  .bp-panel,
+  .bp-submit-dialog-backdrop{
+    backdrop-filter:none;
   }
 }
 

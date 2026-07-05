@@ -17,7 +17,7 @@
 
 body{
   min-height:100vh;
-  background:url("../assets/bg.png") center/cover fixed;
+  background:url("../assets/bg.webp") center/cover fixed;
   background:image-set(
     url("../assets/bg.webp") type("image/webp"),
     url("../assets/bg.png") type("image/png")
@@ -611,6 +611,25 @@ button:disabled{
 }
 
 @media(max-width:860px){
+  body{
+    background-attachment:scroll;
+  }
+
+  .overlay{
+    backdrop-filter:none;
+  }
+
+  .auth-panel,
+  .profile-panel,
+  .status-panel{
+    box-shadow:0 14px 34px rgba(0,0,0,.28);
+    backdrop-filter:none;
+  }
+
+  #particles{
+    opacity:.5;
+  }
+
   .user-header{
     align-items:flex-start;
     flex-direction:column;
@@ -626,6 +645,19 @@ button:disabled{
 
   h1{
     font-size:40px;
+  }
+}
+
+@media(pointer:coarse){
+  body{
+    background-attachment:scroll;
+  }
+
+  .overlay,
+  .auth-panel,
+  .profile-panel,
+  .status-panel{
+    backdrop-filter:none;
   }
 }
 

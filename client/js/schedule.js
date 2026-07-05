@@ -17,6 +17,8 @@
     pending: "待定"
   };
 
+  const SONG_POOL_SCRIPT_SRC = "./js/song-pool-data.js?v=20260702b";
+
   const state = {
     matches: [],
     activeMatchId: "",
@@ -36,6 +38,12 @@
       targets: []
     },
     pollTimer: 0,
+    isLoadingMatches: false,
+    isFetchingActiveMatch: false,
+    activeMatchFetchPromise: null,
+    songPoolLoading: false,
+    songPoolLoadFailed: false,
+    songPoolLoadPromise: null,
     lastPresenceAt: 0,
     isSubmitting: false,
     pendingBpAction: null,
@@ -163,10 +171,72 @@
     return text || fallback;
   }
 
+  function hasSongPoolData() {
+    return Array.isArray(window.PLC_SONG_POOL_DATA?.tracks);
+  }
+
   function getSongPoolData() {
-    return window.PLC_SONG_POOL_DATA || {
+    return hasSongPoolData() ? window.PLC_SONG_POOL_DATA : {
       tracks: []
     };
+  }
+
+  function loadSongPoolData() {
+    if (hasSongPoolData()) {
+      return Promise.resolve(window.PLC_SONG_POOL_DATA);
+    }
+
+    if (state.songPoolLoadPromise) {
+      return state.songPoolLoadPromise;
+    }
+
+    state.songPoolLoading = true;
+    state.songPoolLoadFailed = false;
+    state.songPoolLoadPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = SONG_POOL_SCRIPT_SRC;
+      script.async = true;
+      script.onload = () => {
+        if (hasSongPoolData()) {
+          resolve(window.PLC_SONG_POOL_DATA);
+        } else {
+          reject(new Error("song-pool-data-unavailable"));
+        }
+      };
+      script.onerror = () => {
+        reject(new Error("song-pool-data-load-failed"));
+      };
+      document.head.appendChild(script);
+    })
+      .catch((error) => {
+        state.songPoolLoadPromise = null;
+        state.songPoolLoadFailed = true;
+        throw error;
+      })
+      .finally(() => {
+        state.songPoolLoading = false;
+      });
+
+    return state.songPoolLoadPromise;
+  }
+
+  function ensureSongPoolForActiveMatch(matchId = state.activeMatchId) {
+    if (!matchId || hasSongPoolData()) {
+      return;
+    }
+
+    loadSongPoolData()
+      .then(() => {
+        if (state.activeMatchId === matchId) {
+          renderActiveMatch();
+        }
+      })
+      .catch(() => {
+        if (state.activeMatchId === matchId) {
+          setActionMessage("曲库加载失败，请刷新页面后重试。", true);
+          renderTrackOptions();
+        }
+      });
   }
 
   function normalizeDifficulties(value) {
@@ -991,6 +1061,35 @@
   function renderTrackOptions() {
     const match = state.activeMatch;
     const action = getCurrentAction(match);
+
+    if (action && !hasSongPoolData()) {
+      const optionText = state.songPoolLoadFailed
+        ? "曲库加载失败，请刷新页面"
+        : state.songPoolLoading
+          ? "曲库加载中..."
+          : "正在准备曲库...";
+      const signature = `loading:${action}:${optionText}`;
+
+      if (state.trackOptionsSignature !== signature || !els.trackSelect.disabled) {
+        els.trackSelect.innerHTML = "";
+        els.trackSelect.appendChild(createElement("option", "", optionText));
+      }
+
+      els.difficultySelect.innerHTML = "";
+      els.difficultySelect.appendChild(createElement("option", "", "等待曲库加载"));
+      els.trackSelect.disabled = true;
+      els.difficultySelect.disabled = true;
+      els.submitBp.disabled = true;
+      state.selectedTrackId = "";
+      state.selectedDifficulty = "";
+      state.trackOptionsSignature = signature;
+      state.difficultyOptionsSignature = "loading";
+      if (!state.songPoolLoadFailed) {
+        ensureSongPoolForActiveMatch(match?.id);
+      }
+      return;
+    }
+
     const availableTracks = action ? getAvailableTracks(match, action) : [];
     const previousTrackId = els.trackSelect.value || state.selectedTrackId;
     let tracks = availableTracks;
@@ -1014,6 +1113,7 @@
       }
 
       els.trackSelect.disabled = true;
+      els.submitBp.disabled = true;
       state.selectedTrackId = "";
       state.trackOptionsSignature = signature;
       renderDifficultyOptions();
@@ -1033,6 +1133,7 @@
       }
 
       state.selectedTrackId = nextTrackId;
+      els.submitBp.disabled = state.isSubmitting;
       renderDifficultyOptions();
       return;
     }
@@ -1052,6 +1153,7 @@
     state.selectedTrackId = nextTrackId;
     state.trackOptionsSignature = signature;
     els.trackSelect.disabled = false;
+    els.submitBp.disabled = state.isSubmitting;
     renderDifficultyOptions();
   }
 
@@ -1165,6 +1267,13 @@
   }
 
   async function loadMatches(showLoading = true) {
+    if (state.isLoadingMatches) {
+      return;
+    }
+
+    state.isLoadingMatches = true;
+    els.refresh.disabled = true;
+
     if (showLoading) {
       els.summary.textContent = "正在同步赛事日程...";
     }
@@ -1195,10 +1304,27 @@
       els.summary.textContent = error.message || "赛程加载失败，请稍后重试。";
       state.matches = [];
       renderMatchList();
+    } finally {
+      state.isLoadingMatches = false;
+      els.refresh.disabled = false;
     }
   }
 
   async function fetchActiveMatch() {
+    if (state.isFetchingActiveMatch) {
+      return state.activeMatchFetchPromise;
+    }
+
+    state.isFetchingActiveMatch = true;
+    state.activeMatchFetchPromise = fetchActiveMatchOnce().finally(() => {
+      state.isFetchingActiveMatch = false;
+      state.activeMatchFetchPromise = null;
+    });
+
+    return state.activeMatchFetchPromise;
+  }
+
+  async function fetchActiveMatchOnce() {
     if (!state.activeMatchId) {
       return;
     }
@@ -1221,6 +1347,7 @@
       );
       renderMatchList();
       renderActiveMatch();
+      startPolling();
     } catch (error) {
       if (state.activeMatchId !== requestedMatchId) {
         return;
@@ -1231,7 +1358,11 @@
   }
 
   function getPollingInterval() {
-    return document.hidden ? 12000 : 2500;
+    if (document.hidden) {
+      return 15000;
+    }
+
+    return isBpOpen(state.activeMatch) ? 2500 : 8000;
   }
 
   function startPolling() {
