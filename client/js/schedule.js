@@ -37,7 +37,8 @@
     },
     pollTimer: 0,
     lastPresenceAt: 0,
-    isSubmitting: false
+    isSubmitting: false,
+    pendingBpAction: null
   };
 
   const els = {
@@ -75,7 +76,18 @@
     summaryList: document.getElementById("summaryList"),
     confirmProgress: document.getElementById("confirmProgress"),
     resultPanel: document.getElementById("resultPanel"),
-    resultList: document.getElementById("resultList")
+    resultList: document.getElementById("resultList"),
+    bpSubmitDialog: document.getElementById("bpSubmitDialog"),
+    bpSubmitConfirmType: document.getElementById("bpSubmitConfirmType"),
+    bpSubmitConfirmTitle: document.getElementById("bpSubmitConfirmTitle"),
+    bpSubmitConfirmMatch: document.getElementById("bpSubmitConfirmMatch"),
+    bpSubmitConfirmAction: document.getElementById("bpSubmitConfirmAction"),
+    bpSubmitConfirmTrack: document.getElementById("bpSubmitConfirmTrack"),
+    bpSubmitConfirmMeta: document.getElementById("bpSubmitConfirmMeta"),
+    bpSubmitConfirmDifficulty: document.getElementById("bpSubmitConfirmDifficulty"),
+    bpSubmitConfirmMessage: document.getElementById("bpSubmitConfirmMessage"),
+    bpSubmitConfirmButton: document.getElementById("bpSubmitConfirmButton"),
+    bpSubmitCancelButton: document.getElementById("bpSubmitCancelButton")
   };
 
   function createElement(tag, className, text) {
@@ -728,6 +740,126 @@
       .filter((track) => track.difficulties.length > 0);
   }
 
+  function getActionLabel(action) {
+    return action === "ban" ? "禁用" : "选曲";
+  }
+
+  function setBpConfirmMessage(message, isError = false) {
+    if (!els.bpSubmitConfirmMessage) {
+      return;
+    }
+
+    els.bpSubmitConfirmMessage.textContent = message || "";
+    els.bpSubmitConfirmMessage.classList.toggle("is-error", isError);
+  }
+
+  function getBpTrackById(match, trackId) {
+    return getPoolTracks(match).find((track) => Number(track.id) === Number(trackId)) || null;
+  }
+
+  function validateBpSelection(match, action, trackId, difficulty) {
+    if (!match || !action) {
+      return {
+        error: "当前没有可提交的 BP 操作。"
+      };
+    }
+
+    if (action !== getCurrentAction(match)) {
+      return {
+        error: "当前 BP 阶段已经变化，请重新选择。"
+      };
+    }
+
+    const normalizedTrackId = Number(trackId);
+    const normalizedDifficulty = String(difficulty || "").trim().toUpperCase();
+    const track = getBpTrackById(match, normalizedTrackId);
+
+    if (!track || !normalizedDifficulty) {
+      return {
+        error: "请重新选择曲目和难度。"
+      };
+    }
+
+    if (!track.difficulties.includes(normalizedDifficulty)) {
+      return {
+        error: "该曲目当前不可提交这个难度。"
+      };
+    }
+
+    const selectionKey = getBpSelectionKey(normalizedTrackId, normalizedDifficulty);
+
+    if (getUnavailableDifficultyKeys(match, action).has(selectionKey)) {
+      return {
+        error: action === "ban"
+          ? "这个谱面已经被禁用，请重新选择。"
+          : "这个谱面已经不可选择，请重新选择。"
+      };
+    }
+
+    return {
+      track,
+      difficulty: normalizedDifficulty
+    };
+  }
+
+  function buildBpActionDraft() {
+    const match = state.activeMatch;
+    const action = getCurrentAction(match);
+    const trackId = Number(els.trackSelect.value);
+    const difficulty = els.difficultySelect.value;
+    const validation = validateBpSelection(match, action, trackId, difficulty);
+
+    state.selectedTrackId = trackId ? String(trackId) : "";
+    state.selectedDifficulty = difficulty || "";
+
+    if (validation.error) {
+      setActionMessage(validation.error, true);
+      return null;
+    }
+
+    return {
+      matchId: match.id,
+      matchTitle: match.title,
+      action,
+      trackId,
+      difficulty: validation.difficulty,
+      track: validation.track
+    };
+  }
+
+  function openBpConfirmDialog(draft) {
+    if (!draft || !els.bpSubmitDialog) {
+      return;
+    }
+
+    state.pendingBpAction = draft;
+    els.bpSubmitConfirmType.textContent = draft.action === "ban" ? "Ban" : "Pick";
+    els.bpSubmitConfirmTitle.textContent = `确认${getActionLabel(draft.action)}`;
+    els.bpSubmitConfirmMatch.textContent = draft.matchTitle || "-";
+    els.bpSubmitConfirmAction.textContent = getActionLabel(draft.action);
+    els.bpSubmitConfirmTrack.textContent = draft.track?.title || `曲目 ${draft.trackId}`;
+    els.bpSubmitConfirmMeta.textContent =
+      [draft.track?.pack, draft.track?.artist].filter(Boolean).join(" / ") || "-";
+    els.bpSubmitConfirmDifficulty.textContent = draft.difficulty || "-";
+    setBpConfirmMessage("");
+    els.bpSubmitDialog.classList.add("is-open");
+    els.bpSubmitDialog.setAttribute("aria-hidden", "false");
+    els.bpSubmitConfirmButton.disabled = false;
+    els.bpSubmitCancelButton.disabled = false;
+    els.bpSubmitConfirmButton.focus();
+  }
+
+  function closeBpConfirmDialog(force = false) {
+    if (!els.bpSubmitDialog || (!force && state.isSubmitting)) {
+      return;
+    }
+
+    state.pendingBpAction = null;
+    setBpConfirmMessage("");
+    els.bpSubmitDialog.classList.remove("is-open");
+    els.bpSubmitDialog.setAttribute("aria-hidden", "true");
+  }
+
   function getTrackOptionsSignature(action, tracks) {
     return `${action || ""}|${tracks
       .map((track) => `${track.id}:${track.difficulties.join("/")}`)
@@ -1032,6 +1164,10 @@
     }
   }
 
+  function getPollingInterval() {
+    return document.hidden ? 12000 : 2500;
+  }
+
   function startPolling() {
     window.clearInterval(state.pollTimer);
 
@@ -1039,7 +1175,7 @@
       return;
     }
 
-    state.pollTimer = window.setInterval(fetchActiveMatch, 2500);
+    state.pollTimer = window.setInterval(fetchActiveMatch, getPollingInterval());
   }
 
   function goBackToMatches() {
@@ -1050,6 +1186,7 @@
     state.selectedDifficulty = "";
     state.trackOptionsSignature = "";
     state.difficultyOptionsSignature = "";
+    closeBpConfirmDialog();
     window.clearTimeout(state.randomReveal.timer);
     state.randomReveal = {
       key: "",
@@ -1124,36 +1261,59 @@
   async function submitBpAction(event) {
     event.preventDefault();
 
-    const match = state.activeMatch;
-    const action = getCurrentAction(match);
-
-    if (!match || !action || state.isSubmitting) {
+    if (state.isSubmitting) {
       return;
     }
 
-    const trackId = Number(els.trackSelect.value);
-    const difficulty = els.difficultySelect.value;
-    state.selectedTrackId = trackId ? String(trackId) : "";
-    state.selectedDifficulty = difficulty || "";
+    const draft = buildBpActionDraft();
 
-    if (!trackId || !difficulty) {
-      setActionMessage("请选择曲目和难度。", true);
+    if (draft) {
+      openBpConfirmDialog(draft);
+    }
+  }
+
+  async function confirmPendingBpAction() {
+    const pending = state.pendingBpAction;
+
+    if (!pending || state.isSubmitting) {
+      return;
+    }
+
+    let match = state.activeMatch;
+    let validation = validateBpSelection(match, pending.action, pending.trackId, pending.difficulty);
+
+    if (pending.matchId !== match?.id || validation.error) {
+      const message = validation.error || "当前比赛已经变化，请重新选择。";
+      setBpConfirmMessage(message, true);
+      setActionMessage(message, true);
       return;
     }
 
     state.isSubmitting = true;
     els.submitBp.disabled = true;
-    setActionMessage(action === "ban" ? "正在提交禁用..." : "正在提交选曲...");
+    els.bpSubmitConfirmButton.disabled = true;
+    els.bpSubmitCancelButton.disabled = true;
+    setBpConfirmMessage(`正在提交${getActionLabel(pending.action)}...`);
+    setActionMessage(pending.action === "ban" ? "正在提交禁用..." : "正在提交选曲...");
 
     try {
+      await fetchActiveMatch();
+
+      match = state.activeMatch;
+      validation = validateBpSelection(match, pending.action, pending.trackId, pending.difficulty);
+
+      if (pending.matchId !== match?.id || validation.error) {
+        throw new Error(validation.error || "当前比赛已经变化，请重新选择。");
+      }
+
       const payload = await fetchJson(
-        `/schedule/matches/${encodeURIComponent(match.id)}/bp/actions`,
+        `/schedule/matches/${encodeURIComponent(pending.matchId)}/bp/actions`,
         {
           method: "POST",
           body: JSON.stringify({
-            type: action,
-            trackId,
-            difficulty
+            type: pending.action,
+            trackId: pending.trackId,
+            difficulty: pending.difficulty
           })
         }
       );
@@ -1163,14 +1323,19 @@
       state.matches = state.matches.map((item) =>
         item.id === payload.match.id ? payload.match : item
       );
-      setActionMessage(action === "ban" ? "禁用已提交。" : "选曲已提交。");
+      setActionMessage(pending.action === "ban" ? "禁用已提交。" : "选曲已提交。");
+      closeBpConfirmDialog(true);
       renderMatchList();
       renderActiveMatch();
     } catch (error) {
-      setActionMessage(error.message || "提交失败，请稍后重试。", true);
+      const message = error.message || "提交失败，请稍后重试。";
+      setBpConfirmMessage(message, true);
+      setActionMessage(message, true);
     } finally {
       state.isSubmitting = false;
       els.submitBp.disabled = false;
+      els.bpSubmitConfirmButton.disabled = false;
+      els.bpSubmitCancelButton.disabled = false;
     }
   }
 
@@ -1218,6 +1383,10 @@
     els.backToMatches.addEventListener("click", goBackToMatches);
     els.bpForm.addEventListener("submit", submitBpAction);
     els.confirmBp.addEventListener("click", confirmBpSummary);
+    els.bpSubmitConfirmButton?.addEventListener("click", confirmPendingBpAction);
+    document.querySelectorAll("[data-bp-confirm-close]").forEach((element) => {
+      element.addEventListener("click", () => closeBpConfirmDialog());
+    });
 
     els.trackSearch.addEventListener("input", (event) => {
       state.trackSearch = event.target.value.trim();
@@ -1236,6 +1405,20 @@
     els.difficultySelect.addEventListener("change", () => {
       state.selectedDifficulty = els.difficultySelect.value;
       sendPresence(getCurrentAction());
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        closeBpConfirmDialog();
+      }
+    });
+
+    document.addEventListener("visibilitychange", () => {
+      startPolling();
+
+      if (!document.hidden) {
+        fetchActiveMatch();
+      }
     });
 
     window.PLCAccount?.onChange?.(() => {

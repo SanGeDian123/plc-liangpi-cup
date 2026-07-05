@@ -18,6 +18,10 @@
 body{
   min-height:100vh;
   background:url("../assets/bg.png") center/cover fixed;
+  background:image-set(
+    url("../assets/bg.webp") type("image/webp"),
+    url("../assets/bg.png") type("image/png")
+  ) center/cover fixed;
   color:white;
   overflow-x:hidden;
   animation:pageFadeIn .45s ease both;

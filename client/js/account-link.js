@@ -5,7 +5,7 @@
 
   const links = Array.from(document.querySelectorAll("[data-plc-account-link]"));
   const listeners = new Set();
-  let currentSession = null;
+  let currentSession = readStoredSession();
   let accountClient = null;
 
   function getUserPageUrl() {
@@ -19,6 +19,15 @@
       user?.email?.split("@")[0] ||
       "未登录"
     );
+  }
+
+  function readStoredSession() {
+    try {
+      const session = JSON.parse(localStorage.getItem(STORAGE_KEY));
+      return session?.access_token && session?.user ? session : null;
+    } catch (error) {
+      return null;
+    }
   }
 
   function emitAccountChange() {
@@ -38,7 +47,10 @@
       const name = link.querySelector("[data-plc-account-name]");
       link.href = getUserPageUrl();
       link.classList.toggle("is-signed-out", !user);
-      link.setAttribute("aria-label", user ? `账号：${nickname}` : "未登录，前往用户中心");
+      link.setAttribute(
+        "aria-label",
+        user ? `账号：${nickname}` : "未登录，前往用户中心"
+      );
 
       if (name) {
         name.textContent = nickname;
@@ -77,15 +89,14 @@
         listeners.delete(listener);
       };
     },
-    ready: Promise.resolve(null)
+    ready: Promise.resolve(currentSession)
   };
 
   async function bootAccountLink() {
-    renderAccount(null);
+    setSession(readStoredSession());
 
     if (!window.supabase?.createClient) {
-      setSession(null);
-      return;
+      return currentSession;
     }
 
     accountClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
@@ -98,7 +109,7 @@
     });
 
     const { data } = await accountClient.auth.getSession();
-    setSession(data.session || null);
+    setSession(data.session || readStoredSession());
 
     accountClient.auth.onAuthStateChange((_event, session) => {
       setSession(session || null);
@@ -107,8 +118,14 @@
     return currentSession;
   }
 
+  window.addEventListener("storage", (event) => {
+    if (event.key === STORAGE_KEY) {
+      setSession(readStoredSession());
+    }
+  });
+
   window.PLCAccount.ready = bootAccountLink().catch(() => {
-    setSession(null);
-    return null;
+    setSession(readStoredSession());
+    return currentSession;
   });
 })();

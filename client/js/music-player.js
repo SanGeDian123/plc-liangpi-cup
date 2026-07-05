@@ -80,6 +80,7 @@
   const lyricCache = new Map();
   const volume = 0.1;
   const optimizedAudioDir = "./assets/music-mobile/";
+  const autoBlockedLabel = "自动播放受限";
 
   function getAssetSrc(fileName) {
     return `./assets/${encodeURIComponent(fileName)}`;
@@ -142,9 +143,9 @@
       return [];
     }
 
-    const trailingText = trimmedLine.slice(
-      timestamps[timestamps.length - 1].index + timestamps[timestamps.length - 1][0].length
-    ).trim();
+    const trailingText = trimmedLine
+      .slice(timestamps[timestamps.length - 1].index + timestamps[timestamps.length - 1][0].length)
+      .trim();
     const allTimestampsLeadSameText =
       timestamps.length > 1 &&
       trailingText &&
@@ -240,10 +241,16 @@
       currentLyrics: [],
       lyricIndex: -1,
       started: false,
+      autoRequested: false,
       readyPromise: null,
+      lyricPromise: null,
       currentSrc: "",
-      usingOptimizedAudio: false
+      usingOptimizedAudio: true
     };
+
+    function getCurrentTrack() {
+      return tracks[state.currentIndex];
+    }
 
     function setTrackLabel(track, status = "") {
       nameEl.textContent = status ? `${track.name}（${status}）` : track.name;
@@ -287,24 +294,23 @@
     }
 
     async function prepareTrack() {
-      const track = tracks[state.currentIndex];
+      const track = getCurrentTrack();
       const src = getAudioSrc(track.fileName);
 
       if (audio.dataset.trackSrc !== src) {
         audio.dataset.trackSrc = src;
         audio.src = src;
-        audio.load();
       }
 
       state.currentSrc = src;
-      state.usingOptimizedAudio = src.startsWith(optimizedAudioDir);
+      state.usingOptimizedAudio = true;
       nameEl.dataset.audioSrc = src;
-      nameEl.dataset.optimizedAudio = String(state.usingOptimizedAudio);
-      state.currentLyrics = await loadLyrics(track);
+      nameEl.dataset.optimizedAudio = "true";
+      state.currentLyrics = [];
       state.lyricIndex = -1;
+      state.lyricPromise = null;
       setTrackLabel(track);
       setLyric("");
-      syncLyric();
     }
 
     function ensureTrackReady() {
@@ -315,64 +321,81 @@
       return state.readyPromise;
     }
 
+    function ensureLyricsReady() {
+      if (!state.lyricPromise) {
+        state.lyricPromise = loadLyrics(getCurrentTrack()).then((lyrics) => {
+          state.currentLyrics = lyrics;
+          state.lyricIndex = -1;
+          syncLyric();
+          return lyrics;
+        });
+      }
+
+      return state.lyricPromise;
+    }
+
     async function playCurrentTrack() {
+      if (document.hidden) {
+        return;
+      }
+
       await ensureTrackReady();
       await audio.play();
     }
 
     function startMusic() {
-      if (state.started) {
+      state.autoRequested = true;
+
+      if (state.started || document.hidden) {
         return;
       }
 
       state.started = true;
-      playCurrentTrack()
-        .catch(() => {
-          state.started = false;
-          setTrackLabel(tracks[state.currentIndex], "自动播放受限");
-        });
+      playCurrentTrack().catch(() => {
+        state.started = false;
+        setTrackLabel(getCurrentTrack(), autoBlockedLabel);
+      });
     }
 
     function playRandomTrack() {
       state.currentIndex = pickRandomIndex(state.currentIndex);
       state.started = false;
       state.readyPromise = null;
+      state.lyricPromise = null;
       audio.removeAttribute("src");
       audio.removeAttribute("data-track-src");
       audio.load();
       startMusic();
     }
 
-    function fallbackToFullAudio() {
-      const track = tracks[state.currentIndex];
-      const fallbackSrc = getAssetSrc(track.fileName);
+    function handleAudioError() {
+      state.started = false;
+      state.readyPromise = null;
+      setTrackLabel(getCurrentTrack(), "移动版音频加载失败");
+    }
 
-      if (audio.dataset.trackSrc === fallbackSrc) {
+    function handleVisibilityChange() {
+      if (document.hidden) {
+        audio.pause();
         return;
       }
 
-      audio.dataset.trackSrc = fallbackSrc;
-      audio.src = fallbackSrc;
-      audio.load();
-      state.currentSrc = fallbackSrc;
-      state.usingOptimizedAudio = false;
-      nameEl.dataset.audioSrc = fallbackSrc;
-      nameEl.dataset.optimizedAudio = "false";
-
-      if (state.started) {
-        audio.play().catch(() => {
+      if (state.autoRequested && state.started) {
+        playCurrentTrack().catch(() => {
           state.started = false;
-          setTrackLabel(track, "自动播放受限");
+          setTrackLabel(getCurrentTrack(), autoBlockedLabel);
         });
       }
     }
 
-    audio.preload = "auto";
+    audio.preload = "metadata";
     audio.volume = volume;
     audio.addEventListener("ended", playRandomTrack);
-    audio.addEventListener("error", fallbackToFullAudio);
+    audio.addEventListener("error", handleAudioError);
+    audio.addEventListener("playing", ensureLyricsReady);
     audio.addEventListener("timeupdate", syncLyric);
     nameEl.addEventListener("click", playRandomTrack);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     if (muteButton) {
       muteButton.addEventListener("click", () => {
@@ -382,10 +405,9 @@
       updateMuteButton();
     }
 
-    setTrackLabel(tracks[state.currentIndex], "准备播放");
+    setTrackLabel(getCurrentTrack(), "准备播放");
     setLyric("");
     window.PLCMusicPlayerState = state;
-    state.readyPromise = prepareTrack();
     startMusic();
 
     return state;

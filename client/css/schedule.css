@@ -623,6 +623,116 @@ button{
   color:var(--red);
 }
 
+.bp-submit-dialog{
+  position:fixed;
+  inset:0;
+  z-index:80;
+  display:none;
+  place-items:center;
+  padding:20px;
+}
+
+.bp-submit-dialog.is-open{
+  display:grid;
+}
+
+.bp-submit-dialog-backdrop{
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,.62);
+  backdrop-filter:blur(10px);
+}
+
+.bp-submit-dialog-panel{
+  position:relative;
+  z-index:1;
+  display:grid;
+  gap:14px;
+  width:min(520px, 100%);
+  max-height:min(720px, calc(100vh - 40px));
+  overflow:auto;
+  padding:20px;
+  border:1px solid var(--line-strong);
+  border-radius:8px;
+  background:rgba(9,13,29,.96);
+  color:var(--text);
+  box-shadow:0 30px 90px rgba(0,0,0,.48);
+}
+
+.bp-submit-dialog-panel h2{
+  font-size:26px;
+  line-height:1.15;
+}
+
+.bp-submit-dialog-panel p:not(.eyebrow){
+  color:var(--muted);
+  line-height:1.7;
+}
+
+.bp-submit-confirm-list{
+  display:grid;
+  gap:10px;
+}
+
+.bp-submit-confirm-list div{
+  display:grid;
+  gap:5px;
+  padding:11px 12px;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:8px;
+  background:rgba(255,255,255,.055);
+}
+
+.bp-submit-confirm-list dt{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.bp-submit-confirm-list dd{
+  color:var(--text);
+  line-height:1.45;
+  overflow-wrap:anywhere;
+}
+
+.bp-submit-confirm-message{
+  min-height:22px;
+  color:var(--cyan);
+}
+
+.bp-submit-confirm-message.is-error{
+  color:var(--red);
+}
+
+.bp-submit-dialog-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+}
+
+.ghost-action{
+  min-height:44px;
+  padding:10px 16px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:8px;
+  background:rgba(255,255,255,.08);
+  color:var(--text);
+  cursor:pointer;
+  transition:transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.ghost-action:hover,
+.ghost-action:focus-visible{
+  transform:translateY(-1px);
+  border-color:var(--line-strong);
+  background:rgba(103,231,255,.12);
+}
+
+.ghost-action:disabled{
+  cursor:not-allowed;
+  opacity:.55;
+  transform:none;
+}
+
 @media(max-width:980px){
   .schedule-header{
     align-items:flex-start;
@@ -704,5 +814,14 @@ button{
 
   .bp-form .primary-action{
     width:100%;
+  }
+
+  .bp-submit-dialog{
+    padding:14px;
+  }
+
+  .bp-submit-dialog-actions{
+    display:grid;
+    grid-template-columns:1fr;
   }
 }
