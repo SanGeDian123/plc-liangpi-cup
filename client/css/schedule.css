@@ -474,6 +474,11 @@ button{
   background:rgba(255,255,255,.055);
 }
 
+.selection-item.is-entering{
+  animation:bpSelectionDropIn .38s cubic-bezier(.18,.82,.2,1) both;
+  will-change:transform, opacity;
+}
+
 .selection-item strong,
 .summary-item strong,
 .result-item strong{
@@ -623,6 +628,67 @@ button{
   color:var(--red);
 }
 
+@keyframes bpSelectionDropIn{
+  0%{
+    opacity:0;
+    transform:translateY(-12px) scale(.992);
+  }
+
+  62%{
+    opacity:1;
+    transform:translateY(2px) scale(1);
+  }
+
+  100%{
+    opacity:1;
+    transform:none;
+  }
+}
+
+@keyframes bpDialogFadeIn{
+  from{
+    opacity:0;
+  }
+
+  to{
+    opacity:1;
+  }
+}
+
+@keyframes bpDialogFadeOut{
+  from{
+    opacity:1;
+  }
+
+  to{
+    opacity:0;
+  }
+}
+
+@keyframes bpDialogPanelIn{
+  from{
+    opacity:0;
+    transform:translateY(10px) scale(.985);
+  }
+
+  to{
+    opacity:1;
+    transform:none;
+  }
+}
+
+@keyframes bpDialogPanelOut{
+  from{
+    opacity:1;
+    transform:none;
+  }
+
+  to{
+    opacity:0;
+    transform:translateY(8px) scale(.99);
+  }
+}
+
 .bp-submit-dialog{
   position:fixed;
   inset:0;
@@ -632,7 +698,8 @@ button{
   padding:20px;
 }
 
-.bp-submit-dialog.is-open{
+.bp-submit-dialog.is-open,
+.bp-submit-dialog.is-closing{
   display:grid;
 }
 
@@ -641,6 +708,14 @@ button{
   inset:0;
   background:rgba(0,0,0,.62);
   backdrop-filter:blur(10px);
+}
+
+.bp-submit-dialog.is-open .bp-submit-dialog-backdrop{
+  animation:bpDialogFadeIn .18s ease both;
+}
+
+.bp-submit-dialog.is-closing .bp-submit-dialog-backdrop{
+  animation:bpDialogFadeOut .18s ease both;
 }
 
 .bp-submit-dialog-panel{
@@ -657,6 +732,14 @@ button{
   background:rgba(9,13,29,.96);
   color:var(--text);
   box-shadow:0 30px 90px rgba(0,0,0,.48);
+}
+
+.bp-submit-dialog.is-open .bp-submit-dialog-panel{
+  animation:bpDialogPanelIn .2s cubic-bezier(.18,.82,.2,1) both;
+}
+
+.bp-submit-dialog.is-closing .bp-submit-dialog-panel{
+  animation:bpDialogPanelOut .18s ease both;
 }
 
 .bp-submit-dialog-panel h2{
@@ -823,5 +906,15 @@ button{
   .bp-submit-dialog-actions{
     display:grid;
     grid-template-columns:1fr;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  .selection-item.is-entering,
+  .bp-submit-dialog.is-open .bp-submit-dialog-backdrop,
+  .bp-submit-dialog.is-closing .bp-submit-dialog-backdrop,
+  .bp-submit-dialog.is-open .bp-submit-dialog-panel,
+  .bp-submit-dialog.is-closing .bp-submit-dialog-panel{
+    animation:none !important;
   }
 }

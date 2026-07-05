@@ -38,7 +38,13 @@
     pollTimer: 0,
     lastPresenceAt: 0,
     isSubmitting: false,
-    pendingBpAction: null
+    pendingBpAction: null,
+    bpConfirmCloseTimer: 0,
+    selectionAnimation: {
+      matchId: "",
+      banKeys: new Set(),
+      pickKeys: new Set()
+    }
   };
 
   const els = {
@@ -430,16 +436,58 @@
       .join(" ");
   }
 
+  function getSelectionAnimationKeys(typeClass) {
+    const matchId = state.activeMatch?.id || "";
+
+    if (state.selectionAnimation.matchId !== matchId) {
+      state.selectionAnimation = {
+        matchId,
+        banKeys: new Set(),
+        pickKeys: new Set()
+      };
+    }
+
+    return typeClass === "is-ban"
+      ? state.selectionAnimation.banKeys
+      : state.selectionAnimation.pickKeys;
+  }
+
+  function getSelectionRenderKey(selection, typeClass) {
+    return (
+      selection.id ||
+      [
+        typeClass,
+        selection.userId || "",
+        selection.trackId || "",
+        selection.difficulty || "",
+        selection.createdAt || ""
+      ].join(":")
+    );
+  }
+
   function renderSelectionList(container, selections, emptyText, typeClass) {
     container.innerHTML = "";
 
     if (!selections.length) {
       container.appendChild(createElement("p", "empty-line", emptyText));
+      getSelectionAnimationKeys(typeClass).clear();
       return;
     }
 
+    const animationKeys = getSelectionAnimationKeys(typeClass);
+
     selections.forEach((selection) => {
       const item = createElement("div", `selection-item ${typeClass}`);
+      const selectionKey = getSelectionRenderKey(selection, typeClass);
+
+      if (selectionKey && !animationKeys.has(selectionKey)) {
+        item.classList.add("is-entering");
+      }
+
+      if (selectionKey) {
+        animationKeys.add(selectionKey);
+      }
+
       item.appendChild(
         createElement("strong", "", `${selection.title || `曲目 ${selection.trackId}`} [${selection.difficulty}]`)
       );
@@ -832,6 +880,7 @@
       return;
     }
 
+    window.clearTimeout(state.bpConfirmCloseTimer);
     state.pendingBpAction = draft;
     els.bpSubmitConfirmType.textContent = draft.action === "ban" ? "Ban" : "Pick";
     els.bpSubmitConfirmTitle.textContent = `确认${getActionLabel(draft.action)}`;
@@ -842,6 +891,7 @@
       [draft.track?.pack, draft.track?.artist].filter(Boolean).join(" / ") || "-";
     els.bpSubmitConfirmDifficulty.textContent = draft.difficulty || "-";
     setBpConfirmMessage("");
+    els.bpSubmitDialog.classList.remove("is-closing");
     els.bpSubmitDialog.classList.add("is-open");
     els.bpSubmitDialog.setAttribute("aria-hidden", "false");
     els.bpSubmitConfirmButton.disabled = false;
@@ -856,8 +906,14 @@
 
     state.pendingBpAction = null;
     setBpConfirmMessage("");
+    window.clearTimeout(state.bpConfirmCloseTimer);
     els.bpSubmitDialog.classList.remove("is-open");
+    els.bpSubmitDialog.classList.add("is-closing");
     els.bpSubmitDialog.setAttribute("aria-hidden", "true");
+    state.bpConfirmCloseTimer = window.setTimeout(() => {
+      els.bpSubmitDialog.classList.remove("is-closing");
+      state.bpConfirmCloseTimer = 0;
+    }, 180);
   }
 
   function getTrackOptionsSignature(action, tracks) {
@@ -927,7 +983,7 @@
     const action = getCurrentAction(match);
     const availableTracks = action ? getAvailableTracks(match, action) : [];
     const previousTrackId = els.trackSelect.value || state.selectedTrackId;
-    let tracks = availableTracks.slice(0, 160);
+    let tracks = availableTracks;
     const previousTrack = previousTrackId
       ? availableTracks.find((track) => String(track.id) === String(previousTrackId))
       : null;
