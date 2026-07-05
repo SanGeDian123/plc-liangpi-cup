@@ -129,6 +129,7 @@ const scheduleCache = {
   }
 };
 let songPoolDataPromise = null;
+let songPoolDataMtimeMs = 0;
 const runtimeStorageState = {
   bucketReady: false,
   bucketPromise: null
@@ -1391,7 +1392,10 @@ async function loadScheduleDataWithAutoBp() {
 }
 
 async function loadSongPoolData() {
-  if (!songPoolDataPromise) {
+  const stats = await fs.stat(SONG_POOL_DATA_PATH);
+
+  if (!songPoolDataPromise || songPoolDataMtimeMs !== stats.mtimeMs) {
+    songPoolDataMtimeMs = stats.mtimeMs;
     songPoolDataPromise = (async () => {
       const raw = await fs.readFile(SONG_POOL_DATA_PATH, "utf8");
       const context = {
@@ -1407,7 +1411,11 @@ async function loadSongPoolData() {
       }
 
       return context.window.PLC_SONG_POOL_DATA;
-    })();
+    })().catch((error) => {
+      songPoolDataPromise = null;
+      songPoolDataMtimeMs = 0;
+      throw error;
+    });
   }
 
   return songPoolDataPromise;
