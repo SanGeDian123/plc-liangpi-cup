@@ -435,6 +435,17 @@ textarea:focus{
   line-height:1.6;
 }
 
+.bp-category-editor{
+  display:grid;
+  gap:14px;
+}
+
+.bp-category-grid{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0, 1fr));
+  gap:14px;
+}
+
 .picked-account-list{
   grid-template-columns:repeat(2, minmax(0, 1fr));
 }
@@ -618,6 +629,7 @@ textarea:focus{
   .match-form,
   .account-list,
   .picked-account-list,
+  .bp-category-grid,
   .result-entry{
     grid-template-columns:1fr;
   }

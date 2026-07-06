@@ -65,6 +65,9 @@ let adminToken = localStorage.getItem("adminToken");
     randomPickEnabled: document.getElementById("randomPickEnabled"),
     randomPickCount: document.getElementById("randomPickCount"),
     poolMode: document.getElementById("poolMode"),
+    bpCategoryDivision: document.getElementById("bpCategoryDivision"),
+    bpCategoryStage: document.getElementById("bpCategoryStage"),
+    bpCategoryGroup: document.getElementById("bpCategoryGroup"),
     matchContent: document.getElementById("matchContent"),
     bpRuleSummary: document.getElementById("bpRuleSummary"),
     participantSummary: document.getElementById("participantSummary"),
@@ -165,6 +168,87 @@ let adminToken = localStorage.getItem("adminToken");
 
   function normalizeSearch(value) {
     return String(value || "").trim().toLowerCase();
+  }
+
+  function normalizeCategoryText(value) {
+    return String(value || "").trim().replace(/\s+/g, " ");
+  }
+
+  function inferBpCategory(match = {}) {
+    const text = [
+      match.bpDivision,
+      match.bpStage,
+      match.bpGroup,
+      typeof match.bpCategory === "string" ? match.bpCategory : "",
+      match.title,
+      match.content
+    ]
+      .map(normalizeCategoryText)
+      .filter(Boolean)
+      .join(" ");
+    const divisionMatch = text.match(/\b(LT|LH)\s*组\b/i);
+    const stageMatch = text.match(
+      /(\d+\s*(?:-|进)\s*\d+\s*[（(][一二三四五六七八九十\d]+[）)])/
+    );
+    const groupMatch = text.match(
+      /(\d+\s*(?:-|进)\s*\d+\s*[A-Za-z]\s*组)/
+    );
+    const stage = stageMatch
+      ? stageMatch[1].replace(/\s*(?:-|进)\s*/g, "-").replace(/\s+/g, "")
+      : "";
+    const group = groupMatch
+      ? groupMatch[1]
+          .replace(/\s*(?:-|进)\s*/g, "-")
+          .replace(/\s+([A-Za-z]\s*组)/g, " $1")
+          .replace(/([A-Za-z])\s*组/g, (_, letter) => `${letter.toUpperCase()}组`)
+      : "";
+
+    return {
+      division: divisionMatch
+        ? `${divisionMatch[1].toUpperCase()}组`
+        : stage || group
+          ? "LT组"
+          : "",
+      stage,
+      group
+    };
+  }
+
+  function getMatchBpCategory(match = {}) {
+    const category = typeof match.bpCategory === "string"
+      ? { division: match.bpCategory }
+      : match.bpCategory || {};
+    const inferred = inferBpCategory(match);
+    const stage =
+      normalizeCategoryText(category.stage) ||
+      normalizeCategoryText(category.round || category.phase || category.secondary) ||
+      normalizeCategoryText(match.bpStage) ||
+      normalizeCategoryText(match.bpCategoryStage) ||
+      inferred.stage;
+    const group =
+      normalizeCategoryText(category.group) ||
+      normalizeCategoryText(category.subgroup || category.bracket || category.tertiary) ||
+      normalizeCategoryText(match.bpGroup) ||
+      normalizeCategoryText(match.bpCategoryGroup) ||
+      inferred.group;
+
+    return {
+      division:
+        normalizeCategoryText(category.division || category.type || category.main || category.primary) ||
+        normalizeCategoryText(match.bpDivision) ||
+        inferred.division ||
+        (stage || group ? "LT组" : ""),
+      stage,
+      group
+    };
+  }
+
+  function formatBpCategory(match) {
+    const category = getMatchBpCategory(match);
+
+    return [category.division, category.stage, category.group]
+      .filter(Boolean)
+      .join(" / ");
   }
 
   function getPlayerLabel(player) {
@@ -623,6 +707,12 @@ let adminToken = localStorage.getItem("adminToken");
   }
 
   function collectMatchPayload() {
+    const bpCategory = {
+      division: normalizeCategoryText(els.bpCategoryDivision.value),
+      stage: normalizeCategoryText(els.bpCategoryStage.value),
+      group: normalizeCategoryText(els.bpCategoryGroup.value)
+    };
+
     return {
       title: els.matchTitle.value.trim(),
       startsAt: fromDatetimeLocal(els.matchStartsAt.value),
@@ -634,6 +724,10 @@ let adminToken = localStorage.getItem("adminToken");
       randomPickEnabled: els.randomPickEnabled.checked,
       randomPickCount: Number(els.randomPickCount.value) || 1,
       poolMode: els.poolMode.value,
+      bpCategory,
+      bpDivision: bpCategory.division,
+      bpStage: bpCategory.stage,
+      bpGroup: bpCategory.group,
       customTrackIds: Array.from(state.customTrackIds),
       customDifficulties: els.customDifficulties
         .filter((input) => input.checked)
@@ -660,6 +754,9 @@ let adminToken = localStorage.getItem("adminToken");
     els.randomPickEnabled.checked = true;
     els.randomPickCount.value = "1";
     els.poolMode.value = "round16";
+    els.bpCategoryDivision.value = "LT组";
+    els.bpCategoryStage.value = "";
+    els.bpCategoryGroup.value = "";
     els.matchContent.value = "";
     els.trackSearch.value = "";
     els.customDifficulties.forEach((input) => {
@@ -692,6 +789,10 @@ let adminToken = localStorage.getItem("adminToken");
     els.randomPickEnabled.checked = match.randomPickEnabled !== false;
     els.randomPickCount.value = String(match.randomPickCount || 1);
     els.poolMode.value = match.poolMode || "round16";
+    const category = getMatchBpCategory(match);
+    els.bpCategoryDivision.value = category.division;
+    els.bpCategoryStage.value = category.stage;
+    els.bpCategoryGroup.value = category.group;
     els.matchContent.value = match.content || "";
     els.trackSearch.value = "";
     els.customDifficulties.forEach((input) => {
@@ -749,6 +850,9 @@ let adminToken = localStorage.getItem("adminToken");
         },
         {
           text: POOL_LABELS[match.poolMode] || "曲池"
+        },
+        {
+          text: formatBpCategory(match) || "未分类"
         },
         {
           text: `${match.participants?.length || 0}/${match.participantCount || 0}人`
@@ -972,11 +1076,14 @@ let adminToken = localStorage.getItem("adminToken");
     setMessage(els.editorMsg, "正在保存比赛...");
 
     try {
+      let savedMatch = null;
+
       if (state.editingId) {
-        await fetchAdmin(`/admin/schedule/matches/${encodeURIComponent(state.editingId)}`, {
+        const updated = await fetchAdmin(`/admin/schedule/matches/${encodeURIComponent(state.editingId)}`, {
           method: "PUT",
           body: JSON.stringify(payload)
         });
+        savedMatch = updated.match || null;
       } else {
         const created = await fetchAdmin("/admin/schedule/matches", {
           method: "POST",
@@ -984,10 +1091,25 @@ let adminToken = localStorage.getItem("adminToken");
         });
 
         state.editingId = created.match?.id || "";
+        savedMatch = created.match || null;
       }
 
       await Promise.all([loadAccounts(), loadMatches()]);
-      setMessage(els.editorMsg, "比赛已保存。");
+      const returnedStage = normalizeCategoryText(
+        savedMatch?.bpCategory?.stage ||
+          savedMatch?.bpStage ||
+          savedMatch?.bpCategoryStage
+      );
+
+      if (payload.bpCategory.stage && returnedStage !== payload.bpCategory.stage) {
+        setMessage(
+          els.editorMsg,
+          "比赛已保存，但当前后端没有返回 BP 分类阶段字段；请发布后端后再刷新验证。",
+          true
+        );
+      } else {
+        setMessage(els.editorMsg, "比赛已保存。");
+      }
     } catch (error) {
       setMessage(els.editorMsg, error.message || "保存失败", true);
     } finally {
@@ -1142,11 +1264,11 @@ let adminToken = localStorage.getItem("adminToken");
   }
 
   bindEvents();
+  resetForm();
 
   if (adminToken) {
     loadDashboard();
   } else {
     showLogin();
-    resetForm();
   }
 })();

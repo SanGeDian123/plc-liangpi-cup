@@ -1031,6 +1031,100 @@ function normalizeSchedulePoolMode(value) {
   return ["round16", "top8", "custom"].includes(value) ? value : "round16";
 }
 
+function normalizeBpCategoryText(value, maxLength = 60) {
+  return normalizeTextValue(value, maxLength).replace(/\s+/g, " ");
+}
+
+function inferBpCategory(value = {}) {
+  const text = [
+    value.bpDivision,
+    value.bpStage,
+    value.bpGroup,
+    typeof value.bpCategory === "string" ? value.bpCategory : "",
+    value.title,
+    value.content
+  ]
+    .map((item) => String(item || "").trim())
+    .filter(Boolean)
+    .join(" ");
+  const normalizedText = text.replace(/\s+/g, " ");
+  const divisionMatch = normalizedText.match(/\b(LT|LH)\s*组\b/i);
+  const stageMatch = normalizedText.match(
+    /(\d+\s*(?:-|进)\s*\d+\s*[（(][一二三四五六七八九十\d]+[）)])/
+  );
+  const groupMatch = normalizedText.match(
+    /(\d+\s*(?:-|进)\s*\d+\s*[A-Za-z]\s*组)/
+  );
+  const stage = stageMatch
+    ? stageMatch[1].replace(/\s*(?:-|进)\s*/g, "-").replace(/\s+/g, "")
+    : "";
+  const group = groupMatch
+    ? groupMatch[1]
+        .replace(/\s*(?:-|进)\s*/g, "-")
+        .replace(/\s+([A-Za-z]\s*组)/g, " $1")
+        .replace(/([A-Za-z])\s*组/g, (_, letter) => `${letter.toUpperCase()}组`)
+    : "";
+
+  return {
+    division: divisionMatch
+      ? `${divisionMatch[1].toUpperCase()}组`
+      : stage || group
+        ? "LT组"
+        : "",
+    stage,
+    group
+  };
+}
+
+function normalizeBpCategory(value = {}) {
+  if (typeof value === "string") {
+    return {
+      division: normalizeBpCategoryText(value, 40),
+      stage: "",
+      group: ""
+    };
+  }
+
+  const source = value && typeof value === "object" ? value : {};
+
+  return {
+    division: normalizeBpCategoryText(
+      source.division || source.type || source.main || source.primary,
+      40
+    ),
+    stage: normalizeBpCategoryText(
+      source.stage || source.round || source.phase || source.secondary,
+      60
+    ),
+    group: normalizeBpCategoryText(
+      source.group || source.subgroup || source.bracket || source.tertiary,
+      60
+    )
+  };
+}
+
+function normalizeScheduleBpCategory(value = {}) {
+  const explicit = normalizeBpCategory(value.bpCategory);
+  const legacy = normalizeBpCategory({
+    division: value.bpDivision || value.bpCategoryDivision,
+    stage: value.bpStage || value.bpCategoryStage,
+    group: value.bpGroup || value.bpCategoryGroup
+  });
+  const inferred = inferBpCategory(value);
+  const stage = explicit.stage || legacy.stage || inferred.stage;
+  const group = explicit.group || legacy.group || inferred.group;
+
+  return {
+    division:
+      explicit.division ||
+      legacy.division ||
+      inferred.division ||
+      (stage || group ? "LT组" : ""),
+    stage,
+    group
+  };
+}
+
 function normalizeParticipantCount(value, fallback = 2) {
   const count = Number(value);
 
@@ -1294,6 +1388,7 @@ function normalizeScheduleMatch(value = {}, options = {}) {
     content: normalizeTextValue(value.content, 500),
     status: normalizeScheduleStatus(value.status),
     visibility: normalizeScheduleVisibility(value.visibility),
+    bpCategory: normalizeScheduleBpCategory(value),
     participantCount,
     poolMode,
     randomPickEnabled,

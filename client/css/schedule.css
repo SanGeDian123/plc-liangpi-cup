@@ -243,6 +243,72 @@ button{
   margin-top:18px;
 }
 
+.match-category-section{
+  display:grid;
+  grid-column:1 / -1;
+  gap:12px;
+  min-width:0;
+}
+
+.match-category-section + .match-category-section{
+  margin-top:8px;
+  padding-top:18px;
+  border-top:1px solid rgba(255,255,255,.1);
+}
+
+.match-category-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-width:0;
+}
+
+.match-category-heading h3{
+  min-width:0;
+  font-size:24px;
+  line-height:1.2;
+  overflow-wrap:anywhere;
+}
+
+.match-category-heading span{
+  flex:0 0 auto;
+  color:var(--cyan);
+  font-size:13px;
+}
+
+.match-category-stage,
+.match-category-group,
+.match-category-card-stack{
+  display:grid;
+  gap:10px;
+  min-width:0;
+}
+
+.match-category-stage{
+  padding-left:14px;
+  border-left:1px solid rgba(103,231,255,.22);
+}
+
+.match-category-stage h4{
+  color:var(--yellow);
+  font-size:17px;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+}
+
+.match-category-group{
+  padding-left:12px;
+  border-left:1px solid rgba(255,228,119,.18);
+}
+
+.match-category-group h5{
+  color:var(--green);
+  font-size:15px;
+  line-height:1.25;
+  overflow-wrap:anywhere;
+}
+
 .match-card{
   display:grid;
   gap:10px;

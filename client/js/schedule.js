@@ -388,6 +388,270 @@
       : `系统随机 ${match.randomPickCount || 1} 首`;
   }
 
+  function normalizeBpCategoryText(value) {
+    return String(value || "").trim().replace(/\s+/g, " ");
+  }
+
+  function inferBpCategory(match = {}) {
+    const text = [
+      match.bpDivision,
+      match.bpStage,
+      match.bpGroup,
+      typeof match.bpCategory === "string" ? match.bpCategory : "",
+      match.title,
+      match.content
+    ]
+      .map(normalizeBpCategoryText)
+      .filter(Boolean)
+      .join(" ");
+    const divisionMatch = text.match(/\b(LT|LH)\s*组\b/i);
+    const stageMatch = text.match(
+      /(\d+\s*(?:-|进)\s*\d+\s*[（(][一二三四五六七八九十\d]+[）)])/
+    );
+    const groupMatch = text.match(
+      /(\d+\s*(?:-|进)\s*\d+\s*[A-Za-z]\s*组)/
+    );
+    const stage = stageMatch
+      ? stageMatch[1].replace(/\s*(?:-|进)\s*/g, "-").replace(/\s+/g, "")
+      : "";
+    const group = groupMatch
+      ? groupMatch[1]
+          .replace(/\s*(?:-|进)\s*/g, "-")
+          .replace(/\s+([A-Za-z]\s*组)/g, " $1")
+          .replace(/([A-Za-z])\s*组/g, (_, letter) => `${letter.toUpperCase()}组`)
+      : "";
+
+    return {
+      division: divisionMatch
+        ? `${divisionMatch[1].toUpperCase()}组`
+        : stage || group
+          ? "LT组"
+          : "",
+      stage,
+      group
+    };
+  }
+
+  function getMatchBpCategory(match = {}, withFallback = true) {
+    const rawCategory = typeof match.bpCategory === "string"
+      ? { division: match.bpCategory }
+      : match.bpCategory || {};
+    const inferred = inferBpCategory(match);
+    const stage =
+      normalizeBpCategoryText(rawCategory.stage) ||
+      normalizeBpCategoryText(rawCategory.round || rawCategory.phase || rawCategory.secondary) ||
+      normalizeBpCategoryText(match.bpStage) ||
+      normalizeBpCategoryText(match.bpCategoryStage) ||
+      inferred.stage;
+    const group =
+      normalizeBpCategoryText(rawCategory.group) ||
+      normalizeBpCategoryText(rawCategory.subgroup || rawCategory.bracket || rawCategory.tertiary) ||
+      normalizeBpCategoryText(match.bpGroup) ||
+      normalizeBpCategoryText(match.bpCategoryGroup) ||
+      inferred.group;
+    const division =
+      normalizeBpCategoryText(rawCategory.division || rawCategory.type || rawCategory.main || rawCategory.primary) ||
+      normalizeBpCategoryText(match.bpDivision) ||
+      inferred.division ||
+      (stage || group ? "LT组" : "");
+
+    return {
+      division: division || (withFallback ? "未分类" : ""),
+      stage,
+      group
+    };
+  }
+
+  function getMatchCategoryPath(match) {
+    const category = getMatchBpCategory(match, false);
+
+    return [category.division, category.stage, category.group]
+      .filter(Boolean)
+      .join(" / ");
+  }
+
+  function renderMatchCard(match) {
+    const card = createElement("button", "match-card");
+    card.type = "button";
+    card.dataset.matchId = match.id;
+    card.classList.toggle("is-active", match.id === state.activeMatchId);
+
+    const top = createElement("div", "match-card-top");
+    const title = createElement("h3", "", match.title);
+    top.appendChild(title);
+    renderTags(top, [
+      {
+        text: STATUS_LABELS[match.status] || "未开始",
+        className: match.status === "finished" ? "is-finished" : ""
+      },
+      {
+        text: match.visibility === "public" ? "公开" : "定向",
+        className: match.visibility === "public" ? "is-public" : ""
+      }
+    ]);
+
+    const meta = createElement("div", "match-card-meta");
+    renderTags(meta, [
+      {
+        text: formatDateTime(match.startsAt)
+      },
+      {
+        text: match.bpStartsAt ? `BP ${formatDateTime(match.bpStartsAt)}` : "BP手动开放"
+      },
+      {
+        text: STAGE_LABELS[match.poolMode] || "曲池"
+      },
+      {
+        text: `${match.participants?.length || 0}/${match.participantCount || 0}人`
+      },
+      {
+        text: formatRandomRule(match)
+      }
+    ]);
+
+    const content = createElement("p", "", match.content || "暂无比赛说明");
+
+    card.append(top, meta, content);
+    card.addEventListener("click", () => selectMatch(match.id));
+
+    return card;
+  }
+
+  function getOrCreateCategoryEntry(map, key, label, createEntry) {
+    if (!map.has(key)) {
+      map.set(key, createEntry(label));
+    }
+
+    return map.get(key);
+  }
+
+  function buildMatchCategoryTree(matches) {
+    const root = [];
+    const rootMap = new Map();
+
+    matches.forEach((match) => {
+      const category = getMatchBpCategory(match);
+      const division = getOrCreateCategoryEntry(
+        rootMap,
+        category.division,
+        category.division,
+        (label) => {
+          const entry = {
+            label,
+            count: 0,
+            direct: [],
+            stages: [],
+            stageMap: new Map()
+          };
+          root.push(entry);
+          return entry;
+        }
+      );
+
+      division.count += 1;
+
+      if (!category.stage && !category.group) {
+        division.direct.push(match);
+        return;
+      }
+
+      const stageKey = category.stage || "";
+      const stage = getOrCreateCategoryEntry(
+        division.stageMap,
+        stageKey,
+        category.stage,
+        (label) => {
+          const entry = {
+            label,
+            direct: [],
+            groups: [],
+            groupMap: new Map()
+          };
+          division.stages.push(entry);
+          return entry;
+        }
+      );
+
+      if (!category.group) {
+        stage.direct.push(match);
+        return;
+      }
+
+      const group = getOrCreateCategoryEntry(
+        stage.groupMap,
+        category.group,
+        category.group,
+        (label) => {
+          const entry = {
+            label,
+            matches: []
+          };
+          stage.groups.push(entry);
+          return entry;
+        }
+      );
+      group.matches.push(match);
+    });
+
+    root.sort((a, b) => {
+      const rank = {
+        "LT组": 0,
+        "LH组": 1,
+        "未分类": 99
+      };
+      const aRank = rank[a.label] ?? 10;
+      const bRank = rank[b.label] ?? 10;
+
+      return aRank - bRank || a.label.localeCompare(b.label, "zh-CN");
+    });
+
+    return root;
+  }
+
+  function appendMatchCards(container, matches) {
+    if (!matches.length) {
+      return;
+    }
+
+    const stack = createElement("div", "match-category-card-stack");
+    matches.forEach((match) => {
+      stack.appendChild(renderMatchCard(match));
+    });
+    container.appendChild(stack);
+  }
+
+  function renderMatchCategoryTree(tree) {
+    tree.forEach((division) => {
+      const section = createElement("section", "match-category-section");
+      const heading = createElement("div", "match-category-heading");
+      heading.appendChild(createElement("h3", "", division.label));
+      heading.appendChild(createElement("span", "", `${division.count} 场`));
+      section.appendChild(heading);
+
+      appendMatchCards(section, division.direct);
+
+      division.stages.forEach((stage) => {
+        const stageBlock = createElement("div", "match-category-stage");
+
+        if (stage.label) {
+          stageBlock.appendChild(createElement("h4", "", stage.label));
+        }
+
+        appendMatchCards(stageBlock, stage.direct);
+
+        stage.groups.forEach((group) => {
+          const groupBlock = createElement("div", "match-category-group");
+          appendMatchCards(groupBlock, group.matches);
+          stageBlock.appendChild(groupBlock);
+        });
+
+        section.appendChild(stageBlock);
+      });
+
+      els.matchList.appendChild(section);
+    });
+  }
+
   function renderMatchList() {
     els.matchList.innerHTML = "";
 
@@ -401,51 +665,7 @@
       return;
     }
 
-    state.matches.forEach((match) => {
-      const card = createElement("button", "match-card");
-      card.type = "button";
-      card.dataset.matchId = match.id;
-      card.classList.toggle("is-active", match.id === state.activeMatchId);
-
-      const top = createElement("div", "match-card-top");
-      const title = createElement("h3", "", match.title);
-      top.appendChild(title);
-      renderTags(top, [
-        {
-          text: STATUS_LABELS[match.status] || "未开始",
-          className: match.status === "finished" ? "is-finished" : ""
-        },
-        {
-          text: match.visibility === "public" ? "公开" : "定向",
-          className: match.visibility === "public" ? "is-public" : ""
-        }
-      ]);
-
-      const meta = createElement("div", "match-card-meta");
-      renderTags(meta, [
-        {
-          text: formatDateTime(match.startsAt)
-        },
-        {
-          text: match.bpStartsAt ? `BP ${formatDateTime(match.bpStartsAt)}` : "BP手动开放"
-        },
-        {
-          text: STAGE_LABELS[match.poolMode] || "曲池"
-        },
-        {
-          text: `${match.participants?.length || 0}/${match.participantCount || 0}人`
-        },
-        {
-          text: formatRandomRule(match)
-        }
-      ]);
-
-      const content = createElement("p", "", match.content || "暂无比赛说明");
-
-      card.append(top, meta, content);
-      card.addEventListener("click", () => selectMatch(match.id));
-      els.matchList.appendChild(card);
-    });
+    renderMatchCategoryTree(buildMatchCategoryTree(state.matches));
   }
 
   function renderParticipantRow(match) {
@@ -1479,11 +1699,13 @@
     els.bpPanel.hidden = false;
     els.bpEmpty.hidden = true;
     els.bpWorkbench.hidden = false;
-    els.bpStageLabel.textContent = STAGE_LABELS[match.poolMode] || "Ban/Pick";
+    els.bpStageLabel.textContent =
+      getMatchCategoryPath(match) || STAGE_LABELS[match.poolMode] || "Ban/Pick";
     els.bpTitle.textContent = match.title;
     els.bpMeta.textContent = [
       `比赛 ${formatDateTime(match.startsAt)}`,
       match.bpStartsAt ? `BP ${formatDateTime(match.bpStartsAt)}` : "BP手动开放",
+      STAGE_LABELS[match.poolMode] || "曲池",
       formatRandomRule(match),
       match.content || "暂无比赛说明"
     ].join(" · ");

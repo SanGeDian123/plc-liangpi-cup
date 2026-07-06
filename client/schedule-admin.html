@@ -10,7 +10,7 @@
   <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="./assets/bp-background.jpg" as="image" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
-  <link rel="stylesheet" href="./css/schedule-admin.css?v=20260702d" />
+  <link rel="stylesheet" href="./css/schedule-admin.css?v=20260706i" />
 </head>
 <body>
   <main class="admin-shell">
@@ -131,6 +131,33 @@
               </select>
             </label>
 
+            <section class="wide-field helper-panel bp-category-editor" aria-labelledby="bpCategoryTitle">
+              <div class="section-heading">
+                <h3 id="bpCategoryTitle">BP 页面分类</h3>
+                <span>用于前台比赛列表分组</span>
+              </div>
+              <div class="bp-category-grid">
+                <label for="bpCategoryDivision">
+                  <span>主分类</span>
+                  <input id="bpCategoryDivision" type="text" list="bpCategoryDivisionOptions" maxlength="40" placeholder="LT组 / LH组" />
+                  <datalist id="bpCategoryDivisionOptions">
+                    <option value="LT组"></option>
+                    <option value="LH组"></option>
+                  </datalist>
+                </label>
+
+                <label for="bpCategoryStage">
+                  <span>阶段</span>
+                  <input id="bpCategoryStage" type="text" maxlength="60" placeholder="16-8(一)" />
+                </label>
+
+                <label for="bpCategoryGroup">
+                  <span>小组</span>
+                  <input id="bpCategoryGroup" type="text" maxlength="60" placeholder="16-8 A组" />
+                </label>
+              </div>
+            </section>
+
             <label class="wide-field" for="matchContent">
               <span>比赛内容</span>
               <textarea id="matchContent" rows="4" maxlength="500" placeholder="赛制、房间、直播或注意事项"></textarea>
@@ -214,6 +241,6 @@
 
   <script src="./js/api.js"></script>
   <script src="./js/song-pool-data.js?v=20260705a"></script>
-  <script src="./js/schedule-admin.js?v=20260702d"></script>
+  <script src="./js/schedule-admin.js?v=20260706i"></script>
 </body>
 </html>
