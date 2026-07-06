@@ -319,6 +319,44 @@ textarea:focus{
   margin-top:14px;
 }
 
+.account-group{
+  display:grid;
+  gap:10px;
+}
+
+.account-group-header{
+  width:100%;
+  min-height:42px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  padding:10px 12px;
+  border:1px solid rgba(102,231,255,.18);
+  border-radius:8px;
+  background:rgba(102,231,255,.075);
+  color:var(--text);
+  cursor:pointer;
+}
+
+.account-group-title{
+  display:flex;
+  align-items:baseline;
+  gap:9px;
+  min-width:0;
+}
+
+.account-group-title span,
+.account-group-toggle{
+  color:var(--muted);
+  font-size:13px;
+}
+
+.account-group-body{
+  display:grid;
+  gap:10px;
+}
+
 .account-item,
 .picked-account,
 .track-item,
@@ -347,6 +385,10 @@ textarea:focus{
   background:rgba(102,231,255,.08);
 }
 
+.account-item.is-group-updating{
+  opacity:.72;
+}
+
 .account-item input,
 .track-item input,
 .difficulty-toggle-row input{
@@ -357,6 +399,38 @@ textarea:focus{
 .account-bind-action{
   min-height:34px;
   padding:7px 10px;
+}
+
+.account-group-current{
+  color:var(--cyan) !important;
+}
+
+.account-group-actions{
+  grid-column:2 / -1;
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+
+.account-group-chip{
+  min-height:32px;
+  padding:6px 10px;
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:8px;
+  background:rgba(255,255,255,.07);
+  color:var(--muted);
+  cursor:pointer;
+}
+
+.account-group-chip.is-active{
+  border-color:rgba(147,255,188,.34);
+  background:rgba(147,255,188,.12);
+  color:var(--green);
+}
+
+.account-group-chip:disabled{
+  cursor:not-allowed;
+  opacity:.58;
 }
 
 .account-main,
@@ -592,6 +666,10 @@ textarea:focus{
   }
 
   .account-list{
+    grid-template-columns:1fr;
+  }
+
+  .account-group-body{
     grid-template-columns:repeat(2, minmax(0, 1fr));
   }
 
@@ -628,6 +706,7 @@ textarea:focus{
 
   .match-form,
   .account-list,
+  .account-group-body,
   .picked-account-list,
   .bp-category-grid,
   .result-entry{
@@ -641,6 +720,10 @@ textarea:focus{
 
   .account-item input{
     justify-self:start;
+  }
+
+  .account-group-actions{
+    grid-column:1;
   }
 
   .account-bind-action,

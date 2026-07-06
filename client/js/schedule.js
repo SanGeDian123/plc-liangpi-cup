@@ -17,7 +17,9 @@
     pending: "待定"
   };
 
-  const SONG_POOL_SCRIPT_SRC = "./js/song-pool-data.js?v=20260705a";
+  const SONG_POOL_SCRIPT_BASE = "./js/song-pool-data.js";
+  const SONG_POOL_SCRIPT_VERSION = "20260706i";
+  const SONG_POOL_RETRY_COOLDOWN_MS = 3000;
 
   const state = {
     matches: [],
@@ -45,6 +47,8 @@
     songPoolLoading: false,
     songPoolLoadFailed: false,
     songPoolLoadPromise: null,
+    songPoolLastAttemptAt: 0,
+    songPoolRetryTimer: 0,
     lastPresenceAt: 0,
     isSubmitting: false,
     pendingBpAction: null,
@@ -131,15 +135,16 @@
   }
 
   async function fetchJson(path, options = {}) {
+    const { timeoutMs = 15000, ...fetchOptions } = options;
     const headers = {
-      ...(options.headers || {})
+      ...(fetchOptions.headers || {})
     };
 
     await window.PLCAccount?.ensureFreshSession?.();
 
     const token = getAccessToken();
 
-    if (options.body && !headers["Content-Type"]) {
+    if (fetchOptions.body && !headers["Content-Type"]) {
       headers["Content-Type"] = "application/json";
     }
 
@@ -147,17 +152,37 @@
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${API_URL}${path}`, {
-      ...options,
-      headers
-    });
-    const payload = await response.json().catch(() => ({}));
+    const controller = timeoutMs && !fetchOptions.signal
+      ? new AbortController()
+      : null;
+    const timeoutId = controller
+      ? window.setTimeout(() => controller.abort(), timeoutMs)
+      : 0;
 
-    if (!response.ok) {
-      throw new Error(payload.message || "请求失败");
+    try {
+      const response = await fetch(`${API_URL}${path}`, {
+        ...fetchOptions,
+        headers,
+        signal: fetchOptions.signal || controller?.signal
+      });
+      const payload = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(payload.message || "请求失败");
+      }
+
+      return payload;
+    } catch (error) {
+      if (error.name === "AbortError") {
+        throw new Error("请求超时，请稍后重试。");
+      }
+
+      throw error;
+    } finally {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
     }
-
-    return payload;
   }
 
   function formatDateTime(value) {
@@ -192,8 +217,27 @@
     };
   }
 
-  function loadSongPoolData() {
+  function getSongPoolScriptSrc(forceFresh = false) {
+    const params = new URLSearchParams({
+      v: SONG_POOL_SCRIPT_VERSION
+    });
+
+    if (forceFresh) {
+      params.set("retry", String(Date.now()));
+    }
+
+    return `${SONG_POOL_SCRIPT_BASE}?${params.toString()}`;
+  }
+
+  function removeDynamicSongPoolScripts() {
+    document
+      .querySelectorAll("script[data-song-pool-loader='schedule']")
+      .forEach((script) => script.remove());
+  }
+
+  function loadSongPoolData(options = {}) {
     if (hasSongPoolData()) {
+      state.songPoolLoadFailed = false;
       return Promise.resolve(window.PLC_SONG_POOL_DATA);
     }
 
@@ -201,14 +245,19 @@
       return state.songPoolLoadPromise;
     }
 
+    const forceFresh = Boolean(options.forceFresh || state.songPoolLoadFailed);
+    removeDynamicSongPoolScripts();
     state.songPoolLoading = true;
     state.songPoolLoadFailed = false;
+    state.songPoolLastAttemptAt = Date.now();
     state.songPoolLoadPromise = new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = SONG_POOL_SCRIPT_SRC;
+      script.src = getSongPoolScriptSrc(forceFresh);
       script.async = true;
+      script.dataset.songPoolLoader = "schedule";
       script.onload = () => {
         if (hasSongPoolData()) {
+          state.songPoolLoadFailed = false;
           resolve(window.PLC_SONG_POOL_DATA);
         } else {
           reject(new Error("song-pool-data-unavailable"));
@@ -231,21 +280,50 @@
     return state.songPoolLoadPromise;
   }
 
-  function ensureSongPoolForActiveMatch(matchId = state.activeMatchId) {
+  function scheduleSongPoolRetry(matchId) {
+    window.clearTimeout(state.songPoolRetryTimer);
+    state.songPoolRetryTimer = window.setTimeout(() => {
+      if (state.activeMatchId === matchId && !hasSongPoolData()) {
+        ensureSongPoolForActiveMatch(matchId, {
+          force: true
+        });
+      }
+    }, SONG_POOL_RETRY_COOLDOWN_MS);
+  }
+
+  function ensureSongPoolForActiveMatch(matchId = state.activeMatchId, options = {}) {
     if (!matchId || hasSongPoolData()) {
       return;
     }
 
-    loadSongPoolData()
+    if (state.songPoolLoading) {
+      return;
+    }
+
+    if (
+      state.songPoolLoadFailed &&
+      !options.force &&
+      Date.now() - state.songPoolLastAttemptAt < SONG_POOL_RETRY_COOLDOWN_MS
+    ) {
+      scheduleSongPoolRetry(matchId);
+      return;
+    }
+
+    loadSongPoolData({
+      forceFresh: options.force || state.songPoolLoadFailed
+    })
       .then(() => {
         if (state.activeMatchId === matchId) {
+          window.clearTimeout(state.songPoolRetryTimer);
           renderActiveMatch();
         }
       })
       .catch(() => {
         if (state.activeMatchId === matchId) {
-          setActionMessage("曲库加载失败，请刷新页面后重试。", true);
+          setActionMessage("曲库暂时加载失败，正在自动重试。", true);
           renderTrackOptions();
+          renderBpLibrary();
+          scheduleSongPoolRetry(matchId);
         }
       });
   }
@@ -1264,15 +1342,19 @@
 
     renderDifficultyPicker();
 
+    const action = getCurrentAction(state.activeMatch);
     const selectedTrack = getSelectedTrack();
     const fallback = els.trackSelect.selectedOptions?.[0]?.textContent || "等待 BP 阶段";
-    const isDisabled = els.trackSelect.disabled || !selectedTrack;
+    const isWaitingForSongPool = Boolean(action && !hasSongPoolData());
+    const isDisabled = !action || (!selectedTrack && !isWaitingForSongPool);
 
     els.openBpLibrary.disabled = isDisabled;
     els.bpPickerTrack.textContent = selectedTrack?.title || fallback;
     els.bpPickerMeta.textContent = selectedTrack
       ? [selectedTrack.pack, selectedTrack.artist].filter(Boolean).join(" / ") || "曲目信息未填写"
-      : "打开曲库后选择曲目";
+      : isWaitingForSongPool
+        ? "曲库准备中，可打开查看状态"
+        : "打开曲库后选择曲目";
 
     if (isBpLibraryOpen()) {
       renderBpLibrary();
@@ -1356,9 +1438,9 @@
 
     if (!hasSongPoolData()) {
       els.bpLibraryHint.textContent = state.songPoolLoadFailed
-        ? "曲库加载失败，请刷新页面后重试。"
+        ? "曲库暂时加载失败，正在自动重试。"
         : "曲库正在加载，稍等一下。";
-      renderBpLibraryEmpty(state.songPoolLoadFailed ? "曲库加载失败" : "曲库加载中...");
+      renderBpLibraryEmpty(state.songPoolLoadFailed ? "曲库加载失败，正在重试..." : "曲库加载中...");
       ensureSongPoolForActiveMatch(match?.id);
       return;
     }
@@ -1420,6 +1502,11 @@
 
     const selectedTrack = getSelectedTrack();
     state.libraryTrackId = selectedTrack?.id ? String(selectedTrack.id) : state.selectedTrackId;
+    if (!hasSongPoolData()) {
+      ensureSongPoolForActiveMatch(state.activeMatch?.id, {
+        force: state.songPoolLoadFailed
+      });
+    }
     renderBpLibrary();
     els.bpLibraryDialog.classList.add("is-open");
     els.bpLibraryDialog.setAttribute("aria-hidden", "false");
@@ -1518,7 +1605,7 @@
 
     if (action && !hasSongPoolData()) {
       const optionText = state.songPoolLoadFailed
-        ? "曲库加载失败，请刷新页面"
+        ? "曲库加载失败，正在重试"
         : state.songPoolLoading
           ? "曲库加载中..."
           : "正在准备曲库...";
@@ -1538,9 +1625,7 @@
       state.selectedDifficulty = "";
       state.trackOptionsSignature = signature;
       state.difficultyOptionsSignature = "loading";
-      if (!state.songPoolLoadFailed) {
-        ensureSongPoolForActiveMatch(match?.id);
-      }
+      ensureSongPoolForActiveMatch(match?.id);
       syncBpPicker();
       return;
     }
@@ -1948,6 +2033,7 @@
     }
 
     state.isSubmitting = true;
+    window.clearInterval(state.pollTimer);
     els.submitBp.disabled = true;
     els.bpSubmitConfirmButton.disabled = true;
     els.bpSubmitCancelButton.disabled = true;
@@ -1972,7 +2058,8 @@
             type: pending.action,
             trackId: pending.trackId,
             difficulty: pending.difficulty
-          })
+          }),
+          timeoutMs: 12000
         }
       );
 
@@ -1991,7 +2078,10 @@
       setActionMessage(message, true);
     } finally {
       state.isSubmitting = false;
-      els.submitBp.disabled = false;
+      if (state.activeMatchId) {
+        startPolling();
+      }
+      renderTrackOptions();
       els.bpSubmitConfirmButton.disabled = false;
       els.bpSubmitCancelButton.disabled = false;
     }
@@ -2005,6 +2095,7 @@
     }
 
     state.isSubmitting = true;
+    window.clearInterval(state.pollTimer);
     els.confirmBp.disabled = true;
     setActionMessage("正在确认选曲总结...");
 
@@ -2012,7 +2103,8 @@
       const payload = await fetchJson(
         `/schedule/matches/${encodeURIComponent(match.id)}/bp/confirm`,
         {
-          method: "POST"
+          method: "POST",
+          timeoutMs: 12000
         }
       );
 
@@ -2028,7 +2120,10 @@
       setActionMessage(error.message || "确认失败，请稍后重试。", true);
     } finally {
       state.isSubmitting = false;
-      els.confirmBp.disabled = false;
+      if (state.activeMatchId) {
+        startPolling();
+      }
+      renderActionPanel(state.activeMatch);
     }
   }
 

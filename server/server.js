@@ -84,8 +84,10 @@ const DEFAULT_DISPLAY_SETTINGS = Object.freeze({
 });
 const DEFAULT_USER_BINDINGS = Object.freeze({
   requests: [],
-  bindings: {}
+  bindings: {},
+  playerGroups: {}
 });
+const PLAYER_GROUPS = Object.freeze(["LT组", "LH组", "未分类"]);
 const DEFAULT_USER_MESSAGES = Object.freeze({
   songCommentOwners: {},
   notifications: []
@@ -631,6 +633,24 @@ function normalizeBindingStatus(value) {
   return ["pending", "approved", "rejected"].includes(value) ? value : "pending";
 }
 
+function normalizePlayerGroup(value, fallback = "") {
+  const text = normalizeTextValue(value, 24).replace(/\s+/g, "");
+
+  if (/^LT组?$/i.test(text)) {
+    return "LT组";
+  }
+
+  if (/^LH组?$/i.test(text)) {
+    return "LH组";
+  }
+
+  if (text === "未分类" || /^unclassified$/i.test(text) || /^none$/i.test(text)) {
+    return "未分类";
+  }
+
+  return fallback;
+}
+
 function normalizePlayerScore(value) {
   const score = Number(value);
   return Number.isFinite(score) ? score : null;
@@ -654,6 +674,7 @@ function normalizeBindingRequest(value = {}) {
     playerNickname: normalizeTextValue(value.playerNickname, 80),
     playerScore: normalizePlayerScore(value.playerScore),
     playerNumber: normalizeTextValue(value.playerNumber, 80),
+    playerGroup: normalizePlayerGroup(value.playerGroup),
     status: normalizeBindingStatus(value.status),
     createdAt: normalizeIsoDate(value.createdAt),
     updatedAt: normalizeIsoDate(value.updatedAt)
@@ -676,6 +697,7 @@ function normalizeBindingRecord(value = {}) {
     playerNickname: normalizeTextValue(value.playerNickname, 80),
     playerScore: normalizePlayerScore(value.playerScore),
     playerNumber: normalizeTextValue(value.playerNumber, 80),
+    playerGroup: normalizePlayerGroup(value.playerGroup),
     requestId: normalizeTextValue(value.requestId, 96),
     approvedAt: normalizeIsoDate(value.approvedAt)
   };
@@ -686,6 +708,7 @@ function normalizeUserBindings(value = {}) {
     ? value.requests.map(normalizeBindingRequest).filter(Boolean)
     : [];
   const bindings = {};
+  const playerGroups = {};
 
   if (value.bindings && typeof value.bindings === "object") {
     Object.entries(value.bindings).forEach(([key, binding]) => {
@@ -700,9 +723,21 @@ function normalizeUserBindings(value = {}) {
     });
   }
 
+  if (value.playerGroups && typeof value.playerGroups === "object") {
+    Object.entries(value.playerGroups).forEach(([key, group]) => {
+      const userId = normalizeTextValue(key, 128);
+      const playerGroup = normalizePlayerGroup(group);
+
+      if (userId && playerGroup) {
+        playerGroups[userId] = playerGroup;
+      }
+    });
+  }
+
   return {
     requests,
-    bindings
+    bindings,
+    playerGroups
   };
 }
 
@@ -851,6 +886,7 @@ function createBindingFromRequest(request, approvedAt) {
     playerNickname: request.playerNickname,
     playerScore: request.playerScore,
     playerNumber: request.playerNumber,
+    playerGroup: normalizePlayerGroup(request.playerGroup),
     requestId: request.id,
     approvedAt
   };
@@ -864,6 +900,7 @@ function createManualBinding(account, player, approvedAt) {
     email: normalizeTextValue(account.email, 180),
     nickname: normalizeTextValue(account.nickname, 48),
     ...playerSnapshot,
+    playerGroup: normalizePlayerGroup(account.playerGroup),
     requestId: `manual:${crypto.randomUUID()}`,
     approvedAt
   };
@@ -887,7 +924,8 @@ async function syncScheduleParticipantsForBinding(binding) {
       nickname: binding.nickname || value.nickname,
       playerId: binding.playerId,
       playerNickname: binding.playerNickname,
-      playerNumber: binding.playerNumber
+      playerNumber: binding.playerNumber,
+      playerGroup: binding.playerGroup || value.playerGroup || ""
     };
 
     if (JSON.stringify(next) !== JSON.stringify(value)) {
@@ -900,6 +938,43 @@ async function syncScheduleParticipantsForBinding(binding) {
   data.matches.forEach((match) => {
     match.participants = match.participants.map(applyBinding);
     match.result.entries = match.result.entries.map(applyBinding);
+  });
+
+  if (changed) {
+    await persistScheduleData(data);
+  }
+}
+
+async function syncScheduleParticipantsForAccountGroup(userId, playerGroup) {
+  const normalizedUserId = normalizeTextValue(userId, 128);
+  const normalizedGroup = normalizePlayerGroup(playerGroup);
+
+  if (!normalizedUserId || !normalizedGroup) {
+    return;
+  }
+
+  const data = await loadScheduleDataWithAutoBp();
+  let changed = false;
+  const applyGroup = (value) => {
+    if (!value || value.userId !== normalizedUserId) {
+      return value;
+    }
+
+    const next = {
+      ...value,
+      playerGroup: normalizedGroup
+    };
+
+    if (JSON.stringify(next) !== JSON.stringify(value)) {
+      changed = true;
+    }
+
+    return next;
+  };
+
+  data.matches.forEach((match) => {
+    match.participants = match.participants.map(applyGroup);
+    match.result.entries = match.result.entries.map(applyGroup);
   });
 
   if (changed) {
@@ -1202,6 +1277,7 @@ function normalizeScheduleParticipant(value = {}) {
     playerId: normalizeTextValue(value.playerId, 80),
     playerNickname: normalizeTextValue(value.playerNickname, 80),
     playerNumber: normalizeTextValue(value.playerNumber, 80),
+    playerGroup: normalizePlayerGroup(value.playerGroup),
     slotLabel: normalizeTextValue(value.slotLabel, 40)
   };
 }
@@ -1340,6 +1416,7 @@ function normalizeScheduleResultEntry(value = {}) {
     userId,
     nickname: normalizeTextValue(value.nickname, 48),
     playerNickname: normalizeTextValue(value.playerNickname, 80),
+    playerGroup: normalizePlayerGroup(value.playerGroup),
     score: scoreText,
     outcome: normalizeResultOutcome(value.outcome),
     note: normalizeTextValue(value.note, 160)
@@ -1834,6 +1911,7 @@ function serializeParticipant(participant, options = {}) {
     playerId: participant.playerId,
     playerNickname: participant.playerNickname,
     playerNumber: participant.playerNumber,
+    playerGroup: participant.playerGroup,
     slotLabel: participant.slotLabel,
     displayName: getParticipantDisplayName(participant)
   };
@@ -1894,7 +1972,8 @@ function upsertKnownAccount(map, value = {}) {
     nickname: "",
     playerId: "",
     playerNickname: "",
-    playerNumber: ""
+    playerNumber: "",
+    playerGroup: ""
   };
 
   map.set(userId, {
@@ -1904,7 +1983,8 @@ function upsertKnownAccount(map, value = {}) {
     playerId: normalizeTextValue(value.playerId, 80) || current.playerId,
     playerNickname:
       normalizeTextValue(value.playerNickname, 80) || current.playerNickname,
-    playerNumber: normalizeTextValue(value.playerNumber, 80) || current.playerNumber
+    playerNumber: normalizeTextValue(value.playerNumber, 80) || current.playerNumber,
+    playerGroup: normalizePlayerGroup(value.playerGroup) || current.playerGroup
   });
 }
 
@@ -1958,6 +2038,13 @@ async function listKnownAccounts() {
       source = "known";
     }
   }
+
+  Object.entries(bindings.playerGroups || {}).forEach(([userId, playerGroup]) =>
+    upsertKnownAccount(accounts, {
+      userId,
+      playerGroup
+    })
+  );
 
   return {
     source,
@@ -2669,6 +2756,48 @@ app.put("/admin/accounts/:userId/binding", checkAdmin, async (req, res) => {
   res.set("Cache-Control", "no-store");
   res.json({
     binding
+  });
+});
+
+app.put("/admin/accounts/:userId/player-group", checkAdmin, async (req, res) => {
+  const userId = normalizeTextValue(req.params.userId, 128);
+  const playerGroup = normalizePlayerGroup(req.body?.playerGroup);
+
+  if (!userId) {
+    return res.status(400).json({
+      message: "账号 ID 无效"
+    });
+  }
+
+  if (!playerGroup) {
+    return res.status(400).json({
+      message: "选手分组无效"
+    });
+  }
+
+  const accounts = await listKnownAccounts();
+  const account = accounts.accounts.find((item) => item.userId === userId);
+
+  if (!account) {
+    return res.status(404).json({
+      message: "没有找到这个账号"
+    });
+  }
+
+  const data = await loadUserBindings();
+
+  data.playerGroups = {
+    ...(data.playerGroups || {}),
+    [userId]: playerGroup
+  };
+
+  await persistUserBindings(data);
+  await syncScheduleParticipantsForAccountGroup(userId, playerGroup);
+
+  res.set("Cache-Control", "no-store");
+  res.json({
+    userId,
+    playerGroup
   });
 });
 

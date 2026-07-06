@@ -23,6 +23,7 @@ let adminToken = localStorage.getItem("adminToken");
     stage: "16-8(一)",
     group: "16-8 A组"
   });
+  const ACCOUNT_GROUPS = Object.freeze(["LT组", "LH组", "未分类"]);
 
   const state = {
     accounts: [],
@@ -35,6 +36,8 @@ let adminToken = localStorage.getItem("adminToken");
     playerBindingSearch: "",
     bindingAccountId: "",
     isBindingAccount: false,
+    groupUpdatingUserIds: new Set(),
+    collapsedAccountGroups: new Set(),
     trackSearch: "",
     selectedParticipants: new Set(),
     customTrackIds: new Set(),
@@ -169,6 +172,34 @@ let adminToken = localStorage.getItem("adminToken");
 
   function getAccountById(userId) {
     return state.accounts.find((account) => account.userId === userId) || null;
+  }
+
+  function normalizePlayerGroupLabel(value) {
+    const text = String(value || "").trim().replace(/\s+/g, "");
+
+    if (/^LT组?$/i.test(text)) {
+      return "LT组";
+    }
+
+    if (/^LH组?$/i.test(text)) {
+      return "LH组";
+    }
+
+    return text === "未分类" ? "未分类" : "";
+  }
+
+  function getAccountPlayerGroup(account = {}) {
+    const explicitGroup = normalizePlayerGroupLabel(account.playerGroup);
+
+    if (explicitGroup) {
+      return explicitGroup;
+    }
+
+    const numberGroup = normalizePlayerGroupLabel(
+      String(account.playerNumber || "").split(/[-_#\s]/)[0]
+    );
+
+    return numberGroup || "未分类";
   }
 
   function normalizeSearch(value) {
@@ -390,6 +421,7 @@ let adminToken = localStorage.getItem("adminToken");
         account.nickname,
         account.playerNickname,
         account.playerNumber,
+        getAccountPlayerGroup(account),
         account.userId
       ]
         .join(" ")
@@ -404,65 +436,176 @@ let adminToken = localStorage.getItem("adminToken");
       return;
     }
 
-    accounts.forEach((account) => {
-      const item = createElement("div", "account-item");
-      item.classList.toggle("is-bindable", !account.playerId);
-      const checkbox = document.createElement("input");
-      checkbox.type = "checkbox";
-      checkbox.checked = state.selectedParticipants.has(account.userId);
-      checkbox.addEventListener("change", () => {
-        if (checkbox.checked) {
-          state.selectedParticipants.add(account.userId);
+    ACCOUNT_GROUPS.forEach((group) => {
+      const groupAccounts = accounts.filter((account) => getAccountPlayerGroup(account) === group);
+      const section = createElement("section", "account-group");
+      const header = createElement("button", "account-group-header");
+      const collapsed = state.collapsedAccountGroups.has(group);
+      header.type = "button";
+      header.setAttribute("aria-expanded", String(!collapsed));
+      header.addEventListener("click", () => {
+        if (collapsed) {
+          state.collapsedAccountGroups.delete(group);
         } else {
-          state.selectedParticipants.delete(account.userId);
+          state.collapsedAccountGroups.add(group);
         }
 
-        renderParticipants();
         renderAccounts();
-        renderResultEditor();
       });
 
-      const main = createElement("div", "account-main");
-      main.appendChild(createElement("strong", "", getAccountName(account)));
-      main.appendChild(
-        createElement("span", "", account.email || account.nickname || "无邮箱信息")
+      const title = createElement("span", "account-group-title");
+      title.appendChild(createElement("strong", "", group));
+      title.appendChild(createElement("span", "", `${groupAccounts.length} 人`));
+      header.append(
+        title,
+        createElement("span", "account-group-toggle", collapsed ? "展开" : "折叠")
       );
+      section.appendChild(header);
 
-      if (account.playerNickname) {
-        main.appendChild(
-          createElement("span", "", `绑定：${account.playerNickname} ${account.playerNumber || ""}`.trim())
-        );
-      } else {
-        main.appendChild(createElement("span", "", "未绑定排行榜账号，点击可手动绑定"));
+      if (!collapsed) {
+        const body = createElement("div", "account-group-body");
+
+        if (!groupAccounts.length) {
+          body.appendChild(createElement("p", "empty-line", "此分类暂无选手"));
+        } else {
+          groupAccounts.forEach((account) => {
+            body.appendChild(renderAccountItem(account));
+          });
+        }
+
+        section.appendChild(body);
       }
 
-      if (!account.playerId) {
-        item.addEventListener("click", (event) => {
-          if (event.target === checkbox || event.target.closest("button")) {
-            return;
-          }
-
-          openAccountBinding(account.userId);
-        });
-      }
-
-      const bindButton = createElement(
-        "button",
-        account.playerId ? "ghost-action account-bind-action" : "primary-action account-bind-action",
-        account.playerId ? "已绑定" : "绑定"
-      );
-      bindButton.type = "button";
-      bindButton.disabled = Boolean(account.playerId);
-      bindButton.addEventListener("click", (event) => {
-        event.stopPropagation();
-        openAccountBinding(account.userId);
-      });
-
-      item.append(checkbox, main, bindButton);
-      els.accountList.appendChild(item);
+      els.accountList.appendChild(section);
     });
 
     renderAccountBindingPanel();
+  }
+
+  function renderAccountItem(account) {
+    const item = createElement("div", "account-item");
+    const currentGroup = getAccountPlayerGroup(account);
+    const isUpdatingGroup = state.groupUpdatingUserIds.has(account.userId);
+    item.classList.toggle("is-bindable", !account.playerId);
+    item.classList.toggle("is-group-updating", isUpdatingGroup);
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.setAttribute("aria-label", `选择 ${getAccountName(account)} 参赛`);
+    checkbox.checked = state.selectedParticipants.has(account.userId);
+    checkbox.addEventListener("change", () => {
+      if (checkbox.checked) {
+        state.selectedParticipants.add(account.userId);
+      } else {
+        state.selectedParticipants.delete(account.userId);
+      }
+
+      renderParticipants();
+      renderAccounts();
+      renderResultEditor();
+    });
+
+    const main = createElement("div", "account-main");
+    main.appendChild(createElement("strong", "", getAccountName(account)));
+    main.appendChild(
+      createElement("span", "", account.email || account.nickname || "无邮箱信息")
+    );
+
+    if (account.playerNickname) {
+      main.appendChild(
+        createElement("span", "", `绑定：${account.playerNickname} ${account.playerNumber || ""}`.trim())
+      );
+    } else {
+      main.appendChild(createElement("span", "", "未绑定排行榜账号，点击可手动绑定"));
+    }
+
+    main.appendChild(createElement("span", "account-group-current", `当前分类：${currentGroup}`));
+
+    if (!account.playerId) {
+      item.addEventListener("click", (event) => {
+        if (event.target === checkbox || event.target.closest("button")) {
+          return;
+        }
+
+        openAccountBinding(account.userId);
+      });
+    }
+
+    const bindButton = createElement(
+      "button",
+      account.playerId ? "ghost-action account-bind-action" : "primary-action account-bind-action",
+      account.playerId ? "已绑定" : "绑定"
+    );
+    bindButton.type = "button";
+    bindButton.disabled = Boolean(account.playerId);
+    bindButton.addEventListener("click", (event) => {
+      event.stopPropagation();
+      openAccountBinding(account.userId);
+    });
+
+    const groupActions = createElement("div", "account-group-actions");
+    ACCOUNT_GROUPS.forEach((group) => {
+      const button = createElement(
+        "button",
+        `account-group-chip ${currentGroup === group ? "is-active" : ""}`.trim(),
+        group
+      );
+      button.type = "button";
+      button.disabled = isUpdatingGroup;
+      button.setAttribute("aria-pressed", String(currentGroup === group));
+      button.addEventListener("click", (event) => {
+        event.stopPropagation();
+        updateAccountPlayerGroup(account.userId, group);
+      });
+      groupActions.appendChild(button);
+    });
+
+    item.append(checkbox, main, bindButton, groupActions);
+    return item;
+  }
+
+  async function updateAccountPlayerGroup(userId, playerGroup) {
+    const account = getAccountById(userId);
+    const normalizedGroup = normalizePlayerGroupLabel(playerGroup);
+
+    if (!account || !normalizedGroup || state.groupUpdatingUserIds.has(userId)) {
+      return;
+    }
+
+    const previousGroup = account.playerGroup || "";
+    state.groupUpdatingUserIds.add(userId);
+    state.accounts = state.accounts.map((item) =>
+      item.userId === userId ? { ...item, playerGroup: normalizedGroup } : item
+    );
+    renderAccounts();
+    renderParticipants();
+    renderResultEditor();
+
+    try {
+      const payload = await fetchAdmin(`/admin/accounts/${encodeURIComponent(userId)}/player-group`, {
+        method: "PUT",
+        body: JSON.stringify({
+          playerGroup: normalizedGroup
+        })
+      });
+      const savedGroup = normalizePlayerGroupLabel(payload.playerGroup) || normalizedGroup;
+
+      state.accounts = state.accounts.map((item) =>
+        item.userId === userId ? { ...item, playerGroup: savedGroup } : item
+      );
+      await loadMatches();
+      setMessage(els.editorMsg, `选手分类已更新：${getAccountName(account)} -> ${savedGroup}`);
+    } catch (error) {
+      state.accounts = state.accounts.map((item) =>
+        item.userId === userId ? { ...item, playerGroup: previousGroup } : item
+      );
+      setMessage(els.editorMsg, error.message || "分类保存失败", true);
+    } finally {
+      state.groupUpdatingUserIds.delete(userId);
+      renderAccounts();
+      renderParticipants();
+      renderResultEditor();
+    }
   }
 
   function renderParticipants() {
@@ -720,7 +863,8 @@ let adminToken = localStorage.getItem("adminToken");
       nickname: account.nickname,
       playerId: account.playerId,
       playerNickname: account.playerNickname,
-      playerNumber: account.playerNumber
+      playerNumber: account.playerNumber,
+      playerGroup: getAccountPlayerGroup(account)
     };
   }
 
