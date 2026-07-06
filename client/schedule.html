@@ -10,7 +10,7 @@
   <link rel="preload" href="./assets/bp-background.jpg" as="image" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
   <link rel="stylesheet" href="./css/account-link.css?v=20260701b" />
-  <link rel="stylesheet" href="./css/schedule.css?v=20260705d" />
+  <link rel="stylesheet" href="./css/schedule.css?v=20260706e" />
   <link rel="stylesheet" href="./css/site-announcement.css" />
 </head>
 <body>
@@ -115,15 +115,34 @@
                 <input id="trackSearch" type="search" autocomplete="off" placeholder="输入曲名 / 曲包 / 曲师" />
               </label>
 
-              <label for="trackSelect">
-                <span>曲目</span>
-                <select id="trackSelect"></select>
-              </label>
+              <div class="bp-field bp-picker-field">
+                <span>谱面</span>
+                <select id="trackSelect" class="bp-native-select" tabindex="-1" aria-hidden="true"></select>
+                <button
+                  class="bp-picker-button bp-track-picker-button"
+                  id="openBpLibraryButton"
+                  type="button"
+                  aria-haspopup="dialog"
+                  aria-expanded="false"
+                  aria-controls="bpLibraryDialog"
+                >
+                  <span>
+                    <strong id="bpPickerTrack">等待 BP 阶段</strong>
+                    <small id="bpPickerMeta">打开曲库后选择曲目</small>
+                  </span>
+                </button>
+              </div>
 
-              <label for="difficultySelect">
-                <span>难度</span>
-                <select id="difficultySelect"></select>
-              </label>
+              <div class="bp-field bp-difficulty-field">
+                <span id="difficultyPickerLabel">难度</span>
+                <select id="difficultySelect" class="bp-native-select" tabindex="-1" aria-hidden="true"></select>
+                <div
+                  class="bp-difficulty-picker"
+                  id="difficultyPicker"
+                  role="radiogroup"
+                  aria-labelledby="difficultyPickerLabel"
+                ></div>
+              </div>
 
               <button class="primary-action" id="submitBpButton" type="submit">提交</button>
             </form>
@@ -152,6 +171,27 @@
     </section>
   </main>
 
+  <div class="bp-library-dialog" id="bpLibraryDialog" aria-hidden="true">
+    <div class="bp-library-backdrop" data-bp-library-close></div>
+    <section
+      class="bp-library-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bpLibraryTitle"
+      aria-describedby="bpLibraryHint"
+    >
+      <div class="bp-library-heading">
+        <div>
+          <p class="eyebrow">Mini Library</p>
+          <h2 id="bpLibraryTitle">选择谱面</h2>
+        </div>
+        <button class="icon-button" type="button" data-bp-library-close aria-label="关闭曲库窗口">×</button>
+      </div>
+      <p class="bp-library-hint" id="bpLibraryHint">点击曲目完成选择。</p>
+      <div class="bp-library-list" id="bpLibraryList" aria-live="polite"></div>
+    </section>
+  </div>
+
   <div class="bp-submit-dialog" id="bpSubmitDialog" aria-hidden="true">
     <div class="bp-submit-dialog-backdrop" data-bp-confirm-close></div>
     <section
@@ -164,28 +204,25 @@
       <p class="eyebrow" id="bpSubmitConfirmType">Ban/Pick</p>
       <h2 id="bpSubmitConfirmTitle">确认提交</h2>
       <p id="bpSubmitConfirmText">请确认本次提交是否为当前选中的曲目和难度。</p>
-      <dl class="bp-submit-confirm-list">
-        <div>
-          <dt>比赛</dt>
-          <dd id="bpSubmitConfirmMatch">-</dd>
-        </div>
-        <div>
-          <dt>操作</dt>
-          <dd id="bpSubmitConfirmAction">-</dd>
-        </div>
-        <div>
-          <dt>曲目</dt>
-          <dd id="bpSubmitConfirmTrack">-</dd>
-        </div>
-        <div>
-          <dt>曲包 / 曲师</dt>
-          <dd id="bpSubmitConfirmMeta">-</dd>
-        </div>
-        <div>
-          <dt>难度</dt>
-          <dd id="bpSubmitConfirmDifficulty">-</dd>
-        </div>
-      </dl>
+      <div class="bp-submit-confirm-grid" aria-label="提交信息">
+        <section class="bp-submit-confirm-card is-wide">
+          <span>比赛</span>
+          <strong id="bpSubmitConfirmMatch">-</strong>
+        </section>
+        <section class="bp-submit-confirm-card is-action">
+          <span>操作</span>
+          <strong id="bpSubmitConfirmAction">-</strong>
+        </section>
+        <section class="bp-submit-confirm-card is-difficulty">
+          <span>难度</span>
+          <strong id="bpSubmitConfirmDifficulty">-</strong>
+        </section>
+        <section class="bp-submit-confirm-card is-wide is-track">
+          <span>谱面</span>
+          <strong id="bpSubmitConfirmTrack">-</strong>
+          <small id="bpSubmitConfirmMeta">-</small>
+        </section>
+      </div>
       <p class="bp-submit-confirm-message" id="bpSubmitConfirmMessage" aria-live="polite"></p>
       <div class="bp-submit-dialog-actions">
         <button class="ghost-action" id="bpSubmitCancelButton" type="button" data-bp-confirm-close>取消</button>
@@ -195,8 +232,8 @@
   </div>
 
   <script src="./js/api.js"></script>
-  <script src="./js/account-link.js?v=20260705a"></script>
-  <script src="./js/schedule.js?v=20260705f"></script>
+  <script src="./js/account-link.js?v=20260705b"></script>
+  <script src="./js/schedule.js?v=20260706e"></script>
   <script src="./js/site-announcement.js"></script>
 </body>
 </html>

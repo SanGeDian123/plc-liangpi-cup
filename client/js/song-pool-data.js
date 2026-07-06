@@ -2561,7 +2561,7 @@ window.PLC_SONG_POOL_DATA = {
       "releaseDate": "",
       "order": 1,
       "pack": "单曲",
-      "title": "Credit",
+      "title": "Credits",
       "artist": "",
       "note": "",
       "sourceUrl": "",

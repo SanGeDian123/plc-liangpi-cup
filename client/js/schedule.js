@@ -17,7 +17,7 @@
     pending: "待定"
   };
 
-  const SONG_POOL_SCRIPT_SRC = "./js/song-pool-data.js?v=20260702b";
+  const SONG_POOL_SCRIPT_SRC = "./js/song-pool-data.js?v=20260705a";
 
   const state = {
     matches: [],
@@ -26,6 +26,7 @@
     trackSearch: "",
     selectedTrackId: "",
     selectedDifficulty: "",
+    libraryTrackId: "",
     trackOptionsSignature: "",
     difficultyOptionsSignature: "",
     randomReveal: {
@@ -83,6 +84,10 @@
     trackSearch: document.getElementById("trackSearch"),
     trackSelect: document.getElementById("trackSelect"),
     difficultySelect: document.getElementById("difficultySelect"),
+    difficultyPicker: document.getElementById("difficultyPicker"),
+    openBpLibrary: document.getElementById("openBpLibraryButton"),
+    bpPickerTrack: document.getElementById("bpPickerTrack"),
+    bpPickerMeta: document.getElementById("bpPickerMeta"),
     submitBp: document.getElementById("submitBpButton"),
     confirmBp: document.getElementById("confirmBpButton"),
     actionMessage: document.getElementById("actionMessage"),
@@ -101,7 +106,10 @@
     bpSubmitConfirmDifficulty: document.getElementById("bpSubmitConfirmDifficulty"),
     bpSubmitConfirmMessage: document.getElementById("bpSubmitConfirmMessage"),
     bpSubmitConfirmButton: document.getElementById("bpSubmitConfirmButton"),
-    bpSubmitCancelButton: document.getElementById("bpSubmitCancelButton")
+    bpSubmitCancelButton: document.getElementById("bpSubmitCancelButton"),
+    bpLibraryDialog: document.getElementById("bpLibraryDialog"),
+    bpLibraryList: document.getElementById("bpLibraryList"),
+    bpLibraryHint: document.getElementById("bpLibraryHint")
   };
 
   function createElement(tag, className, text) {
@@ -126,6 +134,9 @@
     const headers = {
       ...(options.headers || {})
     };
+
+    await window.PLCAccount?.ensureFreshSession?.();
+
     const token = getAccessToken();
 
     if (options.body && !headers["Content-Type"]) {
@@ -953,6 +964,7 @@
 
     window.clearTimeout(state.bpConfirmCloseTimer);
     state.pendingBpAction = draft;
+    els.bpSubmitDialog.dataset.action = draft.action;
     els.bpSubmitConfirmType.textContent = draft.action === "ban" ? "Ban" : "Pick";
     els.bpSubmitConfirmTitle.textContent = `确认${getActionLabel(draft.action)}`;
     els.bpSubmitConfirmMatch.textContent = draft.matchTitle || "-";
@@ -978,6 +990,7 @@
     const wasOpen = els.bpSubmitDialog.classList.contains("is-open");
 
     state.pendingBpAction = null;
+    delete els.bpSubmitDialog.dataset.action;
     setBpConfirmMessage("");
     window.clearTimeout(state.bpConfirmCloseTimer);
     els.bpSubmitDialog.classList.remove("is-open");
@@ -1008,6 +1021,224 @@
       : "";
   }
 
+  function isBpLibraryOpen() {
+    return Boolean(els.bpLibraryDialog?.classList.contains("is-open"));
+  }
+
+  function getSelectedTrack() {
+    const match = state.activeMatch;
+    const action = getCurrentAction(match);
+    const trackId = Number(els.trackSelect.value);
+
+    if (!trackId || !action || !hasSongPoolData()) {
+      return null;
+    }
+
+    return getAvailableTracks(match, action).find((track) => Number(track.id) === trackId) || null;
+  }
+
+  function syncBpPicker() {
+    if (!els.openBpLibrary) {
+      return;
+    }
+
+    renderDifficultyPicker();
+
+    const selectedTrack = getSelectedTrack();
+    const fallback = els.trackSelect.selectedOptions?.[0]?.textContent || "等待 BP 阶段";
+    const isDisabled = els.trackSelect.disabled || !selectedTrack;
+
+    els.openBpLibrary.disabled = isDisabled;
+    els.bpPickerTrack.textContent = selectedTrack?.title || fallback;
+    els.bpPickerMeta.textContent = selectedTrack
+      ? [selectedTrack.pack, selectedTrack.artist].filter(Boolean).join(" / ") || "曲目信息未填写"
+      : "打开曲库后选择曲目";
+
+    if (isBpLibraryOpen()) {
+      renderBpLibrary();
+    }
+  }
+
+  function renderBpLibraryEmpty(message) {
+    els.bpLibraryList.innerHTML = "";
+    els.bpLibraryList.appendChild(createElement("p", "empty-line", message));
+  }
+
+  function renderDifficultyPicker() {
+    if (!els.difficultyPicker) {
+      return;
+    }
+
+    const options = Array.from(els.difficultySelect.options);
+    const selectedDifficulty = els.difficultySelect.value;
+    const isDisabled = els.difficultySelect.disabled || !options.length || !selectedDifficulty;
+
+    els.difficultyPicker.innerHTML = "";
+    els.difficultyPicker.classList.toggle("is-disabled", isDisabled);
+    els.difficultyPicker.setAttribute("aria-disabled", isDisabled ? "true" : "false");
+
+    if (isDisabled) {
+      const placeholder = createElement(
+        "span",
+        "bp-difficulty-placeholder",
+        options[0]?.textContent || "等待曲目"
+      );
+      els.difficultyPicker.appendChild(placeholder);
+      return;
+    }
+
+    options.forEach((option) => {
+      const button = createElement("button", "bp-difficulty-option", option.textContent || option.value);
+      const isSelected = option.value === selectedDifficulty;
+
+      button.type = "button";
+      button.dataset.difficulty = option.value;
+      button.setAttribute("role", "radio");
+      button.setAttribute("aria-checked", isSelected ? "true" : "false");
+      button.classList.toggle("is-selected", isSelected);
+      els.difficultyPicker.appendChild(button);
+    });
+  }
+
+  function selectDifficultyOption(difficulty) {
+    if (els.difficultySelect.disabled) {
+      return;
+    }
+
+    const option = Array.from(els.difficultySelect.options).find(
+      (item) => item.value === difficulty
+    );
+
+    if (!option) {
+      return;
+    }
+
+    els.difficultySelect.value = option.value;
+    state.selectedDifficulty = option.value;
+    renderDifficultyPicker();
+    syncBpPicker();
+    sendPresence(getCurrentAction());
+  }
+
+  function renderBpLibrary() {
+    if (!els.bpLibraryList) {
+      return;
+    }
+
+    const match = state.activeMatch;
+    const action = getCurrentAction(match);
+
+    if (!action) {
+      els.bpLibraryHint.textContent = "当前还不是你的 BP 操作阶段。";
+      renderBpLibraryEmpty("等待 BP 阶段");
+      return;
+    }
+
+    if (!hasSongPoolData()) {
+      els.bpLibraryHint.textContent = state.songPoolLoadFailed
+        ? "曲库加载失败，请刷新页面后重试。"
+        : "曲库正在加载，稍等一下。";
+      renderBpLibraryEmpty(state.songPoolLoadFailed ? "曲库加载失败" : "曲库加载中...");
+      ensureSongPoolForActiveMatch(match?.id);
+      return;
+    }
+
+    const tracks = getAvailableTracks(match, action);
+    const selectedTrackId = Number(els.trackSelect.value);
+    const selectedDifficulty = els.difficultySelect.value || state.selectedDifficulty;
+    const libraryTrack =
+      tracks.find((track) => String(track.id) === String(state.libraryTrackId)) ||
+      tracks.find((track) => Number(track.id) === selectedTrackId) ||
+      tracks[0] ||
+      null;
+
+    state.libraryTrackId = libraryTrack ? String(libraryTrack.id) : "";
+
+    els.bpLibraryHint.textContent = state.trackSearch
+      ? "当前列表已按搜索内容筛选。点击曲目完成选择。"
+      : "点击曲目完成选择。";
+    els.bpLibraryList.innerHTML = "";
+
+    if (!tracks.length) {
+      renderBpLibraryEmpty(state.trackSearch ? "没有匹配的可选谱面" : "暂无可选谱面");
+      return;
+    }
+
+    tracks.forEach((track) => {
+      const item = createElement("button", "bp-library-item");
+      const isSelectedTrack = String(track.id) === String(state.libraryTrackId);
+      item.type = "button";
+      item.dataset.libraryTrackId = String(track.id);
+      item.classList.toggle("is-selected", isSelectedTrack);
+
+      const title = createElement("div", "bp-library-title");
+      title.appendChild(createElement("strong", "", track.title || `曲目 ${track.id}`));
+      title.appendChild(
+        createElement("span", "", [track.pack, track.artist].filter(Boolean).join(" / ") || "曲目信息未填写")
+      );
+
+      const difficultyRow = createElement("div", "bp-library-difficulties");
+      track.difficulties.forEach((difficulty) => {
+        const badge = createElement("span", "bp-library-difficulty-badge", difficulty);
+        badge.classList.toggle(
+          "is-selected",
+          isSelectedTrack && difficulty === selectedDifficulty
+        );
+        difficultyRow.appendChild(badge);
+      });
+
+      title.appendChild(difficultyRow);
+      item.appendChild(title);
+      els.bpLibraryList.appendChild(item);
+    });
+  }
+
+  function openBpLibrary() {
+    if (!els.bpLibraryDialog || els.openBpLibrary.disabled) {
+      return;
+    }
+
+    const selectedTrack = getSelectedTrack();
+    state.libraryTrackId = selectedTrack?.id ? String(selectedTrack.id) : state.selectedTrackId;
+    renderBpLibrary();
+    els.bpLibraryDialog.classList.add("is-open");
+    els.bpLibraryDialog.setAttribute("aria-hidden", "false");
+    els.openBpLibrary.setAttribute("aria-expanded", "true");
+    const firstChoice = els.bpLibraryList.querySelector(".bp-library-item");
+    (firstChoice || els.bpLibraryDialog.querySelector("[data-bp-library-close]"))?.focus();
+  }
+
+  function closeBpLibrary() {
+    if (!els.bpLibraryDialog?.classList.contains("is-open")) {
+      return;
+    }
+
+    els.bpLibraryDialog.classList.remove("is-open");
+    els.bpLibraryDialog.setAttribute("aria-hidden", "true");
+    els.openBpLibrary?.setAttribute("aria-expanded", "false");
+    els.openBpLibrary?.focus();
+  }
+
+  function chooseBpLibraryTrack(trackId) {
+    const match = state.activeMatch;
+    const action = getCurrentAction(match);
+    const track = action && hasSongPoolData()
+      ? getAvailableTracks(match, action).find((item) => Number(item.id) === Number(trackId))
+      : null;
+
+    if (!track) {
+      return;
+    }
+
+    state.libraryTrackId = String(track.id);
+    els.trackSelect.value = String(track.id);
+    state.selectedTrackId = String(track.id);
+    renderDifficultyOptions();
+    syncBpPicker();
+    closeBpLibrary();
+    sendPresence(action);
+  }
+
   function renderDifficultyOptions() {
     const match = state.activeMatch;
     const trackId = Number(els.trackSelect.value);
@@ -1025,6 +1256,7 @@
       els.difficultySelect.disabled = true;
       state.selectedDifficulty = "";
       state.difficultyOptionsSignature = signature;
+      syncBpPicker();
       return;
     }
 
@@ -1042,6 +1274,7 @@
       }
 
       state.selectedDifficulty = nextDifficulty;
+      syncBpPicker();
       return;
     }
 
@@ -1056,6 +1289,7 @@
     state.selectedDifficulty = nextDifficulty;
     state.difficultyOptionsSignature = signature;
     els.difficultySelect.disabled = false;
+    syncBpPicker();
   }
 
   function renderTrackOptions() {
@@ -1087,6 +1321,7 @@
       if (!state.songPoolLoadFailed) {
         ensureSongPoolForActiveMatch(match?.id);
       }
+      syncBpPicker();
       return;
     }
 
@@ -1381,8 +1616,10 @@
     state.trackSearch = "";
     state.selectedTrackId = "";
     state.selectedDifficulty = "";
+    state.libraryTrackId = "";
     state.trackOptionsSignature = "";
     state.difficultyOptionsSignature = "";
+    closeBpLibrary();
     closeBpConfirmDialog();
     window.clearTimeout(state.randomReveal.timer);
     state.randomReveal = {
@@ -1401,11 +1638,13 @@
   }
 
   async function selectMatch(matchId) {
+    closeBpLibrary();
     state.activeMatchId = matchId;
     state.activeMatch = state.matches.find((match) => match.id === matchId) || null;
     state.trackSearch = "";
     state.selectedTrackId = "";
     state.selectedDifficulty = "";
+    state.libraryTrackId = "";
     state.trackOptionsSignature = "";
     state.difficultyOptionsSignature = "";
     window.clearTimeout(state.randomReveal.timer);
@@ -1584,6 +1823,19 @@
     document.querySelectorAll("[data-bp-confirm-close]").forEach((element) => {
       element.addEventListener("click", () => closeBpConfirmDialog());
     });
+    document.querySelectorAll("[data-bp-library-close]").forEach((element) => {
+      element.addEventListener("click", () => closeBpLibrary());
+    });
+    els.openBpLibrary?.addEventListener("click", openBpLibrary);
+    els.bpLibraryList?.addEventListener("click", (event) => {
+      const button = event.target.closest?.("[data-library-track-id]");
+
+      if (!button) {
+        return;
+      }
+
+      chooseBpLibraryTrack(button.dataset.libraryTrackId);
+    });
 
     els.trackSearch.addEventListener("input", (event) => {
       state.trackSearch = event.target.value.trim();
@@ -1598,14 +1850,31 @@
       renderDifficultyOptions();
       sendPresence(getCurrentAction());
     });
+    els.difficultyPicker?.addEventListener("click", (event) => {
+      const button = event.target.closest?.("[data-difficulty]");
+
+      if (!button) {
+        return;
+      }
+
+      selectDifficultyOption(button.dataset.difficulty);
+    });
+    els.difficultyPicker?.addEventListener("focusin", () => sendPresence(getCurrentAction()));
     els.difficultySelect.addEventListener("focus", () => sendPresence(getCurrentAction()));
     els.difficultySelect.addEventListener("change", () => {
       state.selectedDifficulty = els.difficultySelect.value;
+      renderDifficultyPicker();
+      syncBpPicker();
       sendPresence(getCurrentAction());
     });
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
+        if (isBpLibraryOpen()) {
+          closeBpLibrary();
+          return;
+        }
+
         closeBpConfirmDialog();
       }
     });
