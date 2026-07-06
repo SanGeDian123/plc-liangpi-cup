@@ -18,6 +18,11 @@ let adminToken = localStorage.getItem("adminToken");
     loss: "负",
     draw: "平"
   };
+  const DEFAULT_BP_CATEGORY = Object.freeze({
+    division: "LT组",
+    stage: "16-8(一)",
+    group: "16-8 A组"
+  });
 
   const state = {
     accounts: [],
@@ -240,6 +245,19 @@ let adminToken = localStorage.getItem("adminToken");
         (stage || group ? "LT组" : ""),
       stage,
       group
+    };
+  }
+
+  function getEditableBpCategory(match = {}) {
+    const category = getMatchBpCategory(match);
+    const division = ["LT组", "LH组"].includes(category.division)
+      ? category.division
+      : DEFAULT_BP_CATEGORY.division;
+
+    return {
+      division,
+      stage: category.stage || DEFAULT_BP_CATEGORY.stage,
+      group: category.group || DEFAULT_BP_CATEGORY.group
     };
   }
 
@@ -754,9 +772,9 @@ let adminToken = localStorage.getItem("adminToken");
     els.randomPickEnabled.checked = true;
     els.randomPickCount.value = "1";
     els.poolMode.value = "round16";
-    els.bpCategoryDivision.value = "LT组";
-    els.bpCategoryStage.value = "";
-    els.bpCategoryGroup.value = "";
+    els.bpCategoryDivision.value = DEFAULT_BP_CATEGORY.division;
+    els.bpCategoryStage.value = DEFAULT_BP_CATEGORY.stage;
+    els.bpCategoryGroup.value = DEFAULT_BP_CATEGORY.group;
     els.matchContent.value = "";
     els.trackSearch.value = "";
     els.customDifficulties.forEach((input) => {
@@ -789,7 +807,7 @@ let adminToken = localStorage.getItem("adminToken");
     els.randomPickEnabled.checked = match.randomPickEnabled !== false;
     els.randomPickCount.value = String(match.randomPickCount || 1);
     els.poolMode.value = match.poolMode || "round16";
-    const category = getMatchBpCategory(match);
+    const category = getEditableBpCategory(match);
     els.bpCategoryDivision.value = category.division;
     els.bpCategoryStage.value = category.stage;
     els.bpCategoryGroup.value = category.group;

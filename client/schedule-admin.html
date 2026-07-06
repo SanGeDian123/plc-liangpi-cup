@@ -139,21 +139,34 @@
               <div class="bp-category-grid">
                 <label for="bpCategoryDivision">
                   <span>主分类</span>
-                  <input id="bpCategoryDivision" type="text" list="bpCategoryDivisionOptions" maxlength="40" placeholder="LT组 / LH组" />
-                  <datalist id="bpCategoryDivisionOptions">
-                    <option value="LT组"></option>
-                    <option value="LH组"></option>
-                  </datalist>
+                  <select id="bpCategoryDivision">
+                    <option value="LT组">LT组</option>
+                    <option value="LH组">LH组</option>
+                  </select>
                 </label>
 
                 <label for="bpCategoryStage">
                   <span>阶段</span>
-                  <input id="bpCategoryStage" type="text" maxlength="60" placeholder="16-8(一)" />
+                  <input id="bpCategoryStage" type="text" list="bpCategoryStageOptions" maxlength="60" value="16-8(一)" />
+                  <datalist id="bpCategoryStageOptions">
+                    <option value="16-8(一)"></option>
+                    <option value="16-8(二)"></option>
+                    <option value="8-4(一)"></option>
+                    <option value="8-4(二)"></option>
+                    <option value="4-2(一)"></option>
+                    <option value="4-2(二)"></option>
+                  </datalist>
                 </label>
 
                 <label for="bpCategoryGroup">
                   <span>小组</span>
-                  <input id="bpCategoryGroup" type="text" maxlength="60" placeholder="16-8 A组" />
+                  <input id="bpCategoryGroup" type="text" list="bpCategoryGroupOptions" maxlength="60" value="16-8 A组" />
+                  <datalist id="bpCategoryGroupOptions">
+                    <option value="16-8 A组"></option>
+                    <option value="16-8 B组"></option>
+                    <option value="16-8 C组"></option>
+                    <option value="16-8 D组"></option>
+                  </datalist>
                 </label>
               </div>
             </section>
@@ -241,6 +254,6 @@
 
   <script src="./js/api.js"></script>
   <script src="./js/song-pool-data.js?v=20260705a"></script>
-  <script src="./js/schedule-admin.js?v=20260706i"></script>
+  <script src="./js/schedule-admin.js?v=20260706j"></script>
 </body>
 </html>
