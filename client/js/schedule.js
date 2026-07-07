@@ -17,8 +17,7 @@
     pending: "待定"
   };
 
-  const SONG_POOL_SCRIPT_BASE = "./js/song-pool-data.js";
-  const SONG_POOL_SCRIPT_VERSION = "20260706i";
+  const SONG_POOL_API_PATH = "/schedule/song-pool";
   const SONG_POOL_RETRY_COOLDOWN_MS = 3000;
   const SCHEDULE_LOAD_TIMEOUT_MS = 8000;
   const SESSION_REFRESH_TIMEOUT_MS = 1200;
@@ -251,26 +250,10 @@
     };
   }
 
-  function getSongPoolScriptSrc(forceFresh = false) {
-    const params = new URLSearchParams({
-      v: SONG_POOL_SCRIPT_VERSION
-    });
-
-    if (forceFresh) {
-      params.set("retry", String(Date.now()));
-    }
-
-    return `${SONG_POOL_SCRIPT_BASE}?${params.toString()}`;
-  }
-
-  function removeDynamicSongPoolScripts() {
-    document
-      .querySelectorAll("script[data-song-pool-loader='schedule']")
-      .forEach((script) => script.remove());
-  }
-
   function loadSongPoolData(options = {}) {
-    if (hasSongPoolData()) {
+    const forceFresh = Boolean(options.forceFresh || state.songPoolLoadFailed);
+
+    if (hasSongPoolData() && !forceFresh) {
       state.songPoolLoadFailed = false;
       return Promise.resolve(window.PLC_SONG_POOL_DATA);
     }
@@ -279,29 +262,24 @@
       return state.songPoolLoadPromise;
     }
 
-    const forceFresh = Boolean(options.forceFresh || state.songPoolLoadFailed);
-    removeDynamicSongPoolScripts();
     state.songPoolLoading = true;
     state.songPoolLoadFailed = false;
     state.songPoolLastAttemptAt = Date.now();
-    state.songPoolLoadPromise = new Promise((resolve, reject) => {
-      const script = document.createElement("script");
-      script.src = getSongPoolScriptSrc(forceFresh);
-      script.async = true;
-      script.dataset.songPoolLoader = "schedule";
-      script.onload = () => {
-        if (hasSongPoolData()) {
-          state.songPoolLoadFailed = false;
-          resolve(window.PLC_SONG_POOL_DATA);
-        } else {
-          reject(new Error("song-pool-data-unavailable"));
-        }
-      };
-      script.onerror = () => {
-        reject(new Error("song-pool-data-load-failed"));
-      };
-      document.head.appendChild(script);
+    state.songPoolLoadPromise = fetchJson(SONG_POOL_API_PATH, {
+      authMode: "omit",
+      refreshSession: false,
+      cache: "no-store",
+      timeoutMs: SCHEDULE_LOAD_TIMEOUT_MS
     })
+      .then((data) => {
+        if (!Array.isArray(data?.tracks)) {
+          throw new Error("song-pool-data-unavailable");
+        }
+
+        window.PLC_SONG_POOL_DATA = data;
+        state.songPoolLoadFailed = false;
+        return data;
+      })
       .catch((error) => {
         state.songPoolLoadPromise = null;
         state.songPoolLoadFailed = true;

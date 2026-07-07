@@ -2837,6 +2837,20 @@ app.get("/schedule/matches/:id", optionalUser, async (req, res) => {
   });
 });
 
+app.get("/schedule/song-pool", async (req, res) => {
+  try {
+    const data = await loadSongPoolData();
+
+    res.set("Cache-Control", "no-store");
+    res.json(data);
+  } catch (error) {
+    console.error("[schedule] Failed to load song pool:", error);
+    res.status(500).json({
+      message: "曲库暂时不可用"
+    });
+  }
+});
+
 app.post("/schedule/matches/:id/bp/presence", requireUser, async (req, res) => {
   const data = await loadScheduleDataWithAutoBp();
   const matchId = normalizeTextValue(req.params.id, 96);
