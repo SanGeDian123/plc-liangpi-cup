@@ -2629,6 +2629,21 @@ window.PLC_SONG_POOL_DATA = {
         "round16": "EZ HD IN AT",
         "top8": "EZ HD IN AT"
       }
+    },
+    {
+      "id": 178,
+      "version": "3.20.0",
+      "releaseDate": "",
+      "order": 6,
+      "pack": "单曲",
+      "title": "Lyrith -迷宮リリス-",
+      "artist": "",
+      "note": "",
+      "sourceUrl": "",
+      "stages": {
+        "round16": "IN",
+        "top8": "IN"
+      }
     }
   ]
 };
