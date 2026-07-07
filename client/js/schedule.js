@@ -20,6 +20,9 @@
   const SONG_POOL_SCRIPT_BASE = "./js/song-pool-data.js";
   const SONG_POOL_SCRIPT_VERSION = "20260706i";
   const SONG_POOL_RETRY_COOLDOWN_MS = 3000;
+  const SCHEDULE_LOAD_TIMEOUT_MS = 8000;
+  const SESSION_REFRESH_TIMEOUT_MS = 1200;
+  const SCHEDULE_RETRY_DELAY_MS = 3500;
 
   const state = {
     matches: [],
@@ -49,6 +52,8 @@
     songPoolLoadPromise: null,
     songPoolLastAttemptAt: 0,
     songPoolRetryTimer: 0,
+    scheduleLoadRetryTimer: 0,
+    hasRequestedAccountRefresh: false,
     lastPresenceAt: 0,
     isSubmitting: false,
     pendingBpAction: null,
@@ -134,15 +139,44 @@
     return window.PLCAccount?.getAccessToken?.() || "";
   }
 
+  async function waitForPromise(promise, timeoutMs) {
+    if (!promise || !timeoutMs) {
+      return promise;
+    }
+
+    let timeoutId = 0;
+
+    try {
+      return await Promise.race([
+        promise,
+        new Promise((resolve) => {
+          timeoutId = window.setTimeout(() => resolve(undefined), timeoutMs);
+        })
+      ]);
+    } finally {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    }
+  }
+
   async function fetchJson(path, options = {}) {
-    const { timeoutMs = 15000, ...fetchOptions } = options;
+    const {
+      authMode = "auto",
+      refreshSession = authMode !== "omit",
+      sessionTimeoutMs = SESSION_REFRESH_TIMEOUT_MS,
+      timeoutMs = 15000,
+      ...fetchOptions
+    } = options;
     const headers = {
       ...(fetchOptions.headers || {})
     };
 
-    await window.PLCAccount?.ensureFreshSession?.();
+    if (refreshSession) {
+      await waitForPromise(window.PLCAccount?.ensureFreshSession?.(), sessionTimeoutMs);
+    }
 
-    const token = getAccessToken();
+    const token = authMode === "omit" ? "" : getAccessToken();
 
     if (fetchOptions.body && !headers["Content-Type"]) {
       headers["Content-Type"] = "application/json";
@@ -1808,11 +1842,33 @@
     renderActionPanel(match);
   }
 
-  async function loadMatches(showLoading = true) {
+  function scheduleMatchesRetry(options = {}) {
+    window.clearTimeout(state.scheduleLoadRetryTimer);
+    state.scheduleLoadRetryTimer = window.setTimeout(() => {
+      loadMatches(false, options);
+    }, SCHEDULE_RETRY_DELAY_MS);
+  }
+
+  function refreshMatchesAfterAccountReady() {
+    if (state.hasRequestedAccountRefresh) {
+      return;
+    }
+
+    state.hasRequestedAccountRefresh = true;
+    waitForPromise(window.PLCAccount?.ready, 2500).then(() => {
+      loadMatches(false, {
+        authMode: "auto"
+      });
+      fetchActiveMatch();
+    });
+  }
+
+  async function loadMatches(showLoading = true, options = {}) {
     if (state.isLoadingMatches) {
       return;
     }
 
+    const authMode = options.authMode || "auto";
     state.isLoadingMatches = true;
     els.refresh.disabled = true;
 
@@ -1821,13 +1877,17 @@
     }
 
     try {
-      await window.PLCAccount?.ready;
-      const payload = await fetchJson("/schedule/matches");
+      const payload = await fetchJson("/schedule/matches", {
+        authMode,
+        refreshSession: authMode !== "omit",
+        timeoutMs: options.timeoutMs || SCHEDULE_LOAD_TIMEOUT_MS
+      });
 
       state.matches = Array.isArray(payload.matches) ? payload.matches : [];
       els.summary.textContent = state.matches.length
         ? `当前有 ${state.matches.length} 场可见比赛。`
         : "暂无可见比赛；公开赛事会直接显示，定向赛事需要登录对应账号。";
+      window.clearTimeout(state.scheduleLoadRetryTimer);
 
       if (state.activeMatchId) {
         const active = state.matches.find((match) => match.id === state.activeMatchId);
@@ -1843,12 +1903,16 @@
       renderMatchList();
       renderActiveMatch();
     } catch (error) {
-      els.summary.textContent = error.message || "赛程加载失败，请稍后重试。";
+      els.summary.textContent = `${error.message || "赛程加载失败，请稍后重试。"} 正在自动重试...`;
       state.matches = [];
       renderMatchList();
+      scheduleMatchesRetry({
+        authMode
+      });
     } finally {
       state.isLoadingMatches = false;
       els.refresh.disabled = false;
+      refreshMatchesAfterAccountReady();
     }
   }
 
@@ -1875,7 +1939,10 @@
 
     try {
       const payload = await fetchJson(
-        `/schedule/matches/${encodeURIComponent(requestedMatchId)}`
+        `/schedule/matches/${encodeURIComponent(requestedMatchId)}`,
+        {
+          timeoutMs: SCHEDULE_LOAD_TIMEOUT_MS
+        }
       );
 
       if (state.activeMatchId !== requestedMatchId) {
@@ -2204,12 +2271,22 @@
       }
     });
 
+    let didSkipInitialAccountChange = false;
     window.PLCAccount?.onChange?.(() => {
-      loadMatches(false);
+      if (!didSkipInitialAccountChange) {
+        didSkipInitialAccountChange = true;
+        return;
+      }
+
+      loadMatches(false, {
+        authMode: "auto"
+      });
       fetchActiveMatch();
     });
   }
 
   bindEvents();
-  loadMatches();
+  loadMatches(true, {
+    authMode: "omit"
+  });
 })();
