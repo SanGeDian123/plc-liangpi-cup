@@ -1546,8 +1546,8 @@ window.PLC_SONG_POOL_DATA = {
       "note": "",
       "sourceUrl": "https://www.bilibili.com/video/BV1wE4m197fG/",
       "stages": {
-        "round16": "EZ HD IN",
-        "top8": "IN"
+        "round16": "EZ HD IN AT",
+        "top8": "IN AT"
       }
     },
     {
@@ -2658,6 +2658,66 @@ window.PLC_SONG_POOL_DATA = {
       "stages": {
         "round16": "IN",
         "top8": "IN"
+      }
+    },
+    {
+      "id": 180,
+      "version": "3.20.0",
+      "releaseDate": "",
+      "order": 8,
+      "pack": "支线章节二 弭刻日",
+      "title": "Ark",
+      "artist": "kanoryo",
+      "note": "",
+      "sourceUrl": "https://phigros.fandom.com/wiki/Ark",
+      "stages": {
+        "round16": "AT",
+        "top8": "AT"
+      }
+    },
+    {
+      "id": 181,
+      "version": "3.20.0",
+      "releaseDate": "",
+      "order": 9,
+      "pack": "支线章节一 忘忧宫",
+      "title": "Ποσειδών",
+      "artist": "1112 vs. Star*",
+      "note": "",
+      "sourceUrl": "https://phigros.fandom.com/wiki/%CE%A0%CE%BF%CF%83%CE%B5%CE%B9%CE%B4%CF%8E%CE%BD",
+      "stages": {
+        "round16": "AT",
+        "top8": "AT"
+      }
+    },
+    {
+      "id": 182,
+      "version": "3.20.0",
+      "releaseDate": "",
+      "order": 10,
+      "pack": "单曲",
+      "title": "Orthodox",
+      "artist": "tokiwa",
+      "note": "",
+      "sourceUrl": "https://phigros.fandom.com/wiki/Orthodox",
+      "stages": {
+        "round16": "IN",
+        "top8": null
+      }
+    },
+    {
+      "id": 183,
+      "version": "3.20.0",
+      "releaseDate": "",
+      "order": 11,
+      "pack": "单曲",
+      "title": "Aleph-0",
+      "artist": "LeaF",
+      "note": "",
+      "sourceUrl": "https://phigros.fandom.com/wiki/Aleph-0",
+      "stages": {
+        "round16": "IN",
+        "top8": null
       }
     }
   ]
