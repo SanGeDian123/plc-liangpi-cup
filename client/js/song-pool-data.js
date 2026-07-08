@@ -1,6 +1,6 @@
 window.PLC_SONG_POOL_DATA = {
-  "sourceWorkbook": "Phigros 2.3.0_3.19.3.xlsx",
-  "sourceRange": "Phigros 2.3.0 至 3.20.0",
+  "sourceWorkbook": "Phigros 2.3.0_3.20.0 + 赛事追加",
+  "sourceRange": "Phigros 2.3.0 至 3.20.0（含赛事追加单曲）",
   "rules": {
     "round16": "2.3.0 起仅 IN；3.7.0 起 EZ HD IN",
     "top8": "3.0.0 起仅 IN；3.14.0 起 EZ HD IN"
@@ -2640,6 +2640,21 @@ window.PLC_SONG_POOL_DATA = {
       "artist": "",
       "note": "",
       "sourceUrl": "",
+      "stages": {
+        "round16": "IN",
+        "top8": "IN"
+      }
+    },
+    {
+      "id": 179,
+      "version": "3.20.0",
+      "releaseDate": "",
+      "order": 7,
+      "pack": "单曲",
+      "title": "Chronostasis",
+      "artist": "黒皇帝",
+      "note": "",
+      "sourceUrl": "https://wikiwiki.jp/phigros/Chronostasis",
       "stages": {
         "round16": "IN",
         "top8": "IN"
