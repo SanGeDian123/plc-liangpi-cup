@@ -2161,8 +2161,8 @@ window.PLC_SONG_POOL_DATA = {
       "note": "",
       "sourceUrl": "https://www.bilibili.com/video/BV1pehdzxE2L/",
       "stages": {
-        "round16": "EZ HD IN",
-        "top8": "EZ HD IN"
+        "round16": "EZ HD IN AT",
+        "top8": "EZ HD IN AT"
       }
     },
     {
