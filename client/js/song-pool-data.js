@@ -2719,6 +2719,21 @@ window.PLC_SONG_POOL_DATA = {
         "round16": "IN",
         "top8": null
       }
+    },
+    {
+      "id": 184,
+      "version": "2.4.0",
+      "releaseDate": "2022-08-26",
+      "order": 3,
+      "pack": "姜米條精选集",
+      "title": "Shadow",
+      "artist": "姜米條&SumaiLight",
+      "note": "",
+      "sourceUrl": "https://phigros.fandom.com/wiki/Shadow",
+      "stages": {
+        "round16": "IN AT",
+        "top8": "IN AT"
+      }
     }
   ]
 };
