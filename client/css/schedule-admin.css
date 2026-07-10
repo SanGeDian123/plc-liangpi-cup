@@ -182,6 +182,31 @@ textarea:focus{
   accent-color:var(--cyan);
 }
 
+.player-confirmation-toggle{
+  border-color:rgba(255,228,119,.26);
+  background:linear-gradient(135deg, rgba(255,228,119,.11), rgba(103,231,255,.05));
+}
+
+.player-confirmation-toggle input{
+  accent-color:var(--yellow);
+}
+
+.player-confirmation-toggle span{
+  display:grid;
+  gap:3px;
+}
+
+.player-confirmation-toggle strong{
+  color:var(--yellow);
+  font-size:14px;
+}
+
+.player-confirmation-toggle small{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.4;
+}
+
 .login-card form{
   display:grid;
   gap:14px;
@@ -606,6 +631,12 @@ textarea:focus{
 .tag.is-finished{
   color:var(--yellow);
   border-color:rgba(255,228,119,.28);
+}
+
+.tag.is-confirmed{
+  color:var(--green);
+  border-color:rgba(147,255,188,.32);
+  background:rgba(147,255,188,.09);
 }
 
 .empty-line{

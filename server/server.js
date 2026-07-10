@@ -1298,6 +1298,24 @@ function normalizeScheduleParticipants(value) {
   });
 }
 
+function normalizePlayerConfirmation(value = {}, participants = []) {
+  const source = value && typeof value === "object" ? value : {};
+  const enabled = source.enabled === true;
+  const participantIds = new Set(participants.map((participant) => participant.userId));
+  const confirmedBy = Array.from(
+    new Set(
+      (Array.isArray(source.confirmedBy) ? source.confirmedBy : [])
+        .map((userId) => normalizeTextValue(userId, 128))
+        .filter((userId) => participantIds.has(userId))
+    )
+  );
+
+  return {
+    enabled,
+    confirmedBy: enabled ? confirmedBy : []
+  };
+}
+
 function normalizeBpSelection(value = {}, fallbackType = "ban") {
   const userId = normalizeTextValue(value.userId, 128);
   const trackId = Number(value.trackId);
@@ -1448,6 +1466,16 @@ function normalizeScheduleMatch(value = {}, options = {}) {
     ? normalizeRandomPickCount(value.randomPickCount, 1)
     : 0;
   const bp = normalizeBpState(value.bp);
+  const playerConfirmation = normalizePlayerConfirmation(
+    {
+      ...(value.playerConfirmation || {}),
+      enabled:
+        value.playerConfirmationEnabled === undefined
+          ? value.playerConfirmation?.enabled
+          : value.playerConfirmationEnabled === true
+    },
+    participants
+  );
 
   if (!randomPickEnabled) {
     bp.randomPicks = [];
@@ -1473,6 +1501,7 @@ function normalizeScheduleMatch(value = {}, options = {}) {
     customTrackIds: normalizeTrackIdList(value.customTrackIds),
     customDifficulties: normalizeDifficultyList(value.customDifficulties),
     participants,
+    playerConfirmation,
     result: normalizeScheduleResult(value.result),
     bp,
     createdAt: normalizeOptionalIsoDate(value.createdAt) || now,
@@ -1539,10 +1568,24 @@ function applyScheduleAutoBp(data, now = new Date()) {
   data.matches.forEach((match) => {
     const bpTime = Date.parse(match.bpStartsAt || "");
 
+    const playerConfirmation = getPlayerConfirmationProgress(match);
+
+    if (
+      match.status === "bp" &&
+      Number.isFinite(bpTime) &&
+      bpTime > nowTime
+    ) {
+      match.status = "scheduled";
+      match.updatedAt = nowIso;
+      changed = true;
+      return;
+    }
+
     if (
       match.status === "scheduled" &&
       Number.isFinite(bpTime) &&
-      bpTime <= nowTime
+      bpTime <= nowTime &&
+      playerConfirmation.allConfirmed
     ) {
       match.status = "bp";
       match.updatedAt = nowIso;
@@ -1701,6 +1744,27 @@ function getMatchParticipant(match, userId) {
   return match.participants.find((participant) => participant.userId === userId) || null;
 }
 
+function getPlayerConfirmationProgress(match, viewerUserId = "") {
+  const confirmation = normalizePlayerConfirmation(
+    match?.playerConfirmation,
+    match?.participants || []
+  );
+  const participantIds = (match?.participants || []).map((participant) => participant.userId);
+  const allConfirmed =
+    !confirmation.enabled ||
+    (participantIds.length > 0 &&
+      participantIds.every((userId) => confirmation.confirmedBy.includes(userId)));
+
+  return {
+    enabled: confirmation.enabled,
+    confirmedBy: confirmation.confirmedBy,
+    confirmedCount: confirmation.confirmedBy.length,
+    total: participantIds.length,
+    allConfirmed,
+    viewerConfirmed: Boolean(viewerUserId && confirmation.confirmedBy.includes(viewerUserId))
+  };
+}
+
 function getParticipantDisplayName(participant, fallback = "选手") {
   return (
     participant?.playerNickname ||
@@ -1791,11 +1855,33 @@ function getBpProgress(match) {
   };
 }
 
-function isMatchBpOpen(match) {
-  return match?.status === "bp";
+function isMatchBpOpen(match, now = new Date()) {
+  if (match?.status !== "bp") {
+    return false;
+  }
+
+  const bpTime = Date.parse(match.bpStartsAt || "");
+  const playerConfirmation = getPlayerConfirmationProgress(match);
+
+  return (
+    playerConfirmation.allConfirmed &&
+    (!Number.isFinite(bpTime) || bpTime <= now.getTime())
+  );
 }
 
 function getMatchBpClosedMessage(match) {
+  const bpTime = Date.parse(match?.bpStartsAt || "");
+
+  if (Number.isFinite(bpTime) && bpTime > Date.now()) {
+    return `BP 将于 ${new Date(bpTime).toLocaleString("zh-CN")} 开放`;
+  }
+
+  const playerConfirmation = getPlayerConfirmationProgress(match);
+
+  if (playerConfirmation.enabled && !playerConfirmation.allConfirmed) {
+    return "尚未完成全部选手确认，暂不能 BP";
+  }
+
   if (match?.status === "scheduled") {
     return "比赛尚未开始，暂不能 BP";
   }
@@ -1913,13 +1999,17 @@ function serializeParticipant(participant, options = {}) {
     playerNumber: participant.playerNumber,
     playerGroup: participant.playerGroup,
     slotLabel: participant.slotLabel,
-    displayName: getParticipantDisplayName(participant)
+    displayName: getParticipantDisplayName(participant),
+    confirmed: Boolean(options.confirmedParticipantIds?.has(participant.userId))
   };
 }
 
 function serializeScheduleMatch(match, options = {}) {
   const viewerUserId = options.viewerUserId || "";
   const participant = viewerUserId ? getMatchParticipant(match, viewerUserId) : null;
+  const playerConfirmation = getPlayerConfirmationProgress(match, viewerUserId);
+  const confirmedParticipantIds = new Set(playerConfirmation.confirmedBy);
+  const bpOpen = isMatchBpOpen(match);
   const bp = normalizeBpState({
     ...match.bp,
     presence: getFreshPresence(match.bp)
@@ -1934,9 +2024,19 @@ function serializeScheduleMatch(match, options = {}) {
     participants: match.participants.map((item) =>
       serializeParticipant(item, {
         admin: options.admin,
-        viewerUserId
+        viewerUserId,
+        confirmedParticipantIds
       })
     ),
+    playerConfirmation: {
+      enabled: playerConfirmation.enabled,
+      confirmedCount: playerConfirmation.confirmedCount,
+      total: playerConfirmation.total,
+      allConfirmed: playerConfirmation.allConfirmed,
+      viewerConfirmed: playerConfirmation.viewerConfirmed,
+      ...(options.admin ? { confirmedBy: playerConfirmation.confirmedBy } : {})
+    },
+    bpOpen,
     bp: {
       ...bp,
       progress,
@@ -2814,7 +2914,8 @@ app.get("/schedule/matches", optionalUser, async (req, res) => {
 
   res.set("Cache-Control", "no-store");
   res.json({
-    matches
+    matches,
+    serverNow: new Date().toISOString()
   });
 });
 
@@ -2833,6 +2934,51 @@ app.get("/schedule/matches/:id", optionalUser, async (req, res) => {
   res.json({
     match: serializeScheduleMatch(match, {
       viewerUserId: req.authUser?.id || ""
+    }),
+    serverNow: new Date().toISOString()
+  });
+});
+
+app.post("/schedule/matches/:id/player-confirmation", requireUser, async (req, res) => {
+  const data = await loadScheduleDataWithAutoBp();
+  const matchId = normalizeTextValue(req.params.id, 96);
+  const match = data.matches.find((item) => item.id === matchId);
+  const participant = match ? getMatchParticipant(match, req.authUser.id) : null;
+
+  if (!match || !participant) {
+    return res.status(403).json({
+      message: "你不是这场比赛的参赛选手"
+    });
+  }
+
+  if (match.status !== "scheduled") {
+    return res.status(400).json({
+      message: "只有未开始的比赛可以进行选手确认"
+    });
+  }
+
+  const confirmation = getPlayerConfirmationProgress(match, req.authUser.id);
+
+  if (!confirmation.enabled) {
+    return res.status(400).json({
+      message: "本场比赛未启用选手确认"
+    });
+  }
+
+  if (!confirmation.confirmedBy.includes(participant.userId)) {
+    match.playerConfirmation.confirmedBy.push(participant.userId);
+  }
+
+  match.updatedAt = new Date().toISOString();
+  applyScheduleAutoBp(data);
+
+  const saved = await persistScheduleData(data);
+  const savedMatch = saved.matches.find((item) => item.id === matchId) || match;
+
+  res.set("Cache-Control", "no-store");
+  res.json({
+    match: serializeScheduleMatch(savedMatch, {
+      viewerUserId: req.authUser.id
     })
   });
 });

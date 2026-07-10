@@ -25,6 +25,7 @@
 
   const state = {
     matches: [],
+    finishedMatchesExpanded: false,
     activeMatchId: "",
     activeMatch: null,
     trackSearch: "",
@@ -53,8 +54,14 @@
     songPoolRetryTimer: 0,
     scheduleLoadRetryTimer: 0,
     hasRequestedAccountRefresh: false,
+    serverTimeOffsetMs: 0,
+    bpCountdownTimer: 0,
+    bpCountdownMatchId: "",
     lastPresenceAt: 0,
     isSubmitting: false,
+    isConfirmingPlayer: false,
+    playerConfirmationMessage: "",
+    playerConfirmationMessageIsError: false,
     pendingBpAction: null,
     bpConfirmCloseTimer: 0,
     selectionAnimation: {
@@ -81,6 +88,15 @@
     participantRow: document.getElementById("participantRow"),
     myNickname: document.getElementById("myNickname"),
     opponentNickname: document.getElementById("opponentNickname"),
+    playerConfirmationPanel: document.getElementById("playerConfirmationPanel"),
+    playerConfirmationCount: document.getElementById("playerConfirmationCount"),
+    playerConfirmationHint: document.getElementById("playerConfirmationHint"),
+    playerConfirmationRoster: document.getElementById("playerConfirmationRoster"),
+    playerConfirmationCountdown: document.getElementById("playerConfirmationCountdown"),
+    playerConfirmationCountdownValue: document.getElementById("playerConfirmationCountdownValue"),
+    playerConfirmationCountdownHint: document.getElementById("playerConfirmationCountdownHint"),
+    confirmPlayerConfirmation: document.getElementById("confirmPlayerConfirmationButton"),
+    playerConfirmationMessage: document.getElementById("playerConfirmationMessage"),
     livePresence: document.getElementById("livePresence"),
     banProgress: document.getElementById("banProgress"),
     pickProgress: document.getElementById("pickProgress"),
@@ -433,7 +449,121 @@
   }
 
   function isBpOpen(match) {
-    return match?.status === "bp";
+    return match?.bpOpen === true;
+  }
+
+  function syncServerTime(serverNow) {
+    const time = Date.parse(serverNow || "");
+
+    if (Number.isFinite(time)) {
+      state.serverTimeOffsetMs = time - Date.now();
+    }
+  }
+
+  function getServerNow() {
+    return Date.now() + state.serverTimeOffsetMs;
+  }
+
+  function formatBpCountdown(remainingMs) {
+    const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+
+    return [hours, minutes, seconds]
+      .map((value) => String(value).padStart(2, "0"))
+      .join(":");
+  }
+
+  function stopBpCountdown() {
+    window.clearInterval(state.bpCountdownTimer);
+    state.bpCountdownTimer = 0;
+    state.bpCountdownMatchId = "";
+  }
+
+  function renderBpCountdown(match) {
+    const confirmation = getPlayerConfirmationInfo(match);
+    const bpTime = Date.parse(match?.bpStartsAt || "");
+    const shouldShow =
+      match?.status === "scheduled" &&
+      confirmation.enabled &&
+      confirmation.allConfirmed &&
+      Number.isFinite(bpTime);
+
+    if (!shouldShow) {
+      els.playerConfirmationCountdown.hidden = true;
+      stopBpCountdown();
+      return;
+    }
+
+    const updateCountdown = () => {
+      const remainingMs = bpTime - getServerNow();
+
+      els.playerConfirmationCountdownValue.textContent = formatBpCountdown(remainingMs);
+      els.playerConfirmationCountdownHint.textContent =
+        remainingMs > 0
+          ? `BP 将于 ${formatDateTime(match.bpStartsAt)} 开放`
+          : "正在同步 BP 开放状态...";
+
+      if (remainingMs <= 0) {
+        stopBpCountdown();
+        fetchActiveMatch();
+      }
+
+      return remainingMs <= 0;
+    };
+
+    els.playerConfirmationCountdown.hidden = false;
+    const countdownFinished = updateCountdown();
+
+    if (countdownFinished) {
+      return;
+    }
+
+    if (state.bpCountdownMatchId === match.id && state.bpCountdownTimer) {
+      return;
+    }
+
+    stopBpCountdown();
+    state.bpCountdownMatchId = match.id;
+    state.bpCountdownTimer = window.setInterval(() => {
+      if (state.activeMatch?.id !== match.id) {
+        stopBpCountdown();
+        return;
+      }
+
+      updateCountdown();
+    }, 250);
+  }
+
+  function getPlayerConfirmationInfo(match) {
+    const confirmation = match?.playerConfirmation || {};
+    const total = Number(confirmation.total ?? match?.participants?.length ?? 0);
+    const confirmedCount = Number(confirmation.confirmedCount ?? 0);
+
+    return {
+      enabled: confirmation.enabled === true,
+      total: Number.isFinite(total) && total >= 0 ? total : 0,
+      confirmedCount: Number.isFinite(confirmedCount) && confirmedCount >= 0 ? confirmedCount : 0,
+      allConfirmed: confirmation.allConfirmed === true,
+      viewerConfirmed: confirmation.viewerConfirmed === true
+    };
+  }
+
+  function isBpOpeningHiddenByConfirmation(match) {
+    const confirmation = getPlayerConfirmationInfo(match);
+
+    return match?.status === "scheduled" && confirmation.enabled && !confirmation.allConfirmed;
+  }
+
+  function getBpOpeningMeta(match) {
+    if (isBpOpeningHiddenByConfirmation(match)) {
+      return "全部选手确认后显示 BP 开放时间";
+    }
+
+    return match?.bpStartsAt
+      ? `BP ${formatDateTime(match.bpStartsAt)}`
+      : "BP手动开放";
   }
 
   function getCurrentAction(match = state.activeMatch) {
@@ -586,7 +716,7 @@
         text: formatDateTime(match.startsAt)
       },
       {
-        text: match.bpStartsAt ? `BP ${formatDateTime(match.bpStartsAt)}` : "BP手动开放"
+        text: getBpOpeningMeta(match)
       },
       {
         text: STAGE_LABELS[match.poolMode] || "曲池"
@@ -710,7 +840,7 @@
     container.appendChild(stack);
   }
 
-  function renderMatchCategoryTree(tree) {
+  function renderMatchCategoryTree(tree, container = els.matchList) {
     tree.forEach((division) => {
       const section = createElement("section", "match-category-section");
       const heading = createElement("div", "match-category-heading");
@@ -738,8 +868,40 @@
         section.appendChild(stageBlock);
       });
 
-      els.matchList.appendChild(section);
+      container.appendChild(section);
     });
+  }
+
+  function renderFinishedMatchSection(matches) {
+    if (!matches.length) {
+      return;
+    }
+
+    const section = createElement("section", "finished-match-section");
+    const heading = createElement("div", "finished-match-heading");
+    const toggle = createElement("button", "finished-match-toggle");
+    const title = createElement("span", "", "已结束比赛");
+    const count = createElement("span", "finished-match-count", `${matches.length} 场`);
+    const indicator = createElement("span", "finished-match-indicator", "展开");
+    const content = createElement("div", "finished-match-content");
+    const contentId = "finishedMatchContent";
+
+    toggle.type = "button";
+    toggle.setAttribute("aria-expanded", String(state.finishedMatchesExpanded));
+    toggle.setAttribute("aria-controls", contentId);
+    content.id = contentId;
+    content.hidden = !state.finishedMatchesExpanded;
+    indicator.textContent = state.finishedMatchesExpanded ? "收起" : "展开";
+    toggle.append(title, count, indicator);
+    toggle.addEventListener("click", () => {
+      state.finishedMatchesExpanded = !state.finishedMatchesExpanded;
+      renderMatchList();
+    });
+
+    heading.appendChild(toggle);
+    section.append(heading, content);
+    els.matchList.appendChild(section);
+    renderMatchCategoryTree(buildMatchCategoryTree(matches), content);
   }
 
   function renderMatchList() {
@@ -755,7 +917,11 @@
       return;
     }
 
-    renderMatchCategoryTree(buildMatchCategoryTree(state.matches));
+    const activeMatches = state.matches.filter((match) => match.status !== "finished");
+    const finishedMatches = state.matches.filter((match) => match.status === "finished");
+
+    renderMatchCategoryTree(buildMatchCategoryTree(activeMatches));
+    renderFinishedMatchSection(finishedMatches);
   }
 
   function renderParticipantRow(match) {
@@ -802,6 +968,64 @@
         .map((item, index) => getParticipantName(item, `选手${index + 1}`))
         .join(" / ") || "等待分配";
     opponentLabel.textContent = "参赛选手";
+  }
+
+  function renderPlayerConfirmation(match) {
+    const confirmation = getPlayerConfirmationInfo(match);
+    const isWaitingForConfirmation =
+      confirmation.enabled && match.status === "scheduled";
+
+    els.playerConfirmationPanel.hidden = !isWaitingForConfirmation;
+
+    if (!isWaitingForConfirmation) {
+      stopBpCountdown();
+      return;
+    }
+
+    const total = confirmation.total || match.participants?.length || 0;
+    const confirmedCount = Math.min(confirmation.confirmedCount, total);
+    const isParticipant = Boolean(match.viewer?.isParticipant);
+
+    els.playerConfirmationPanel.classList.toggle("is-complete", confirmation.allConfirmed);
+    els.playerConfirmationCount.textContent = `${confirmedCount}/${total}`;
+    els.playerConfirmationHint.textContent = confirmation.allConfirmed
+      ? `全部选手已确认，${getBpOpeningMeta(match)}。`
+      : total
+        ? "全部参赛选手确认后，将显示 BP 开放时间。"
+        : "等待后台指定参赛账号后开启确认。";
+    els.playerConfirmationRoster.innerHTML = "";
+
+    (match.participants || []).forEach((participant, index) => {
+      const item = createElement("div", "player-confirmation-roster-item");
+      const name = createElement(
+        "strong",
+        "",
+        getParticipantName(participant, `选手${index + 1}`)
+      );
+      const status = createElement(
+        "span",
+        "player-confirmation-state",
+        participant.confirmed ? "已确认" : "待确认"
+      );
+
+      item.classList.toggle("is-confirmed", Boolean(participant.confirmed));
+      item.append(name, status);
+      els.playerConfirmationRoster.appendChild(item);
+    });
+
+    renderBpCountdown(match);
+
+    els.confirmPlayerConfirmation.hidden =
+      !isParticipant || confirmation.viewerConfirmed || confirmation.allConfirmed;
+    els.confirmPlayerConfirmation.disabled = state.isConfirmingPlayer;
+    els.confirmPlayerConfirmation.textContent = state.isConfirmingPlayer
+      ? "正在确认..."
+      : "确认参赛";
+    els.playerConfirmationMessage.textContent = state.playerConfirmationMessage;
+    els.playerConfirmationMessage.classList.toggle(
+      "is-error",
+      state.playerConfirmationMessageIsError
+    );
   }
 
   function renderPresence(match) {
@@ -1731,6 +1955,25 @@
     }
 
     if (!isBpOpen(match)) {
+      const playerConfirmation = getPlayerConfirmationInfo(match);
+
+      if (
+        match.status === "scheduled" &&
+        playerConfirmation.enabled &&
+        !playerConfirmation.allConfirmed
+      ) {
+        els.actionQuota.textContent = "等待选手确认";
+        setActionMessage(
+          playerConfirmation.viewerConfirmed
+            ? "你已确认参赛，正在等待其余选手确认。"
+            : "请先在上方确认参赛；全部选手确认后将显示 BP 开放时间。",
+          false,
+          true
+        );
+        renderTrackOptions();
+        return;
+      }
+
       els.actionQuota.textContent =
         match.status === "scheduled" ? "比赛未开始" : "BP未开放";
       setActionMessage(
@@ -1781,6 +2024,7 @@
     const match = state.activeMatch;
 
     if (!match) {
+      stopBpCountdown();
       els.layout.classList.remove("is-detail");
       els.matchListPanel.hidden = false;
       els.bpPanel.hidden = true;
@@ -1801,7 +2045,7 @@
     els.bpTitle.textContent = match.title;
     els.bpMeta.textContent = [
       `比赛 ${formatDateTime(match.startsAt)}`,
-      match.bpStartsAt ? `BP ${formatDateTime(match.bpStartsAt)}` : "BP手动开放",
+      getBpOpeningMeta(match),
       STAGE_LABELS[match.poolMode] || "曲池",
       formatRandomRule(match),
       match.content || "暂无比赛说明"
@@ -1812,6 +2056,7 @@
 
     renderParticipantRow(match);
     renderIdentityRow(match);
+    renderPlayerConfirmation(match);
     renderPresence(match);
     renderSelectionList(els.banList, match.bp?.bans || [], "暂无禁用曲目", "is-ban");
     renderSelectionList(els.pickList, match.bp?.picks || [], "暂无选择曲目", "is-pick");
@@ -1861,6 +2106,7 @@
         timeoutMs: options.timeoutMs || SCHEDULE_LOAD_TIMEOUT_MS
       });
 
+      syncServerTime(payload.serverNow);
       state.matches = Array.isArray(payload.matches) ? payload.matches : [];
       els.summary.textContent = state.matches.length
         ? `当前有 ${state.matches.length} 场可见比赛。`
@@ -1927,6 +2173,7 @@
         return;
       }
 
+      syncServerTime(payload.serverNow);
       queueRandomPickReveal(state.activeMatch, payload.match);
       state.activeMatch = payload.match;
       state.matches = state.matches.map((match) =>
@@ -1971,6 +2218,9 @@
     state.libraryTrackId = "";
     state.trackOptionsSignature = "";
     state.difficultyOptionsSignature = "";
+    state.isConfirmingPlayer = false;
+    state.playerConfirmationMessage = "";
+    state.playerConfirmationMessageIsError = false;
     closeBpLibrary();
     closeBpConfirmDialog();
     window.clearTimeout(state.randomReveal.timer);
@@ -1999,6 +2249,9 @@
     state.libraryTrackId = "";
     state.trackOptionsSignature = "";
     state.difficultyOptionsSignature = "";
+    state.isConfirmingPlayer = false;
+    state.playerConfirmationMessage = "";
+    state.playerConfirmationMessageIsError = false;
     window.clearTimeout(state.randomReveal.timer);
     state.randomReveal = {
       key: "",
@@ -2132,6 +2385,57 @@
     }
   }
 
+  async function confirmPlayerConfirmation() {
+    const match = state.activeMatch;
+    const confirmation = getPlayerConfirmationInfo(match);
+
+    if (
+      !match ||
+      state.isConfirmingPlayer ||
+      match.status !== "scheduled" ||
+      !match.viewer?.isParticipant ||
+      !confirmation.enabled ||
+      confirmation.viewerConfirmed
+    ) {
+      return;
+    }
+
+    state.isConfirmingPlayer = true;
+    state.playerConfirmationMessage = "正在提交参赛确认...";
+    state.playerConfirmationMessageIsError = false;
+    renderPlayerConfirmation(match);
+
+    try {
+      const payload = await fetchJson(
+        `/schedule/matches/${encodeURIComponent(match.id)}/player-confirmation`,
+        {
+          method: "POST",
+          timeoutMs: 12000
+        }
+      );
+
+      queueRandomPickReveal(state.activeMatch, payload.match);
+      state.activeMatch = payload.match;
+      state.matches = state.matches.map((item) =>
+        item.id === payload.match.id ? payload.match : item
+      );
+      state.playerConfirmationMessage = payload.match.playerConfirmation?.allConfirmed
+        ? "全部选手已确认，BP 开放时间已显示。"
+        : "已确认参赛，正在等待其余选手确认。";
+    } catch (error) {
+      state.playerConfirmationMessage = error.message || "确认失败，请稍后重试。";
+      state.playerConfirmationMessageIsError = true;
+    } finally {
+      state.isConfirmingPlayer = false;
+      renderMatchList();
+      renderActiveMatch();
+
+      if (state.activeMatchId) {
+        startPolling();
+      }
+    }
+  }
+
   async function confirmBpSummary() {
     const match = state.activeMatch;
 
@@ -2181,6 +2485,7 @@
     els.backToMatches.addEventListener("click", goBackToMatches);
     els.bpForm.addEventListener("submit", submitBpAction);
     els.confirmBp.addEventListener("click", confirmBpSummary);
+    els.confirmPlayerConfirmation?.addEventListener("click", confirmPlayerConfirmation);
     els.bpSubmitConfirmButton?.addEventListener("click", confirmPendingBpAction);
     document.querySelectorAll("[data-bp-confirm-close]").forEach((element) => {
       element.addEventListener("click", () => closeBpConfirmDialog());

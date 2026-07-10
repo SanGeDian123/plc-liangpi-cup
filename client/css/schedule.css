@@ -243,6 +243,75 @@ button{
   margin-top:18px;
 }
 
+.finished-match-section{
+  display:grid;
+  grid-column:1 / -1;
+  gap:12px;
+  margin-top:8px;
+  padding-top:18px;
+  border-top:1px solid rgba(255,255,255,.1);
+}
+
+.finished-match-toggle{
+  display:flex;
+  align-items:center;
+  width:100%;
+  min-height:48px;
+  gap:10px;
+  padding:12px 14px;
+  border:1px solid rgba(255,228,119,.22);
+  border-radius:8px;
+  background:rgba(255,228,119,.06);
+  color:var(--text);
+  font:inherit;
+  font-size:17px;
+  font-weight:700;
+  text-align:left;
+  cursor:pointer;
+  transition:transform .2s ease, border-color .2s ease, background .2s ease;
+}
+
+.finished-match-toggle:hover,
+.finished-match-toggle:focus-visible{
+  transform:translateY(-1px);
+  border-color:rgba(255,228,119,.48);
+  background:rgba(255,228,119,.11);
+}
+
+.finished-match-count,
+.finished-match-indicator{
+  flex:0 0 auto;
+  color:var(--yellow);
+  font-size:13px;
+  font-weight:400;
+}
+
+.finished-match-indicator{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  margin-left:auto;
+}
+
+.finished-match-indicator::after{
+  content:"";
+  width:7px;
+  height:7px;
+  border-right:1px solid currentColor;
+  border-bottom:1px solid currentColor;
+  transform:translateY(-2px) rotate(45deg);
+  transition:transform .2s ease;
+}
+
+.finished-match-toggle[aria-expanded="true"] .finished-match-indicator::after{
+  transform:translateY(2px) rotate(225deg);
+}
+
+.finished-match-content{
+  display:grid;
+  gap:12px;
+}
+
 .match-category-section{
   display:grid;
   grid-column:1 / -1;
@@ -481,6 +550,203 @@ button{
   text-overflow:ellipsis;
   white-space:nowrap;
   font-size:18px;
+}
+
+.player-confirmation-panel{
+  position:relative;
+  display:grid;
+  gap:14px;
+  padding:16px;
+  border:1px solid rgba(255,228,119,.3);
+  border-radius:8px;
+  background:
+    linear-gradient(135deg, rgba(255,228,119,.12), rgba(103,231,255,.055) 54%, rgba(147,255,188,.08)),
+    rgba(8,12,24,.68);
+  overflow:hidden;
+  isolation:isolate;
+}
+
+.player-confirmation-panel::before{
+  position:absolute;
+  z-index:-1;
+  top:-56px;
+  right:-38px;
+  width:156px;
+  height:156px;
+  border:1px solid rgba(255,228,119,.18);
+  border-radius:50%;
+  box-shadow:0 0 0 20px rgba(255,228,119,.035), 0 0 48px rgba(255,228,119,.12);
+  content:"";
+  animation:playerConfirmationPulse 3.2s ease-in-out infinite;
+}
+
+.player-confirmation-panel.is-complete{
+  border-color:rgba(147,255,188,.42);
+  background:
+    linear-gradient(135deg, rgba(147,255,188,.15), rgba(103,231,255,.07) 58%, rgba(255,228,119,.08)),
+    rgba(8,12,24,.68);
+  animation:playerConfirmationReady .52s cubic-bezier(.18,.82,.2,1) both;
+}
+
+.player-confirmation-panel.is-complete::before{
+  border-color:rgba(147,255,188,.23);
+  box-shadow:0 0 0 20px rgba(147,255,188,.04), 0 0 52px rgba(147,255,188,.16);
+}
+
+.player-confirmation-heading{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+}
+
+.player-confirmation-heading h3{
+  margin-top:5px;
+  font-size:21px;
+  line-height:1.2;
+}
+
+.player-confirmation-heading p:not(.eyebrow){
+  margin-top:8px;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.6;
+}
+
+.player-confirmation-count{
+  display:inline-grid;
+  min-width:62px;
+  min-height:42px;
+  place-items:center;
+  padding:8px 12px;
+  border:1px solid rgba(255,228,119,.32);
+  border-radius:8px;
+  background:rgba(255,228,119,.1);
+  color:var(--yellow);
+  font-size:17px;
+  line-height:1;
+}
+
+.player-confirmation-panel.is-complete .player-confirmation-count{
+  border-color:rgba(147,255,188,.38);
+  background:rgba(147,255,188,.11);
+  color:var(--green);
+}
+
+.player-confirmation-countdown{
+  display:grid;
+  grid-template-columns:auto minmax(0, 1fr) auto;
+  align-items:center;
+  gap:12px;
+  min-height:54px;
+  padding:10px 13px;
+  border:1px solid rgba(103,231,255,.28);
+  border-radius:8px;
+  background:linear-gradient(90deg, rgba(103,231,255,.1), rgba(103,231,255,.035));
+}
+
+.player-confirmation-countdown > span{
+  color:var(--cyan);
+  font-size:13px;
+  white-space:nowrap;
+}
+
+.player-confirmation-countdown strong{
+  color:var(--text);
+  font-family:"PLCFont", "Microsoft YaHei", sans-serif;
+  font-size:27px;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:1px;
+  line-height:1;
+  text-align:center;
+}
+
+.player-confirmation-countdown small{
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.4;
+  text-align:right;
+}
+
+.player-confirmation-roster{
+  display:grid;
+  grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+  gap:9px;
+}
+
+.player-confirmation-roster-item{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-width:0;
+  padding:10px 11px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:8px;
+  background:rgba(255,255,255,.05);
+}
+
+.player-confirmation-roster-item strong{
+  overflow:hidden;
+  font-size:14px;
+  line-height:1.35;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.player-confirmation-state{
+  display:inline-flex;
+  flex:0 0 auto;
+  align-items:center;
+  gap:6px;
+  color:var(--yellow);
+  font-size:12px;
+  white-space:nowrap;
+}
+
+.player-confirmation-state::before{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:currentColor;
+  box-shadow:0 0 12px currentColor;
+  content:"";
+  animation:playerConfirmationDot 1.8s ease-in-out infinite;
+}
+
+.player-confirmation-roster-item.is-confirmed{
+  border-color:rgba(147,255,188,.24);
+  background:rgba(147,255,188,.065);
+}
+
+.player-confirmation-roster-item.is-confirmed .player-confirmation-state{
+  color:var(--green);
+}
+
+.player-confirmation-roster-item.is-confirmed .player-confirmation-state::before{
+  animation:none;
+}
+
+.player-confirmation-actions{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:12px;
+}
+
+.player-confirmation-actions .primary-action{
+  min-width:132px;
+}
+
+.player-confirmation-message{
+  min-height:20px;
+  color:var(--cyan);
+  font-size:13px;
+  line-height:1.5;
+}
+
+.player-confirmation-message.is-error{
+  color:var(--red);
 }
 
 .participant-chip{
@@ -870,6 +1136,46 @@ button{
   56%,
   100%{
     transform:translateX(100%);
+  }
+}
+
+@keyframes playerConfirmationPulse{
+  0%,
+  100%{
+    transform:scale(.94);
+    opacity:.5;
+  }
+
+  50%{
+    transform:scale(1.05);
+    opacity:1;
+  }
+}
+
+@keyframes playerConfirmationDot{
+  0%,
+  100%{
+    opacity:.42;
+    transform:scale(.78);
+  }
+
+  50%{
+    opacity:1;
+    transform:scale(1);
+  }
+}
+
+@keyframes playerConfirmationReady{
+  0%{
+    transform:translateY(5px) scale(.988);
+  }
+
+  70%{
+    transform:translateY(-1px) scale(1.004);
+  }
+
+  100%{
+    transform:none;
   }
 }
 
@@ -1347,6 +1653,39 @@ button{
     grid-template-columns:1fr;
   }
 
+  .player-confirmation-heading{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .player-confirmation-count{
+    min-width:0;
+  }
+
+  .player-confirmation-roster{
+    grid-template-columns:1fr;
+  }
+
+  .player-confirmation-countdown{
+    grid-template-columns:1fr;
+    gap:5px;
+    text-align:center;
+  }
+
+  .player-confirmation-countdown strong,
+  .player-confirmation-countdown small{
+    text-align:center;
+  }
+
+  .player-confirmation-actions{
+    align-items:stretch;
+    flex-direction:column;
+  }
+
+  .player-confirmation-actions .primary-action{
+    width:100%;
+  }
+
   .bp-form .primary-action{
     width:100%;
   }
@@ -1391,6 +1730,9 @@ button{
 @media(prefers-reduced-motion:reduce){
   .selection-item.is-entering,
   .action-message.is-waiting::after,
+  .player-confirmation-panel,
+  .player-confirmation-panel::before,
+  .player-confirmation-state::before,
   .bp-library-dialog.is-open .bp-library-backdrop,
   .bp-library-dialog.is-open .bp-library-panel,
   .bp-submit-dialog.is-open .bp-submit-dialog-backdrop,

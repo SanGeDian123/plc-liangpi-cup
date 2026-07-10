@@ -67,6 +67,7 @@ let adminToken = localStorage.getItem("adminToken");
     matchTitle: document.getElementById("matchTitle"),
     matchStartsAt: document.getElementById("matchStartsAt"),
     bpStartsAt: document.getElementById("bpStartsAt"),
+    playerConfirmationEnabled: document.getElementById("playerConfirmationEnabled"),
     matchStatus: document.getElementById("matchStatus"),
     matchVisibility: document.getElementById("matchVisibility"),
     participantCount: document.getElementById("participantCount"),
@@ -879,6 +880,7 @@ let adminToken = localStorage.getItem("adminToken");
       title: els.matchTitle.value.trim(),
       startsAt: fromDatetimeLocal(els.matchStartsAt.value),
       bpStartsAt: fromDatetimeLocal(els.bpStartsAt.value),
+      playerConfirmationEnabled: els.playerConfirmationEnabled.checked,
       content: els.matchContent.value.trim(),
       status: els.matchStatus.value,
       visibility: els.matchVisibility.value,
@@ -910,6 +912,7 @@ let adminToken = localStorage.getItem("adminToken");
     els.matchTitle.value = "";
     els.matchStartsAt.value = "";
     els.bpStartsAt.value = "";
+    els.playerConfirmationEnabled.checked = false;
     els.matchStatus.value = "scheduled";
     els.matchVisibility.value = "assigned";
     els.participantCount.value = "2";
@@ -945,6 +948,7 @@ let adminToken = localStorage.getItem("adminToken");
     els.matchTitle.value = match.title || "";
     els.matchStartsAt.value = toDatetimeLocal(match.startsAt);
     els.bpStartsAt.value = toDatetimeLocal(match.bpStartsAt);
+    els.playerConfirmationEnabled.checked = Boolean(match.playerConfirmation?.enabled);
     els.matchStatus.value = match.status || "scheduled";
     els.matchVisibility.value = match.visibility || "assigned";
     els.participantCount.value = String(match.participantCount || 2);
@@ -1019,6 +1023,14 @@ let adminToken = localStorage.getItem("adminToken");
         {
           text: `${match.participants?.length || 0}/${match.participantCount || 0}人`
         },
+        ...(match.playerConfirmation?.enabled
+          ? [
+              {
+                text: `选手确认 ${match.playerConfirmation.confirmedCount || 0}/${match.playerConfirmation.total || match.participants?.length || 0}`,
+                className: match.playerConfirmation.allConfirmed ? "is-confirmed" : ""
+              }
+            ]
+          : []),
         {
           text: match.randomPickEnabled === false
             ? "无随机"
