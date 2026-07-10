@@ -39,7 +39,7 @@
       <p id="scheduleSummary">正在同步赛事日程...</p>
     </section>
 
-    <section class="practice-random-panel" aria-labelledby="practiceRandomTitle">
+    <section class="practice-random-panel" id="practiceRandomPanel" aria-labelledby="practiceRandomTitle">
       <div class="practice-random-copy">
         <p class="eyebrow">Random Pick Practice</p>
         <h2 id="practiceRandomTitle">随机抽取模拟</h2>
@@ -152,7 +152,7 @@
             <form class="bp-form" id="bpForm">
               <label for="trackSearch">
                 <span>搜索曲目</span>
-                <input id="trackSearch" type="search" autocomplete="off" placeholder="输入曲名 / 曲包 / 曲师" />
+                <input id="trackSearch" type="search" autocomplete="off" placeholder="输入曲名 / 别名 / 曲包 / 曲师" />
               </label>
 
               <div class="bp-field bp-picker-field">
@@ -273,7 +273,8 @@
 
   <script src="./js/api.js"></script>
   <script src="./js/account-link.js?v=20260705b"></script>
-  <script src="./js/schedule.js?v=20260710f"></script>
+  <script src="./js/song-alias-data.js?v=20260710b"></script>
+  <script src="./js/schedule.js?v=20260710h"></script>
   <script src="./js/site-announcement.js"></script>
 </body>
 </html>

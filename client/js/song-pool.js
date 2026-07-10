@@ -213,9 +213,12 @@
       return true;
     }
 
+    const aliases = window.PLC_SONG_ALIASES?.[track.id] || [];
     const haystack = [
       track.title,
-      track.pack
+      track.artist,
+      track.pack,
+      ...aliases
     ].map(normalize).join(" ");
 
     return haystack.includes(state.search);

@@ -82,6 +82,7 @@
     summary: document.getElementById("scheduleSummary"),
     refresh: document.getElementById("refreshMatchesButton"),
     matchList: document.getElementById("matchList"),
+    practiceRandomPanel: document.getElementById("practiceRandomPanel"),
     practiceRandomButton: document.getElementById("practiceRandomButton"),
     practiceRandomResult: document.getElementById("practiceRandomResult"),
     practiceRandomStatus: document.getElementById("practiceRandomStatus"),
@@ -580,7 +581,8 @@
     }
 
     const needle = state.trackSearch.toLowerCase();
-    const haystack = [track.title, track.artist, track.pack]
+    const aliases = window.PLC_SONG_ALIASES?.[track.id] || [];
+    const haystack = [track.title, track.artist, track.pack, ...aliases]
       .map((item) => String(item || "").toLowerCase())
       .join(" ");
 
@@ -2185,6 +2187,7 @@
 
     if (!match) {
       stopBpCountdown();
+      els.practiceRandomPanel.hidden = false;
       els.layout.classList.remove("is-detail");
       els.matchListPanel.hidden = false;
       els.bpPanel.hidden = true;
@@ -2195,6 +2198,7 @@
 
     const progress = match.bp?.progress || {};
 
+    els.practiceRandomPanel.hidden = true;
     els.layout.classList.add("is-detail");
     els.matchListPanel.hidden = true;
     els.bpPanel.hidden = false;
