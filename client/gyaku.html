@@ -6,11 +6,10 @@
   <meta name="theme-color" content="#03162c" />
   <meta name="description" content="PLC 凉皮杯第六残片：Gyaku_ 曲绘与谱面下载。" />
   <title>Gyaku_ // UNLOCKED</title>
-  <link rel="preload" href="./assets/gyaku-unlock-design.png" as="image" />
-  <link rel="preload" href="./assets/gyaku-mobile-design.png" as="image" media="(max-width:599px) and (orientation:portrait)" />
-  <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="./assets/gyaku-unlock-design.webp" as="image" type="image/webp" media="(min-width:600px), (orientation:landscape)" />
+  <link rel="preload" href="./assets/gyaku-mobile-design.webp" as="image" type="image/webp" media="(max-width:599px) and (orientation:portrait)" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
-  <link rel="stylesheet" href="./css/gyaku.css?v=20260710k" />
+  <link rel="stylesheet" href="./css/gyaku.css?v=20260710l" />
 </head>
 <body class="is-opening">
   <main class="unlock-scene" id="unlockScene" aria-label="Gyaku_ 解锁界面">
@@ -26,8 +25,9 @@
     <div class="design-plane" id="designPlane">
       <img
         class="design-image"
-        src="./assets/gyaku-unlock-design.png"
+        data-src="./assets/gyaku-unlock-design.webp"
         alt="Gyaku_ 解锁设计：左侧为曲目信息，右侧为蓝白色人物曲绘，画面周围漂浮着玻璃碎片。"
+        decoding="async"
         draggable="false"
       />
       <span class="glass-sheen" aria-hidden="true"></span>
@@ -50,8 +50,9 @@
     <div class="mobile-design-plane" id="mobileDesignPlane">
       <img
         class="mobile-design-image"
-        src="./assets/gyaku-mobile-design.png"
+        data-src="./assets/gyaku-mobile-design.webp"
         alt="Gyaku_ 手机端解锁设计"
+        decoding="async"
         draggable="false"
       />
       <span class="mobile-glass-sheen" aria-hidden="true"></span>
@@ -96,6 +97,6 @@
     </a>
     <p class="download-status" id="downloadStatus" role="status" aria-live="polite"></p>
   </main>
-  <script src="./js/gyaku.js?v=20260710k"></script>
+  <script src="./js/gyaku.js?v=20260710l"></script>
 </body>
 </html>

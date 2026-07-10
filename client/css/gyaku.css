@@ -1,9 +1,3 @@
-@font-face{
-  font-family:PLCFont;
-  src:url("../assets/fonts/Phi.woff2") format("woff2");
-  font-display:swap;
-}
-
 :root{
   color-scheme:dark;
   --scene-x:0px;
@@ -31,7 +25,7 @@ body{
 }
 
 body{
-  font-family:PLCFont,"Segoe UI",sans-serif;
+  font-family:"Segoe UI",sans-serif;
 }
 
 button,
@@ -149,7 +143,7 @@ body.is-opening .download-status{
   inset:-7%;
   background:
     linear-gradient(rgba(0,16,38,.28),rgba(0,9,24,.38)),
-    url("../assets/gyaku-unlock-design.png") 66% 50% / cover no-repeat;
+    url("../assets/gyaku-unlock-design.webp") 66% 50% / cover no-repeat;
   filter:blur(18px) saturate(1.18) brightness(.7);
   transform:scale(1.1);
   animation:ambientBreath 8s ease-in-out infinite alternate;
@@ -574,7 +568,7 @@ body.is-opening .download-status{
   .ambient-field{
     background:
       linear-gradient(rgba(0,16,38,.14),rgba(0,9,24,.24)),
-      url("../assets/gyaku-mobile-design.png") 50% 50% / cover no-repeat;
+      url("../assets/gyaku-mobile-design.webp") 50% 50% / cover no-repeat;
     filter:blur(16px) saturate(1.12) brightness(.72);
   }
 

@@ -3,17 +3,22 @@ const coverDownloadTargets = document.querySelectorAll("[data-cover-download]");
 const downloadStatus = document.getElementById("downloadStatus");
 const lightParticles = document.getElementById("lightParticles");
 const openingSequence = document.getElementById("openingSequence");
+const desktopArtwork = document.querySelector(".design-image");
+const mobileArtwork = document.querySelector(".mobile-design-image");
 const motionControl = document.getElementById("motionControl");
 const motionControlLabel = document.getElementById("motionControlLabel");
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
 const coarsePointer = window.matchMedia("(pointer: coarse)");
+const mobileArtworkQuery = window.matchMedia("(max-width: 599px) and (orientation: portrait)");
 const supportsDeviceOrientation = "DeviceOrientationEvent" in window;
 const requiresMotionPermission = supportsDeviceOrientation &&
   typeof DeviceOrientationEvent.requestPermission === "function";
 
 let downloadStatusTimer = null;
 let openingAnimationTimer = null;
+let openingLoadFallbackTimer = null;
+let initialOpeningStarted = false;
 let pointerFrame = null;
 let pointerX = 0;
 let pointerY = 0;
@@ -24,6 +29,24 @@ let motionX = 0;
 let motionY = 0;
 
 const openingAnimationDurationMs = 1850;
+const openingLoadFallbackMs = 650;
+
+function loadResponsiveArtwork() {
+  const activeArtwork = mobileArtworkQuery.matches
+    ? mobileArtwork
+    : desktopArtwork;
+
+  if (!activeArtwork) {
+    return null;
+  }
+
+  if (!activeArtwork.getAttribute("src")) {
+    activeArtwork.src = activeArtwork.dataset.src || "";
+  }
+
+  activeArtwork.fetchPriority = "high";
+  return activeArtwork;
+}
 
 function finishOpeningAnimation() {
   window.clearTimeout(openingAnimationTimer);
@@ -53,6 +76,30 @@ function beginOpeningAnimation({ restart = false } = {}) {
     finishOpeningAnimation,
     openingAnimationDurationMs
   );
+}
+
+function startInitialOpeningWhenReady() {
+  const activeArtwork = loadResponsiveArtwork();
+
+  const startOpening = () => {
+    if (initialOpeningStarted) {
+      return;
+    }
+
+    initialOpeningStarted = true;
+    window.clearTimeout(openingLoadFallbackTimer);
+    openingLoadFallbackTimer = null;
+    beginOpeningAnimation();
+  };
+
+  if (!activeArtwork || (activeArtwork.complete && activeArtwork.naturalWidth > 0)) {
+    startOpening();
+    return;
+  }
+
+  activeArtwork.addEventListener("load", startOpening, { once: true });
+  activeArtwork.addEventListener("error", startOpening, { once: true });
+  openingLoadFallbackTimer = window.setTimeout(startOpening, openingLoadFallbackMs);
 }
 
 function handleReducedMotionChange() {
@@ -246,6 +293,7 @@ function configureMotionControl() {
 function handleScreenOrientationChange() {
   motionBaseline = null;
   resetSceneDepth();
+  window.setTimeout(loadResponsiveArtwork, 80);
 }
 
 function renderPointerDepth() {
@@ -322,9 +370,11 @@ window.addEventListener("orientationchange", handleScreenOrientationChange);
 window.screen?.orientation?.addEventListener?.("change", handleScreenOrientationChange);
 reduceMotion.addEventListener?.("change", handleReducedMotionChange);
 coarsePointer.addEventListener?.("change", configureMotionControl);
+mobileArtworkQuery.addEventListener?.("change", loadResponsiveArtwork);
 
 window.addEventListener("pageshow", (event) => {
   if (event.persisted) {
+    loadResponsiveArtwork();
     beginOpeningAnimation({ restart: true });
   }
 });
@@ -337,9 +387,4 @@ document.addEventListener("keydown", (event) => {
 
 createLightParticles();
 configureMotionControl();
-
-if (document.readyState === "complete") {
-  beginOpeningAnimation();
-} else {
-  window.addEventListener("load", () => beginOpeningAnimation(), { once: true });
-}
+startInitialOpeningWhenReady();
