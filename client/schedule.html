@@ -10,7 +10,7 @@
   <link rel="preload" href="./assets/bp-background.jpg" as="image" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
   <link rel="stylesheet" href="./css/account-link.css?v=20260701b" />
-  <link rel="stylesheet" href="./css/schedule.css?v=20260710e" />
+  <link rel="stylesheet" href="./css/schedule.css?v=20260710f" />
   <link rel="stylesheet" href="./css/site-announcement.css" />
 </head>
 <body>
@@ -37,6 +37,28 @@
       <p class="eyebrow">PLC Match Center</p>
       <h1 id="scheduleTitle">比赛赛程</h1>
       <p id="scheduleSummary">正在同步赛事日程...</p>
+    </section>
+
+    <section class="practice-random-panel" aria-labelledby="practiceRandomTitle">
+      <div class="practice-random-copy">
+        <p class="eyebrow">Random Pick Practice</p>
+        <h2 id="practiceRandomTitle">随机抽取模拟</h2>
+        <p>按正赛随机机制抽取 1 首曲目，提前熟悉选曲节奏。</p>
+
+        <div class="practice-random-controls">
+          <div class="practice-pool-switch" role="group" aria-label="模拟抽取曲池">
+            <button class="is-active" type="button" data-practice-pool="round16" aria-pressed="true">16进8曲池</button>
+            <button type="button" data-practice-pool="top8" aria-pressed="false">8强赛曲池</button>
+          </div>
+          <button class="primary-action practice-random-button" id="practiceRandomButton" type="button">随机抽取 1 首</button>
+        </div>
+      </div>
+
+      <div class="practice-random-result" id="practiceRandomResult" aria-live="polite">
+        <span class="practice-random-status" id="practiceRandomStatus">Ready</span>
+        <strong id="practiceRandomTitleResult">等待抽取</strong>
+        <small id="practiceRandomMeta">优先抽取 IN / AT 谱面</small>
+      </div>
     </section>
 
     <section class="schedule-layout">
@@ -251,7 +273,7 @@
 
   <script src="./js/api.js"></script>
   <script src="./js/account-link.js?v=20260705b"></script>
-  <script src="./js/schedule.js?v=20260710e"></script>
+  <script src="./js/schedule.js?v=20260710f"></script>
   <script src="./js/site-announcement.js"></script>
 </body>
 </html>

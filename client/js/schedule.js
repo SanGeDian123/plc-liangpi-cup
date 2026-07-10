@@ -43,6 +43,11 @@
       target: null,
       targets: []
     },
+    practiceRandom: {
+      poolMode: "round16",
+      isDrawing: false,
+      timer: 0
+    },
     pollTimer: 0,
     isLoadingMatches: false,
     isFetchingActiveMatch: false,
@@ -77,6 +82,12 @@
     summary: document.getElementById("scheduleSummary"),
     refresh: document.getElementById("refreshMatchesButton"),
     matchList: document.getElementById("matchList"),
+    practiceRandomButton: document.getElementById("practiceRandomButton"),
+    practiceRandomResult: document.getElementById("practiceRandomResult"),
+    practiceRandomStatus: document.getElementById("practiceRandomStatus"),
+    practiceRandomTitleResult: document.getElementById("practiceRandomTitleResult"),
+    practiceRandomMeta: document.getElementById("practiceRandomMeta"),
+    practicePoolButtons: Array.from(document.querySelectorAll("[data-practice-pool]")),
     bpPanel: document.getElementById("bpPanel"),
     bpEmpty: document.getElementById("bpEmpty"),
     bpWorkbench: document.getElementById("bpWorkbench"),
@@ -418,6 +429,149 @@
         difficulties: getTrackDifficulties(track, match)
       }))
       .filter((track) => track.difficulties.length > 0);
+  }
+
+  function getSecureRandomIndex(length) {
+    if (!Number.isInteger(length) || length <= 0) {
+      return -1;
+    }
+
+    const range = 0x100000000;
+    const limit = range - (range % length);
+    const values = new Uint32Array(1);
+    let value = limit;
+
+    while (value >= limit) {
+      window.crypto.getRandomValues(values);
+      value = values[0];
+    }
+
+    return value % length;
+  }
+
+  function getPracticeRandomCandidates() {
+    const tracks = getPoolTracks({
+      poolMode: state.practiceRandom.poolMode,
+      customTrackIds: [],
+      customDifficulties: []
+    });
+    const allCandidates = tracks.flatMap((track) =>
+      track.difficulties.map((difficulty) => ({
+        track,
+        difficulty
+      }))
+    );
+    const inAtCandidates = allCandidates.filter(({ difficulty }) =>
+      difficulty === "IN" || difficulty === "AT"
+    );
+
+    return inAtCandidates.length ? inAtCandidates : allCandidates;
+  }
+
+  function setPracticeRandomControlsDisabled(disabled) {
+    els.practiceRandomButton.disabled = disabled;
+    els.practicePoolButtons.forEach((button) => {
+      button.disabled = disabled;
+    });
+  }
+
+  function finishPracticeRandomDraw(candidate) {
+    const { track, difficulty } = candidate;
+
+    window.clearTimeout(state.practiceRandom.timer);
+    state.practiceRandom.timer = 0;
+    state.practiceRandom.isDrawing = false;
+    els.practiceRandomResult.classList.remove("is-rolling");
+    els.practiceRandomResult.classList.add("is-revealed");
+    els.practiceRandomStatus.textContent = "Random Pick";
+    els.practiceRandomTitleResult.textContent = `${track.title} [${difficulty}]`;
+    els.practiceRandomMeta.textContent = [track.artist, track.pack].filter(Boolean).join(" · ") || "曲目信息暂缺";
+    els.practiceRandomButton.textContent = "再次随机抽取";
+    setPracticeRandomControlsDisabled(false);
+  }
+
+  function animatePracticeRandomDraw(candidate, candidates) {
+    const totalSteps = 28;
+    let step = 0;
+
+    els.practiceRandomResult.classList.remove("is-revealed");
+    els.practiceRandomResult.classList.add("is-rolling");
+    els.practiceRandomStatus.textContent = "Drawing";
+    els.practiceRandomMeta.textContent = "正在随机抽取曲目...";
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      finishPracticeRandomDraw(candidate);
+      return;
+    }
+
+    const tick = () => {
+      if (step >= totalSteps) {
+        finishPracticeRandomDraw(candidate);
+        return;
+      }
+
+      const preview = candidates[getSecureRandomIndex(candidates.length)];
+      els.practiceRandomTitleResult.textContent = `${preview.track.title} [${preview.difficulty}]`;
+      step += 1;
+
+      const ratio = step / totalSteps;
+      const delay = 36 + Math.round(290 * ratio * ratio * ratio);
+      state.practiceRandom.timer = window.setTimeout(tick, delay);
+    };
+
+    tick();
+  }
+
+  async function drawPracticeRandomTrack() {
+    if (state.practiceRandom.isDrawing) {
+      return;
+    }
+
+    state.practiceRandom.isDrawing = true;
+    setPracticeRandomControlsDisabled(true);
+    els.practiceRandomButton.textContent = "正在准备曲池...";
+
+    try {
+      if (!hasSongPoolData()) {
+        await loadSongPoolData();
+      }
+
+      const candidates = getPracticeRandomCandidates();
+
+      if (!candidates.length) {
+        throw new Error("当前曲池暂无可抽取谱面");
+      }
+
+      const candidate = candidates[getSecureRandomIndex(candidates.length)];
+      els.practiceRandomButton.textContent = "随机抽取中...";
+      animatePracticeRandomDraw(candidate, candidates);
+    } catch (error) {
+      state.practiceRandom.isDrawing = false;
+      els.practiceRandomResult.classList.remove("is-rolling", "is-revealed");
+      els.practiceRandomStatus.textContent = "Unavailable";
+      els.practiceRandomTitleResult.textContent = "暂时无法抽取";
+      els.practiceRandomMeta.textContent = error.message || "曲池加载失败，请稍后重试";
+      els.practiceRandomButton.textContent = "重新尝试";
+      setPracticeRandomControlsDisabled(false);
+    }
+  }
+
+  function selectPracticePool(poolMode) {
+    if (state.practiceRandom.isDrawing || !["round16", "top8"].includes(poolMode)) {
+      return;
+    }
+
+    state.practiceRandom.poolMode = poolMode;
+    els.practicePoolButtons.forEach((button) => {
+      const isActive = button.dataset.practicePool === poolMode;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", String(isActive));
+    });
+    els.practiceRandomResult.classList.remove("is-rolling", "is-revealed");
+    els.practiceRandomStatus.textContent = "Ready";
+    els.practiceRandomTitleResult.textContent = "等待抽取";
+    els.practiceRandomMeta.textContent = "优先抽取 IN / AT 谱面";
+    els.practiceRandomButton.textContent = "随机抽取 1 首";
   }
 
   function matchesSearch(track) {
@@ -2483,6 +2637,11 @@
   }
 
   function bindEvents() {
+    els.practiceRandomButton?.addEventListener("click", drawPracticeRandomTrack);
+    els.practicePoolButtons.forEach((button) => {
+      button.addEventListener("click", () => selectPracticePool(button.dataset.practicePool));
+    });
+
     els.refresh.addEventListener("click", () => {
       loadMatches();
       fetchActiveMatch();
