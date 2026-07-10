@@ -630,6 +630,19 @@ button{
   line-height:1.2;
 }
 
+.player-confirmation-click-hint{
+  display:none;
+  margin-top:7px;
+  color:rgba(255,255,255,.58);
+  font-size:12px;
+  line-height:1.4;
+  letter-spacing:.04em;
+}
+
+.player-confirmation-panel.is-actionable .player-confirmation-click-hint{
+  display:block;
+}
+
 .player-confirmation-count{
   display:inline-grid;
   min-width:62px;
