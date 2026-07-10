@@ -1,0 +1,947 @@
+@font-face{
+  font-family:PLCFont;
+  src:url("../assets/fonts/Phi.woff2") format("woff2");
+  font-display:swap;
+}
+
+:root{
+  color-scheme:dark;
+  --scene-x:0px;
+  --scene-y:0px;
+  --particle-x:0px;
+  --particle-y:0px;
+}
+
+*{
+  box-sizing:border-box;
+}
+
+[hidden]{
+  display:none !important;
+}
+
+html,
+body{
+  width:100%;
+  min-width:320px;
+  height:100%;
+  margin:0;
+  overflow:hidden;
+  background:#020d1c;
+}
+
+body{
+  font-family:PLCFont,"Segoe UI",sans-serif;
+}
+
+button,
+a{
+  -webkit-tap-highlight-color:transparent;
+}
+
+.unlock-scene{
+  position:relative;
+  isolation:isolate;
+  width:100%;
+  height:100%;
+  min-height:100svh;
+  overflow:hidden;
+  background:#03142a;
+}
+
+.opening-sequence{
+  position:absolute;
+  z-index:20;
+  inset:0;
+  overflow:hidden;
+  visibility:hidden;
+  pointer-events:none;
+}
+
+body.is-opening .opening-sequence{
+  visibility:visible;
+}
+
+.opening-sequence::before{
+  content:"";
+  position:absolute;
+  inset:-2%;
+  background:#000;
+  opacity:1;
+  clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 100%);
+  will-change:clip-path,opacity,filter;
+}
+
+body.is-opening.is-opening-active .opening-sequence::before{
+  animation:diagonalOpeningReveal 1.12s cubic-bezier(.24,.66,.22,1) .08s both;
+}
+
+.opening-band{
+  display:none;
+}
+
+.opening-scan{
+  position:absolute;
+  z-index:2;
+  inset:-45%;
+  background:linear-gradient(45deg,transparent 47.8%,rgba(90,178,255,.08) 49.1%,rgba(232,248,255,.76) 49.9%,rgba(92,184,255,.18) 50.7%,transparent 52.2%);
+  filter:drop-shadow(0 0 18px rgba(82,175,255,.48));
+  opacity:0;
+  transform:translate3d(-54%,54%,0);
+  will-change:transform,opacity;
+}
+
+body.is-opening.is-opening-active .opening-scan{
+  animation:diagonalOpeningScan 1.02s cubic-bezier(.24,.66,.22,1) .12s both;
+}
+
+.art-opening-mask{
+  position:absolute;
+  z-index:6;
+  display:none;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 52% 46%,rgba(6,21,42,.9),#000 66%),
+    #000;
+  opacity:1;
+  pointer-events:none;
+  will-change:opacity,filter;
+}
+
+.desktop-art-opening-mask{
+  top:7.4%;
+  left:31.2%;
+  width:57.1%;
+  height:85.4%;
+  clip-path:polygon(18% 0,96% 4%,100% 93%,77% 100%,0 88%,10% 28%);
+}
+
+.mobile-art-opening-mask{
+  top:19.1%;
+  left:11.5%;
+  width:87.5%;
+  height:57.8%;
+  clip-path:polygon(14% 0,100% 5%,92% 100%,0 88%);
+}
+
+body.is-opening.is-opening-active .art-opening-mask{
+  display:block;
+  animation:artOpeningReveal 1s cubic-bezier(.18,.72,.2,1) .72s both;
+}
+
+body.is-opening .cover-download,
+body.is-opening .mobile-cover-download,
+body.is-opening .return-link,
+body.is-opening .motion-control{
+  pointer-events:none;
+}
+
+body.is-opening .cover-download-prompt,
+body.is-opening .return-link,
+body.is-opening .motion-control,
+body.is-opening .download-status{
+  opacity:0 !important;
+}
+
+.ambient-field{
+  position:absolute;
+  z-index:-2;
+  inset:-7%;
+  background:
+    linear-gradient(rgba(0,16,38,.28),rgba(0,9,24,.38)),
+    url("../assets/gyaku-unlock-design.png") 66% 50% / cover no-repeat;
+  filter:blur(18px) saturate(1.18) brightness(.7);
+  transform:scale(1.1);
+  animation:ambientBreath 8s ease-in-out infinite alternate;
+}
+
+.ambient-field::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at 74% 42%,rgba(174,222,255,.16),transparent 29%),
+    radial-gradient(circle at 16% 66%,rgba(59,140,225,.12),transparent 32%),
+    linear-gradient(110deg,rgba(1,12,28,.36),transparent 52%,rgba(4,26,55,.22));
+  mix-blend-mode:screen;
+}
+
+.design-plane{
+  position:absolute;
+  z-index:1;
+  top:50%;
+  left:50%;
+  width:max(100vw,177.68vh);
+  height:max(100vh,56.28vw);
+  overflow:hidden;
+  transform:translate3d(calc(-50% + var(--scene-x)),calc(-50% + var(--scene-y)),0) scale(1.012);
+  transform-origin:50% 50%;
+  transition:transform .22s ease-out;
+  will-change:transform;
+}
+
+.mobile-design-plane{
+  display:none;
+}
+
+.design-image{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:fill;
+  user-select:none;
+}
+
+.glass-sheen{
+  position:absolute;
+  inset:-15%;
+  pointer-events:none;
+  background:linear-gradient(112deg,transparent 36%,rgba(215,241,255,.13) 45%,rgba(255,255,255,.32) 48%,rgba(114,192,255,.08) 51%,transparent 60%);
+  mix-blend-mode:screen;
+  transform:translateX(-72%);
+  animation:glassSweep 7.2s cubic-bezier(.2,.7,.28,1) infinite;
+}
+
+.cover-download{
+  position:absolute;
+  z-index:4;
+  top:7.4%;
+  left:31.2%;
+  width:57.1%;
+  height:85.4%;
+  display:grid;
+  place-items:end center;
+  padding:0 0 10%;
+  clip-path:polygon(18% 0,96% 4%,100% 93%,77% 100%,0 88%,10% 28%);
+  color:#e9f6ff;
+  text-decoration:none;
+  cursor:pointer;
+  outline:0;
+}
+
+.cover-download::before,
+.cover-download::after{
+  content:"";
+  position:absolute;
+  inset:2.5%;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity .28s ease,transform .38s cubic-bezier(.2,.75,.2,1);
+}
+
+.cover-download::before{
+  border:1px solid rgba(224,244,255,.76);
+  box-shadow:inset 0 0 34px rgba(153,214,255,.2),0 0 46px rgba(80,171,255,.32);
+  transform:scale(.985);
+}
+
+.cover-download::after{
+  background:linear-gradient(118deg,transparent 30%,rgba(255,255,255,.19) 47%,transparent 64%);
+  transform:translateX(-28%);
+  mix-blend-mode:screen;
+}
+
+.cover-download:hover::before,
+.cover-download:focus-visible::before,
+.cover-download:hover::after,
+.cover-download:focus-visible::after,
+.cover-download.is-downloading::before,
+.cover-download.is-downloading::after{
+  opacity:1;
+}
+
+.cover-download:hover::before,
+.cover-download:focus-visible::before{
+  transform:scale(1);
+}
+
+.cover-download:hover::after,
+.cover-download:focus-visible::after,
+.cover-download.is-downloading::after{
+  transform:translateX(24%);
+}
+
+.cover-download-prompt{
+  position:relative;
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  padding:10px 18px 9px;
+  border:1px solid rgba(225,244,255,.52);
+  background:rgba(3,31,66,.54);
+  box-shadow:0 12px 32px rgba(0,20,48,.42),inset 0 0 18px rgba(143,209,255,.12);
+  color:#f3f9ff;
+  letter-spacing:.28em;
+  backdrop-filter:blur(12px);
+  opacity:0;
+  transform:translateY(12px);
+  transition:opacity .25s ease,transform .3s ease;
+}
+
+.cover-download-prompt b{
+  font-size:12px;
+  font-weight:500;
+}
+
+.cover-download-prompt small{
+  color:#a9d7ff;
+  font-family:"Segoe UI",sans-serif;
+  font-size:10px;
+  letter-spacing:.12em;
+}
+
+.cover-download:hover .cover-download-prompt,
+.cover-download:focus-visible .cover-download-prompt,
+.cover-download.is-downloading .cover-download-prompt{
+  opacity:1;
+  transform:none;
+}
+
+.mobile-cover-download{
+  color:#e9f6ff;
+  text-decoration:none;
+}
+
+.light-particles{
+  position:absolute;
+  z-index:3;
+  inset:0;
+  pointer-events:none;
+  overflow:hidden;
+  transform:translate3d(var(--particle-x),var(--particle-y),0);
+  transition:transform .18s ease-out;
+  will-change:transform;
+}
+
+.light-particle{
+  position:absolute;
+  width:var(--size);
+  height:var(--size);
+  border-radius:50%;
+  background:#dff5ff;
+  box-shadow:0 0 5px #fff,0 0 13px #5cb7ff;
+  opacity:0;
+  animation:particleDrift var(--duration) ease-in-out var(--delay) infinite;
+}
+
+.refraction{
+  position:absolute;
+  z-index:2;
+  width:18vw;
+  height:1px;
+  pointer-events:none;
+  background:linear-gradient(90deg,transparent,rgba(205,239,255,.74),transparent);
+  box-shadow:0 0 16px rgba(86,179,255,.58);
+  opacity:.34;
+  animation:refractionDrift 5.8s ease-in-out infinite alternate;
+}
+
+.refraction-one{
+  top:18%;
+  right:-3%;
+  transform:rotate(66deg);
+}
+
+.refraction-two{
+  bottom:11%;
+  left:28%;
+  transform:rotate(-18deg);
+  animation-delay:-2.1s;
+}
+
+.motion-control{
+  position:absolute;
+  z-index:7;
+  left:max(20px,env(safe-area-inset-left));
+  bottom:max(18px,env(safe-area-inset-bottom));
+  display:flex;
+  align-items:center;
+  gap:9px;
+  min-height:32px;
+  padding:8px 11px;
+  border:1px solid rgba(209,235,255,.26);
+  background:rgba(2,18,40,.34);
+  color:rgba(226,243,255,.72);
+  font:10px/1 "Segoe UI",sans-serif;
+  letter-spacing:.18em;
+  cursor:pointer;
+  backdrop-filter:blur(8px);
+  transition:color .2s ease,border-color .2s ease,background .2s ease,opacity .2s ease;
+}
+
+.motion-control:hover,
+.motion-control:focus-visible{
+  border-color:rgba(219,242,255,.68);
+  background:rgba(2,26,58,.68);
+  color:#fff;
+  outline:none;
+}
+
+.motion-control-indicator{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#7393ae;
+  box-shadow:0 0 0 3px rgba(115,147,174,.1);
+  transition:background .2s ease,box-shadow .2s ease;
+}
+
+.motion-control[data-state="listening"] .motion-control-indicator{
+  background:#ffd878;
+  box-shadow:0 0 0 3px rgba(255,216,120,.12),0 0 12px rgba(255,216,120,.42);
+  animation:motionListening 1.2s ease-in-out infinite;
+}
+
+.motion-control[data-state="active"]{
+  border-color:rgba(142,217,255,.48);
+  color:#e8f7ff;
+}
+
+.motion-control[data-state="active"] .motion-control-indicator{
+  background:#9ee5ff;
+  box-shadow:0 0 0 3px rgba(158,229,255,.14),0 0 14px rgba(88,191,255,.72);
+}
+
+.motion-control[data-state="denied"]{
+  opacity:.68;
+}
+
+.motion-control[data-state="denied"] .motion-control-indicator{
+  background:#ff8f9c;
+  box-shadow:0 0 0 3px rgba(255,143,156,.1);
+}
+
+.return-link{
+  position:absolute;
+  z-index:6;
+  right:max(20px,env(safe-area-inset-right));
+  bottom:max(18px,env(safe-area-inset-bottom));
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:8px 11px;
+  border:1px solid rgba(209,235,255,.22);
+  background:rgba(2,18,40,.25);
+  color:rgba(226,243,255,.62);
+  font:10px/1 "Segoe UI",sans-serif;
+  letter-spacing:.24em;
+  text-decoration:none;
+  backdrop-filter:blur(8px);
+  transition:color .2s ease,border-color .2s ease,background .2s ease;
+}
+
+.return-link:hover,
+.return-link:focus-visible{
+  border-color:rgba(219,242,255,.62);
+  background:rgba(2,26,58,.62);
+  color:#fff;
+  outline:none;
+}
+
+.download-status{
+  position:absolute;
+  z-index:7;
+  left:50%;
+  bottom:max(22px,env(safe-area-inset-bottom));
+  margin:0;
+  padding:8px 13px;
+  border-left:2px solid #a8dbff;
+  background:rgba(2,20,45,.72);
+  color:#e8f6ff;
+  font:11px/1.4 "Segoe UI",sans-serif;
+  letter-spacing:.14em;
+  opacity:0;
+  transform:translate(-50%,12px);
+  transition:opacity .24s ease,transform .24s ease;
+  pointer-events:none;
+}
+
+.download-status.is-visible{
+  opacity:1;
+  transform:translate(-50%,0);
+}
+
+.mobile-track-card{
+  display:none;
+}
+
+@keyframes ambientBreath{
+  from{transform:scale(1.08);filter:blur(18px) saturate(1.08) brightness(.64)}
+  to{transform:scale(1.14);filter:blur(22px) saturate(1.28) brightness(.76)}
+}
+
+@keyframes diagonalOpeningReveal{
+  0%{
+    opacity:1;
+    clip-path:polygon(0 0,100% 0,100% 100%,0 100%,0 100%);
+    filter:blur(0);
+  }
+
+  22%{
+    clip-path:polygon(0 0,100% 0,100% 100%,35% 100%,0 65%);
+  }
+
+  48%{
+    clip-path:polygon(0 0,100% 0,100% 100%,85% 100%,0 15%);
+  }
+
+  68%{
+    clip-path:polygon(20% 0,100% 0,100% 80%,100% 80%,20% 0);
+  }
+
+  88%{
+    opacity:1;
+    clip-path:polygon(70% 0,100% 0,100% 30%,100% 30%,70% 0);
+    filter:blur(.6px);
+  }
+
+  100%{
+    opacity:0;
+    clip-path:polygon(100% 0,100% 0,100% 0,100% 0,100% 0);
+    filter:blur(3px);
+  }
+}
+
+@keyframes diagonalOpeningScan{
+  0%{
+    opacity:0;
+    transform:translate3d(-54%,54%,0);
+  }
+
+  16%{
+    opacity:.62;
+  }
+
+  76%{
+    opacity:.42;
+  }
+
+  100%{
+    opacity:0;
+    transform:translate3d(54%,-54%,0);
+  }
+}
+
+@keyframes artOpeningReveal{
+  0%, 18%{
+    opacity:1;
+    filter:brightness(0);
+  }
+
+  48%{
+    opacity:.82;
+    filter:brightness(.22);
+  }
+
+  76%{
+    opacity:.36;
+    filter:brightness(.66);
+  }
+
+  100%{
+    opacity:0;
+    filter:brightness(1);
+  }
+}
+
+@keyframes glassSweep{
+  0%, 58%{transform:translateX(-72%);opacity:0}
+  64%{opacity:.8}
+  78%{transform:translateX(72%);opacity:.62}
+  82%, 100%{transform:translateX(72%);opacity:0}
+}
+
+@keyframes particleDrift{
+  0%{opacity:0;transform:translate3d(0,18px,0) scale(.4)}
+  22%{opacity:.82}
+  72%{opacity:.48}
+  100%{opacity:0;transform:translate3d(var(--drift),-34px,0) scale(1.18)}
+}
+
+@keyframes refractionDrift{
+  from{opacity:.12;filter:blur(1px)}
+  to{opacity:.52;filter:blur(0)}
+}
+
+@keyframes motionListening{
+  0%, 100%{opacity:.48}
+  50%{opacity:1}
+}
+
+@media(max-width:599px) and (orientation:portrait){
+  .ambient-field{
+    background:
+      linear-gradient(rgba(0,16,38,.14),rgba(0,9,24,.24)),
+      url("../assets/gyaku-mobile-design.png") 50% 50% / cover no-repeat;
+    filter:blur(16px) saturate(1.12) brightness(.72);
+  }
+
+  .design-plane,
+  .mobile-track-card{
+    display:none;
+  }
+
+  .mobile-design-plane{
+    position:absolute;
+    z-index:1;
+    top:50%;
+    left:50%;
+    display:block;
+    width:min(100vw,56.28svh);
+    height:min(100svh,177.68vw);
+    overflow:hidden;
+    transform:translate3d(calc(-50% + var(--scene-x)),calc(-50% + var(--scene-y)),0) scale(1.003);
+    transform-origin:50% 50%;
+    transition:transform .2s ease-out;
+    will-change:transform;
+  }
+
+  .mobile-design-image{
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:fill;
+    user-select:none;
+  }
+
+  .mobile-glass-sheen{
+    position:absolute;
+    inset:-12%;
+    pointer-events:none;
+    background:linear-gradient(116deg,transparent 38%,rgba(209,239,255,.08) 45%,rgba(255,255,255,.22) 48%,rgba(120,200,255,.06) 52%,transparent 61%);
+    mix-blend-mode:screen;
+    transform:translateX(-74%);
+    animation:glassSweep 7.8s cubic-bezier(.2,.7,.28,1) infinite;
+  }
+
+  .mobile-cover-download{
+    position:absolute;
+    z-index:4;
+    top:19.1%;
+    left:11.5%;
+    width:87.5%;
+    height:57.8%;
+    display:grid;
+    place-items:end center;
+    padding-bottom:25%;
+    clip-path:polygon(14% 0,100% 5%,92% 100%,0 88%);
+    cursor:pointer;
+    outline:0;
+    touch-action:manipulation;
+  }
+
+  .mobile-cover-download::before{
+    content:"";
+    position:absolute;
+    inset:1.6%;
+    border:1px solid rgba(221,243,255,.34);
+    box-shadow:inset 0 0 30px rgba(140,207,255,.1),0 0 34px rgba(72,165,255,.15);
+    opacity:.5;
+    pointer-events:none;
+    transition:opacity .2s ease,transform .2s ease;
+  }
+
+  .mobile-cover-download .cover-download-prompt{
+    min-width:108px;
+    gap:2px;
+    padding:7px 13px 6px;
+    background:rgba(3,28,61,.76);
+    opacity:1;
+    transform:none;
+  }
+
+  .mobile-cover-download .cover-download-prompt b{
+    font-size:10px;
+    letter-spacing:.22em;
+  }
+
+  .mobile-cover-download .cover-download-prompt small{
+    font-size:8px;
+  }
+
+  .mobile-cover-download:active::before,
+  .mobile-cover-download:focus-visible::before{
+    opacity:1;
+    transform:scale(.985);
+  }
+
+  .mobile-cover-download:active .cover-download-prompt{
+    transform:scale(.94);
+  }
+
+  .return-link{
+    right:max(12px,env(safe-area-inset-right));
+    bottom:max(12px,env(safe-area-inset-bottom));
+    padding:7px 9px;
+    background:rgba(2,18,40,.42);
+  }
+
+  .motion-control{
+    left:max(12px,env(safe-area-inset-left));
+    bottom:max(12px,env(safe-area-inset-bottom));
+  }
+
+  .download-status{
+    bottom:max(54px,calc(env(safe-area-inset-bottom) + 46px));
+    left:12px;
+    max-width:calc(100vw - 24px);
+    transform:translateY(12px);
+  }
+
+  .download-status.is-visible{
+    transform:none;
+  }
+}
+
+@media(max-width:1180px), (hover:none) and (pointer:coarse){
+  .cover-download{
+    touch-action:manipulation;
+  }
+
+  .cover-download::before{
+    opacity:.34;
+    transform:scale(1);
+  }
+
+  .cover-download-prompt{
+    min-width:132px;
+    padding:11px 20px 10px;
+    border-color:rgba(225,244,255,.68);
+    background:rgba(3,31,66,.7);
+    box-shadow:0 14px 34px rgba(0,20,48,.48),inset 0 0 20px rgba(143,209,255,.16);
+    opacity:1;
+    transform:none;
+  }
+
+  .cover-download-prompt b{
+    font-size:13px;
+  }
+
+  .cover-download:active::before{
+    opacity:1;
+    transform:scale(.985);
+  }
+
+  .cover-download:active .cover-download-prompt{
+    transform:scale(.94);
+  }
+}
+
+@media(min-width:600px) and (max-width:1180px) and (orientation:portrait){
+  .unlock-scene{
+    --portrait-scene-top:max(3vh,env(safe-area-inset-top));
+    background:#03142a;
+  }
+
+  .design-plane{
+    top:var(--portrait-scene-top);
+    left:34vw;
+    width:178vw;
+    height:100vw;
+    transform:translate3d(-50%,var(--scene-y),0);
+  }
+
+  .cover-download{
+    padding-bottom:7%;
+  }
+
+  .mobile-track-card{
+    position:absolute;
+    z-index:5;
+    top:calc(var(--portrait-scene-top) + 100vw + 14px);
+    right:16px;
+    bottom:auto;
+    left:16px;
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:10px 20px;
+    padding:17px 18px 15px;
+    border:1px solid rgba(204,233,255,.22);
+    background:linear-gradient(118deg,rgba(2,20,45,.82),rgba(5,43,80,.56));
+    box-shadow:0 22px 55px rgba(0,10,28,.5),inset 0 0 28px rgba(117,196,255,.06);
+    color:#e6f3ff;
+    backdrop-filter:blur(16px);
+  }
+
+  .mobile-track-card p,
+  .mobile-track-card h1,
+  .mobile-track-card dl,
+  .mobile-track-card small{
+    margin:0;
+  }
+
+  .mobile-track-card p{
+    grid-column:1 / -1;
+    color:#89afd1;
+    font:8px/1.2 "Segoe UI",sans-serif;
+    letter-spacing:.5em;
+  }
+
+  .mobile-track-card h1{
+    font:300 clamp(38px,13vw,64px)/.88 "Segoe UI",sans-serif;
+    letter-spacing:.02em;
+  }
+
+  .mobile-track-card dl{
+    grid-row:3;
+    display:flex;
+    gap:18px;
+  }
+
+  .mobile-track-card dl div{
+    display:flex;
+    flex-direction:column;
+    gap:3px;
+  }
+
+  .mobile-track-card dt{
+    color:#8fb4d3;
+    font:italic 9px/1 "Segoe UI",sans-serif;
+  }
+
+  .mobile-track-card dd{
+    margin:0;
+    font:italic 12px/1.2 "Segoe UI",sans-serif;
+  }
+
+  .mobile-track-card strong{
+    grid-column:2;
+    grid-row:2 / 4;
+    align-self:center;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:8px 13px;
+    border:1px solid rgba(224,241,255,.48);
+    background:rgba(220,237,255,.12);
+    font:300 34px/1 "Segoe UI",sans-serif;
+  }
+
+  .mobile-track-card strong span{
+    margin-top:4px;
+    font-size:11px;
+  }
+
+  .mobile-track-card > small{
+    grid-column:1 / -1;
+    padding-top:7px;
+    border-top:1px solid rgba(205,233,255,.16);
+    color:#9fc6e5;
+    font:10px/1.3 "Segoe UI",sans-serif;
+    letter-spacing:.08em;
+  }
+
+  .mobile-track-card > small b{
+    color:#eff9ff;
+    font-weight:600;
+    letter-spacing:.16em;
+  }
+
+  .return-link{
+    right:16px;
+    bottom:max(16px,env(safe-area-inset-bottom));
+  }
+
+  .motion-control{
+    left:16px;
+    bottom:max(16px,env(safe-area-inset-bottom));
+  }
+
+  .download-status{
+    bottom:max(58px,calc(env(safe-area-inset-bottom) + 48px));
+    left:16px;
+    max-width:calc(100vw - 130px);
+    transform:translateY(12px);
+  }
+
+  .download-status.is-visible{
+    transform:none;
+  }
+}
+
+@media(min-width:600px) and (max-width:1180px) and (orientation:portrait){
+  .design-plane{
+    left:34.5vw;
+    width:142vw;
+    height:79.9vw;
+  }
+
+  .cover-download{
+    padding-bottom:9%;
+  }
+
+  .cover-download-prompt{
+    min-width:158px;
+    padding:13px 24px 12px;
+  }
+
+  .cover-download-prompt b{
+    font-size:14px;
+  }
+
+  .mobile-track-card{
+    top:calc(var(--portrait-scene-top) + 79.9vw + 18px);
+    right:max(48px,7vw);
+    left:max(48px,7vw);
+    gap:12px 28px;
+    padding:20px 24px 18px;
+  }
+
+  .mobile-track-card h1{
+    font-size:64px;
+  }
+
+  .mobile-track-card dl{
+    gap:28px;
+  }
+
+  .mobile-track-card dd{
+    font-size:14px;
+  }
+
+  .mobile-track-card strong{
+    padding:10px 18px;
+    font-size:40px;
+  }
+}
+
+@media(max-width:1180px) and (orientation:landscape){
+  .design-plane{
+    width:100vw;
+    height:56.28vw;
+    transform:translate3d(calc(-50% + var(--scene-x)),calc(-50% + var(--scene-y)),0) scale(1.005);
+  }
+
+  .cover-download-prompt{
+    min-width:124px;
+    padding:8px 16px 7px;
+  }
+
+  .cover-download-prompt b{
+    font-size:11px;
+  }
+}
+
+@media(max-height:620px) and (orientation:landscape){
+  .cover-download-prompt{
+    padding:7px 12px 6px;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  *,
+  *::before,
+  *::after{
+    scroll-behavior:auto !important;
+    animation-duration:.001ms !important;
+    animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;
+  }
+
+  .design-plane{
+    --scene-x:0px;
+    --scene-y:0px;
+  }
+}

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#03162c" />
+  <meta name="description" content="PLC 凉皮杯第六残片：Gyaku_ 曲绘与谱面下载。" />
+  <title>Gyaku_ // UNLOCKED</title>
+  <link rel="preload" href="./assets/gyaku-unlock-design.png" as="image" />
+  <link rel="preload" href="./assets/gyaku-mobile-design.png" as="image" media="(max-width:599px) and (orientation:portrait)" />
+  <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
+  <link rel="stylesheet" href="./css/gyaku.css?v=20260710k" />
+</head>
+<body class="is-opening">
+  <main class="unlock-scene" id="unlockScene" aria-label="Gyaku_ 解锁界面">
+    <div class="ambient-field" aria-hidden="true"></div>
+
+    <div class="opening-sequence" id="openingSequence" aria-hidden="true">
+      <span class="opening-band opening-band-top"></span>
+      <span class="opening-band opening-band-middle"></span>
+      <span class="opening-band opening-band-bottom"></span>
+      <span class="opening-scan"></span>
+    </div>
+
+    <div class="design-plane" id="designPlane">
+      <img
+        class="design-image"
+        src="./assets/gyaku-unlock-design.png"
+        alt="Gyaku_ 解锁设计：左侧为曲目信息，右侧为蓝白色人物曲绘，画面周围漂浮着玻璃碎片。"
+        draggable="false"
+      />
+      <span class="glass-sheen" aria-hidden="true"></span>
+      <span class="art-opening-mask desktop-art-opening-mask" aria-hidden="true"></span>
+      <a
+        class="cover-download"
+        id="coverDownload"
+        data-cover-download
+        href="./assets/占位文件.txt"
+        download="占位文件.txt"
+        aria-label="下载占位文件"
+      >
+        <span class="cover-download-prompt">
+          <b>DOWNLOAD</b>
+          <small>Gyaku_.pez</small>
+        </span>
+      </a>
+    </div>
+
+    <div class="mobile-design-plane" id="mobileDesignPlane">
+      <img
+        class="mobile-design-image"
+        src="./assets/gyaku-mobile-design.png"
+        alt="Gyaku_ 手机端解锁设计"
+        draggable="false"
+      />
+      <span class="mobile-glass-sheen" aria-hidden="true"></span>
+      <span class="art-opening-mask mobile-art-opening-mask" aria-hidden="true"></span>
+      <a
+        class="mobile-cover-download"
+        data-cover-download
+        href="./assets/占位文件.txt"
+        download="占位文件.txt"
+        aria-label="下载占位文件"
+      >
+        <span class="cover-download-prompt">
+          <b>DOWNLOAD</b>
+          <small>Gyaku_.pez</small>
+        </span>
+      </a>
+    </div>
+
+    <div class="light-particles" id="lightParticles" aria-hidden="true"></div>
+    <div class="refraction refraction-one" aria-hidden="true"></div>
+    <div class="refraction refraction-two" aria-hidden="true"></div>
+
+    <button class="motion-control" id="motionControl" type="button" aria-pressed="false" hidden>
+      <span class="motion-control-indicator" aria-hidden="true"></span>
+      <span id="motionControlLabel">ENABLE MOTION</span>
+    </button>
+
+    <section class="mobile-track-card" aria-label="曲目信息">
+      <p>VDAKE NOKEN / HRE</p>
+      <h1>Gyaku_</h1>
+      <dl>
+        <div><dt>Chart</dt><dd>BaNa<sub>2</sub>Be<sub>2</sub>O<sub>5</sub></dd></div>
+        <div><dt>Artist</dt><dd>Essbee</dd></div>
+        <div><dt>Illustration</dt><dd>UK</dd></div>
+      </dl>
+      <strong>17 <span>AT</span></strong>
+      <small><b>DOWNLOAD</b> // Gyaku_.pez</small>
+    </section>
+
+    <a class="return-link" href="./event.html#finalSignal" aria-label="返回赛事主页">
+      <span aria-hidden="true">←</span> RETURN
+    </a>
+    <p class="download-status" id="downloadStatus" role="status" aria-live="polite"></p>
+  </main>
+  <script src="./js/gyaku.js?v=20260710k"></script>
+</body>
+</html>
