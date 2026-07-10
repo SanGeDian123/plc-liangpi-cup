@@ -10,7 +10,7 @@
   <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="./assets/bp-background.jpg" as="image" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
-  <link rel="stylesheet" href="./css/schedule-admin.css?v=20260710b" />
+  <link rel="stylesheet" href="./css/schedule-admin.css?v=20260710c" />
 </head>
 <body>
   <main class="admin-shell">
@@ -79,6 +79,11 @@
               <input id="matchTitle" type="text" maxlength="120" required />
             </label>
 
+            <label for="matchSortOrder">
+              <span>显示排序</span>
+              <input id="matchSortOrder" type="number" min="-9999" max="9999" step="1" placeholder="留空则按名称排序" />
+            </label>
+
             <label for="matchStartsAt">
               <span>比赛时间</span>
               <input id="matchStartsAt" type="datetime-local" />
@@ -93,7 +98,6 @@
               <input id="playerConfirmationEnabled" type="checkbox" />
               <span>
                 <strong>选手确认</strong>
-                <small>全部参赛选手确认后，前台才显示 BP 开放时间</small>
               </span>
             </label>
 
@@ -262,6 +266,6 @@
 
   <script src="./js/api.js"></script>
   <script src="./js/song-pool-data.js?v=20260705a"></script>
-  <script src="./js/schedule-admin.js?v=20260710c"></script>
+  <script src="./js/schedule-admin.js?v=20260710d"></script>
 </body>
 </html>

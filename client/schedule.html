@@ -10,7 +10,7 @@
   <link rel="preload" href="./assets/bp-background.jpg" as="image" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
   <link rel="stylesheet" href="./css/account-link.css?v=20260701b" />
-  <link rel="stylesheet" href="./css/schedule.css?v=20260710c" />
+  <link rel="stylesheet" href="./css/schedule.css?v=20260710d" />
   <link rel="stylesheet" href="./css/site-announcement.css" />
 </head>
 <body>
@@ -83,12 +83,11 @@
             </div>
           </div>
 
-          <section class="player-confirmation-panel" id="playerConfirmationPanel" aria-labelledby="playerConfirmationTitle" hidden>
+          <button class="player-confirmation-panel" id="playerConfirmationPanel" type="button" aria-labelledby="playerConfirmationTitle" hidden>
             <div class="player-confirmation-heading">
               <div>
                 <p class="eyebrow">Player Check-in</p>
                 <h3 id="playerConfirmationTitle">赛前选手确认</h3>
-                <p id="playerConfirmationHint">全部参赛选手确认后，将显示 BP 开放时间。</p>
               </div>
               <strong class="player-confirmation-count" id="playerConfirmationCount">0/0</strong>
             </div>
@@ -98,11 +97,8 @@
               <strong id="playerConfirmationCountdownValue">--:--:--</strong>
               <small id="playerConfirmationCountdownHint"></small>
             </div>
-            <div class="player-confirmation-actions">
-              <button class="primary-action" id="confirmPlayerConfirmationButton" type="button">确认参赛</button>
-              <p class="player-confirmation-message" id="playerConfirmationMessage" aria-live="polite"></p>
-            </div>
-          </section>
+            <p class="player-confirmation-message" id="playerConfirmationMessage" aria-live="polite"></p>
+          </button>
 
           <div class="live-presence" id="livePresence" hidden></div>
 
@@ -254,7 +250,7 @@
 
   <script src="./js/api.js"></script>
   <script src="./js/account-link.js?v=20260705b"></script>
-  <script src="./js/schedule.js?v=20260710c"></script>
+  <script src="./js/schedule.js?v=20260710e"></script>
   <script src="./js/site-announcement.js"></script>
 </body>
 </html>

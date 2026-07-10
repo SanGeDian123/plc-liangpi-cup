@@ -211,12 +211,6 @@ textarea:focus{
   font-size:14px;
 }
 
-.player-confirmation-toggle small{
-  color:var(--muted);
-  font-size:12px;
-  line-height:1.4;
-}
-
 .login-card form{
   display:grid;
   gap:14px;

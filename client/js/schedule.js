@@ -90,12 +90,11 @@
     opponentNickname: document.getElementById("opponentNickname"),
     playerConfirmationPanel: document.getElementById("playerConfirmationPanel"),
     playerConfirmationCount: document.getElementById("playerConfirmationCount"),
-    playerConfirmationHint: document.getElementById("playerConfirmationHint"),
     playerConfirmationRoster: document.getElementById("playerConfirmationRoster"),
     playerConfirmationCountdown: document.getElementById("playerConfirmationCountdown"),
     playerConfirmationCountdownValue: document.getElementById("playerConfirmationCountdownValue"),
     playerConfirmationCountdownHint: document.getElementById("playerConfirmationCountdownHint"),
-    confirmPlayerConfirmation: document.getElementById("confirmPlayerConfirmationButton"),
+    confirmPlayerConfirmation: document.getElementById("playerConfirmationPanel"),
     playerConfirmationMessage: document.getElementById("playerConfirmationMessage"),
     livePresence: document.getElementById("livePresence"),
     banProgress: document.getElementById("banProgress"),
@@ -487,7 +486,7 @@
     const shouldShow =
       match?.status === "scheduled" &&
       confirmation.enabled &&
-      confirmation.allConfirmed &&
+      confirmation.viewerConfirmed &&
       Number.isFinite(bpTime);
 
     if (!shouldShow) {
@@ -550,20 +549,23 @@
     };
   }
 
-  function isBpOpeningHiddenByConfirmation(match) {
-    const confirmation = getPlayerConfirmationInfo(match);
-
-    return match?.status === "scheduled" && confirmation.enabled && !confirmation.allConfirmed;
-  }
-
   function getBpOpeningMeta(match) {
-    if (isBpOpeningHiddenByConfirmation(match)) {
-      return "全部选手确认后显示 BP 开放时间";
-    }
-
     return match?.bpStartsAt
       ? `BP ${formatDateTime(match.bpStartsAt)}`
       : "BP手动开放";
+  }
+
+  function compareScheduleMatches(a, b) {
+    const aOrder = Number.isFinite(a?.sortOrder) ? a.sortOrder : Number.MAX_SAFE_INTEGER;
+    const bOrder = Number.isFinite(b?.sortOrder) ? b.sortOrder : Number.MAX_SAFE_INTEGER;
+
+    return (
+      aOrder - bOrder ||
+      String(a?.title || "").localeCompare(String(b?.title || ""), "zh-CN", {
+        numeric: true,
+        sensitivity: "base"
+      })
+    );
   }
 
   function getCurrentAction(match = state.activeMatch) {
@@ -917,8 +919,12 @@
       return;
     }
 
-    const activeMatches = state.matches.filter((match) => match.status !== "finished");
-    const finishedMatches = state.matches.filter((match) => match.status === "finished");
+    const activeMatches = state.matches
+      .filter((match) => match.status !== "finished")
+      .sort(compareScheduleMatches);
+    const finishedMatches = state.matches
+      .filter((match) => match.status === "finished")
+      .sort(compareScheduleMatches);
 
     renderMatchCategoryTree(buildMatchCategoryTree(activeMatches));
     renderFinishedMatchSection(finishedMatches);
@@ -985,14 +991,20 @@
     const total = confirmation.total || match.participants?.length || 0;
     const confirmedCount = Math.min(confirmation.confirmedCount, total);
     const isParticipant = Boolean(match.viewer?.isParticipant);
+    const canConfirm =
+      isParticipant &&
+      !confirmation.viewerConfirmed &&
+      !confirmation.allConfirmed &&
+      !state.isConfirmingPlayer;
 
     els.playerConfirmationPanel.classList.toggle("is-complete", confirmation.allConfirmed);
+    els.playerConfirmationPanel.classList.toggle("is-actionable", canConfirm);
+    els.playerConfirmationPanel.disabled = !canConfirm;
+    els.playerConfirmationPanel.setAttribute(
+      "aria-label",
+      canConfirm ? "确认参赛" : "赛前选手确认"
+    );
     els.playerConfirmationCount.textContent = `${confirmedCount}/${total}`;
-    els.playerConfirmationHint.textContent = confirmation.allConfirmed
-      ? `全部选手已确认，${getBpOpeningMeta(match)}。`
-      : total
-        ? "全部参赛选手确认后，将显示 BP 开放时间。"
-        : "等待后台指定参赛账号后开启确认。";
     els.playerConfirmationRoster.innerHTML = "";
 
     (match.participants || []).forEach((participant, index) => {
@@ -1015,12 +1027,6 @@
 
     renderBpCountdown(match);
 
-    els.confirmPlayerConfirmation.hidden =
-      !isParticipant || confirmation.viewerConfirmed || confirmation.allConfirmed;
-    els.confirmPlayerConfirmation.disabled = state.isConfirmingPlayer;
-    els.confirmPlayerConfirmation.textContent = state.isConfirmingPlayer
-      ? "正在确认..."
-      : "确认参赛";
     els.playerConfirmationMessage.textContent = state.playerConfirmationMessage;
     els.playerConfirmationMessage.classList.toggle(
       "is-error",
@@ -1966,7 +1972,7 @@
         setActionMessage(
           playerConfirmation.viewerConfirmed
             ? "你已确认参赛，正在等待其余选手确认。"
-            : "请先在上方确认参赛；全部选手确认后将显示 BP 开放时间。",
+            : "请先在上方确认参赛。",
           false,
           true
         );
@@ -2420,7 +2426,7 @@
         item.id === payload.match.id ? payload.match : item
       );
       state.playerConfirmationMessage = payload.match.playerConfirmation?.allConfirmed
-        ? "全部选手已确认，BP 开放时间已显示。"
+        ? "全部选手已确认。"
         : "已确认参赛，正在等待其余选手确认。";
     } catch (error) {
       state.playerConfirmationMessage = error.message || "确认失败，请稍后重试。";

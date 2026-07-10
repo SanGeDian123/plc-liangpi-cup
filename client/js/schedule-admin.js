@@ -67,6 +67,7 @@ let adminToken = localStorage.getItem("adminToken");
     newMatch: document.getElementById("newMatchButton"),
     form: document.getElementById("matchForm"),
     matchTitle: document.getElementById("matchTitle"),
+    matchSortOrder: document.getElementById("matchSortOrder"),
     matchStartsAt: document.getElementById("matchStartsAt"),
     bpStartsAt: document.getElementById("bpStartsAt"),
     playerConfirmationEnabled: document.getElementById("playerConfirmationEnabled"),
@@ -880,6 +881,9 @@ let adminToken = localStorage.getItem("adminToken");
 
     return {
       title: els.matchTitle.value.trim(),
+      sortOrder: els.matchSortOrder.value === ""
+        ? null
+        : Number(els.matchSortOrder.value),
       startsAt: fromDatetimeLocal(els.matchStartsAt.value),
       bpStartsAt: fromDatetimeLocal(els.bpStartsAt.value),
       playerConfirmationEnabled: els.playerConfirmationEnabled.checked,
@@ -924,6 +928,7 @@ let adminToken = localStorage.getItem("adminToken");
 
     els.editorTitle.textContent = "新增比赛";
     els.matchTitle.value = "";
+    els.matchSortOrder.value = "";
     els.matchStartsAt.value = "";
     els.bpStartsAt.value = "";
     els.playerConfirmationEnabled.checked = false;
@@ -961,6 +966,9 @@ let adminToken = localStorage.getItem("adminToken");
 
     els.editorTitle.textContent = "编辑比赛";
     els.matchTitle.value = match.title || "";
+    els.matchSortOrder.value = Number.isFinite(match.sortOrder)
+      ? String(match.sortOrder)
+      : "";
     els.matchStartsAt.value = toDatetimeLocal(match.startsAt);
     els.bpStartsAt.value = toDatetimeLocal(match.bpStartsAt);
     els.playerConfirmationEnabled.checked = Boolean(match.playerConfirmation?.enabled);
@@ -1040,6 +1048,13 @@ let adminToken = localStorage.getItem("adminToken");
         {
           text: `${match.participants?.length || 0}/${match.participantCount || 0}人`
         },
+        ...(Number.isFinite(match.sortOrder)
+          ? [
+              {
+                text: `排序 ${match.sortOrder}`
+              }
+            ]
+          : []),
         ...(match.playerConfirmation?.enabled
           ? [
               {

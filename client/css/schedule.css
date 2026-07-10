@@ -555,6 +555,7 @@ button{
 .player-confirmation-panel{
   position:relative;
   display:grid;
+  width:100%;
   gap:14px;
   padding:16px;
   border:1px solid rgba(255,228,119,.3);
@@ -564,6 +565,29 @@ button{
     rgba(8,12,24,.68);
   overflow:hidden;
   isolation:isolate;
+  color:var(--text);
+  font:inherit;
+  text-align:left;
+  transition:transform .2s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.player-confirmation-panel:disabled{
+  opacity:1;
+  cursor:default;
+}
+
+.player-confirmation-panel.is-actionable{
+  cursor:pointer;
+}
+
+.player-confirmation-panel.is-actionable:hover,
+.player-confirmation-panel.is-actionable:focus-visible{
+  transform:translateY(-2px);
+  border-color:rgba(103,231,255,.58);
+  background:
+    linear-gradient(135deg, rgba(103,231,255,.16), rgba(255,228,119,.09) 58%, rgba(147,255,188,.09)),
+    rgba(8,12,24,.76);
+  box-shadow:0 18px 42px rgba(0,0,0,.28), 0 0 0 3px rgba(103,231,255,.1);
 }
 
 .player-confirmation-panel::before{
@@ -604,13 +628,6 @@ button{
   margin-top:5px;
   font-size:21px;
   line-height:1.2;
-}
-
-.player-confirmation-heading p:not(.eyebrow){
-  margin-top:8px;
-  color:var(--muted);
-  font-size:14px;
-  line-height:1.6;
 }
 
 .player-confirmation-count{
@@ -725,17 +742,6 @@ button{
 
 .player-confirmation-roster-item.is-confirmed .player-confirmation-state::before{
   animation:none;
-}
-
-.player-confirmation-actions{
-  display:flex;
-  align-items:center;
-  flex-wrap:wrap;
-  gap:12px;
-}
-
-.player-confirmation-actions .primary-action{
-  min-width:132px;
 }
 
 .player-confirmation-message{
@@ -1675,15 +1681,6 @@ button{
   .player-confirmation-countdown strong,
   .player-confirmation-countdown small{
     text-align:center;
-  }
-
-  .player-confirmation-actions{
-    align-items:stretch;
-    flex-direction:column;
-  }
-
-  .player-confirmation-actions .primary-action{
-    width:100%;
   }
 
   .bp-form .primary-action{

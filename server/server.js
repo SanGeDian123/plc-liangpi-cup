@@ -1102,6 +1102,18 @@ function normalizeScheduleVisibility(value) {
   return value === "public" ? "public" : "assigned";
 }
 
+function normalizeScheduleSortOrder(value) {
+  if (value === "" || value === null || value === undefined) {
+    return null;
+  }
+
+  const sortOrder = Number(value);
+
+  return Number.isFinite(sortOrder)
+    ? Math.max(-9999, Math.min(9999, Math.trunc(sortOrder)))
+    : null;
+}
+
 function normalizeSchedulePoolMode(value) {
   return ["round16", "top8", "custom"].includes(value) ? value : "round16";
 }
@@ -1488,6 +1500,7 @@ function normalizeScheduleMatch(value = {}, options = {}) {
   return {
     id: normalizeTextValue(value.id, 96) || crypto.randomUUID(),
     title: normalizeTextValue(value.title, 120) || "未命名比赛",
+    sortOrder: normalizeScheduleSortOrder(value.sortOrder),
     startsAt: normalizeOptionalIsoDate(value.startsAt),
     bpStartsAt: normalizeOptionalIsoDate(value.bpStartsAt),
     content: normalizeTextValue(value.content, 500),
@@ -1516,10 +1529,14 @@ function normalizeScheduleData(value = {}) {
 
   return {
     matches: matches.sort((a, b) => {
-      const aTime = Date.parse(a.startsAt || "") || Number.MAX_SAFE_INTEGER;
-      const bTime = Date.parse(b.startsAt || "") || Number.MAX_SAFE_INTEGER;
+      const aOrder = Number.isFinite(a.sortOrder) ? a.sortOrder : Number.MAX_SAFE_INTEGER;
+      const bOrder = Number.isFinite(b.sortOrder) ? b.sortOrder : Number.MAX_SAFE_INTEGER;
+      const titleOrder = a.title.localeCompare(b.title, "zh-CN", {
+        numeric: true,
+        sensitivity: "base"
+      });
 
-      return aTime - bTime || Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
+      return aOrder - bOrder || titleOrder || Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
     })
   };
 }
