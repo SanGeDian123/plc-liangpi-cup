@@ -1572,8 +1572,10 @@ function applyScheduleAutoBp(data, now = new Date()) {
 
     if (
       match.status === "bp" &&
-      Number.isFinite(bpTime) &&
-      bpTime > nowTime
+      (
+        !playerConfirmation.allConfirmed ||
+        (Number.isFinite(bpTime) && bpTime > nowTime)
+      )
     ) {
       match.status = "scheduled";
       match.updatedAt = nowIso;
@@ -3252,6 +3254,38 @@ app.post("/admin/schedule/matches", checkAdmin, async (req, res) => {
 
   res.set("Cache-Control", "no-store");
   res.status(201).json({
+    match: serializeScheduleMatch(savedMatch, {
+      admin: true
+    })
+  });
+});
+
+app.put("/admin/schedule/matches/:id/player-confirmation", checkAdmin, async (req, res) => {
+  const data = await loadScheduleDataWithAutoBp();
+  const matchId = normalizeTextValue(req.params.id, 96);
+  const match = data.matches.find((item) => item.id === matchId);
+
+  if (!match) {
+    return res.status(404).json({
+      message: "没有找到这场比赛"
+    });
+  }
+
+  match.playerConfirmation = normalizePlayerConfirmation(
+    {
+      ...match.playerConfirmation,
+      enabled: req.body?.enabled === true
+    },
+    match.participants
+  );
+  match.updatedAt = new Date().toISOString();
+  applyScheduleAutoBp(data);
+
+  const saved = await persistScheduleData(data);
+  const savedMatch = saved.matches.find((item) => item.id === matchId) || match;
+
+  res.set("Cache-Control", "no-store");
+  res.json({
     match: serializeScheduleMatch(savedMatch, {
       admin: true
     })

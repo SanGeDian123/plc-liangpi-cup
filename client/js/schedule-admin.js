@@ -1,6 +1,7 @@
 let adminToken = localStorage.getItem("adminToken");
 
 (function () {
+  const EDITING_MATCH_STORAGE_KEY = "scheduleAdminEditingMatchId";
   const STATUS_LABELS = {
     scheduled: "未开始",
     bp: "BP中",
@@ -41,6 +42,7 @@ let adminToken = localStorage.getItem("adminToken");
     trackSearch: "",
     selectedParticipants: new Set(),
     customTrackIds: new Set(),
+    isSavingPlayerConfirmation: false,
     pendingConfirm: null
   };
 
@@ -903,11 +905,23 @@ let adminToken = localStorage.getItem("adminToken");
     };
   }
 
-  function resetForm() {
+  function resetForm(options = {}) {
+    const preserveEditingSelection = options.preserveEditingSelection === true;
+
     state.editingId = "";
     state.selectedParticipants = new Set();
     state.customTrackIds = new Set();
     state.trackSearch = "";
+    state.isSavingPlayerConfirmation = false;
+    els.playerConfirmationEnabled.disabled = false;
+    els.playerConfirmationEnabled
+      .closest(".player-confirmation-toggle")
+      ?.classList.remove("is-saving");
+
+    if (!preserveEditingSelection) {
+      sessionStorage.removeItem(EDITING_MATCH_STORAGE_KEY);
+    }
+
     els.editorTitle.textContent = "新增比赛";
     els.matchTitle.value = "";
     els.matchStartsAt.value = "";
@@ -936,8 +950,9 @@ let adminToken = localStorage.getItem("adminToken");
     renderResultEditor();
   }
 
-  function editMatch(match) {
+  function editMatch(match, options = {}) {
     state.editingId = match.id;
+    sessionStorage.setItem(EDITING_MATCH_STORAGE_KEY, match.id);
     state.selectedParticipants = new Set(
       (match.participants || []).map((participant) => participant.userId).filter(Boolean)
     );
@@ -972,10 +987,12 @@ let adminToken = localStorage.getItem("adminToken");
     renderCustomPool();
     renderResultEditor();
     setMessage(els.editorMsg, `正在编辑：${match.title}`);
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
+    if (options.scroll !== false) {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+    }
   }
 
   function renderTags(container, tags) {
@@ -1083,6 +1100,19 @@ let adminToken = localStorage.getItem("adminToken");
     state.matches = Array.isArray(payload.matches) ? payload.matches : [];
     renderMatches();
     renderResultEditor();
+
+    if (!state.editingId) {
+      const rememberedMatchId = sessionStorage.getItem(EDITING_MATCH_STORAGE_KEY) || "";
+      const rememberedMatch = state.matches.find((match) => match.id === rememberedMatchId);
+
+      if (rememberedMatch) {
+        editMatch(rememberedMatch, {
+          scroll: false
+        });
+      } else if (rememberedMatchId) {
+        sessionStorage.removeItem(EDITING_MATCH_STORAGE_KEY);
+      }
+    }
   }
 
   async function loadLeaderboardPlayers() {
@@ -1265,6 +1295,9 @@ let adminToken = localStorage.getItem("adminToken");
         });
 
         state.editingId = created.match?.id || "";
+        if (state.editingId) {
+          sessionStorage.setItem(EDITING_MATCH_STORAGE_KEY, state.editingId);
+        }
         savedMatch = created.match || null;
       }
 
@@ -1288,6 +1321,68 @@ let adminToken = localStorage.getItem("adminToken");
       setMessage(els.editorMsg, error.message || "保存失败", true);
     } finally {
       els.saveMatch.disabled = false;
+    }
+  }
+
+  async function savePlayerConfirmationSetting() {
+    const enabled = els.playerConfirmationEnabled.checked;
+
+    if (!state.editingId) {
+      setMessage(els.editorMsg, "新建比赛将在点击“保存比赛”后应用选手确认设置。");
+      return;
+    }
+
+    if (state.isSavingPlayerConfirmation) {
+      return;
+    }
+
+    state.isSavingPlayerConfirmation = true;
+    els.playerConfirmationEnabled.disabled = true;
+    els.playerConfirmationEnabled
+      .closest(".player-confirmation-toggle")
+      ?.classList.add("is-saving");
+    setMessage(els.editorMsg, "正在保存选手确认设置...");
+
+    try {
+      const payload = await fetchAdmin(
+        `/admin/schedule/matches/${encodeURIComponent(state.editingId)}/player-confirmation`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ enabled })
+        }
+      );
+      const savedMatch = payload.match;
+
+      if (!savedMatch) {
+        throw new Error("后端没有返回已保存的比赛数据");
+      }
+
+      state.matches = state.matches.map((match) =>
+        match.id === savedMatch.id ? savedMatch : match
+      );
+      els.playerConfirmationEnabled.checked = Boolean(
+        savedMatch.playerConfirmation?.enabled
+      );
+      renderMatches();
+      setMessage(
+        els.editorMsg,
+        savedMatch.playerConfirmation?.enabled
+          ? "选手确认已开启，并已自动保存。"
+          : "选手确认已关闭，并已自动保存。"
+      );
+    } catch (error) {
+      els.playerConfirmationEnabled.checked = !enabled;
+      setMessage(
+        els.editorMsg,
+        error.message || "选手确认设置保存失败，请稍后重试。",
+        true
+      );
+    } finally {
+      state.isSavingPlayerConfirmation = false;
+      els.playerConfirmationEnabled.disabled = false;
+      els.playerConfirmationEnabled
+        .closest(".player-confirmation-toggle")
+        ?.classList.remove("is-saving");
     }
   }
 
@@ -1410,6 +1505,10 @@ let adminToken = localStorage.getItem("adminToken");
 
     els.participantCount.addEventListener("input", renderBpRule);
     els.randomPickEnabled.addEventListener("change", renderBpRule);
+    els.playerConfirmationEnabled.addEventListener(
+      "change",
+      savePlayerConfirmationSetting
+    );
     els.randomPickCount.addEventListener("input", renderBpRule);
     els.poolMode.addEventListener("change", renderCustomPool);
     els.trackSearch.addEventListener("input", (event) => {
@@ -1438,7 +1537,9 @@ let adminToken = localStorage.getItem("adminToken");
   }
 
   bindEvents();
-  resetForm();
+  resetForm({
+    preserveEditingSelection: true
+  });
 
   if (adminToken) {
     loadDashboard();
