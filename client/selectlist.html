@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="PLC凉皮杯所有比赛的 Ban/Pick 谱面数据统计。" />
+  <title>PLC凉皮杯 - BP数据统计</title>
+  <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="./assets/bp-background.jpg" as="image" />
+  <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
+  <link rel="stylesheet" href="./css/account-link.css?v=20260701b" />
+  <link rel="stylesheet" href="./css/selectlist.css?v=20260711b" />
+  <link rel="stylesheet" href="./css/site-announcement.css" />
+</head>
+<body>
+  <header class="selectlist-header">
+    <a class="selectlist-brand" href="./event" aria-label="返回赛事主页">
+      <img src="./assets/logo2-160.webp" width="42" height="42" alt="" aria-hidden="true" decoding="async" />
+      <strong>PLC凉皮杯</strong>
+    </a>
+    <nav class="selectlist-nav" aria-label="BP数据统计页面导航">
+      <a href="./event">赛事主页</a>
+      <a href="./schedule">在线赛程</a>
+      <a href="./song-pool">比赛曲库</a>
+      <a href="./">海选榜</a>
+    </nav>
+    <a class="plc-account-link" href="./user" data-plc-account-link>
+      <span class="plc-account-label">账号</span>
+      <strong class="plc-account-name" data-plc-account-name>未登录</strong>
+    </a>
+  </header>
+
+  <main class="selectlist-page">
+    <section class="selectlist-hero" aria-labelledby="selectlistTitle">
+      <div>
+        <p class="eyebrow">BP Intelligence</p>
+        <h1 id="selectlistTitle">BP数据统计</h1>
+        <p>汇总所有场次已提交的 Ban / Pick 谱面，观察比赛中的选曲趋势。</p>
+      </div>
+    </section>
+
+    <section class="stat-grid" aria-label="BP 统计摘要">
+      <article class="stat-card is-total"><span>有效操作</span><strong id="totalActions">0</strong><small id="totalMatches">0 场比赛</small></article>
+      <article class="stat-card is-ban"><span>Ban</span><strong id="totalBans">0</strong><small>禁用谱面次数</small></article>
+      <article class="stat-card is-pick"><span>Pick</span><strong id="totalPicks">0</strong><small>选择谱面次数</small></article>
+      <article class="stat-card is-tracks"><span>谱面</span><strong id="totalTracks">0</strong><small>被记录的不同谱面</small></article>
+    </section>
+
+    <section class="trend-panel" aria-labelledby="trendTitle">
+      <div class="panel-heading">
+        <div><p class="eyebrow">Selection List</p><h2 id="trendTitle">谱面统计</h2></div>
+        <button class="refresh-button" id="refreshButton" type="button">刷新数据</button>
+      </div>
+
+      <div class="trend-controls">
+        <div class="type-tabs" role="group" aria-label="操作类型">
+          <button class="is-active" type="button" data-type="all" aria-pressed="true">全部</button>
+          <button type="button" data-type="ban" aria-pressed="false">Ban</button>
+          <button type="button" data-type="pick" aria-pressed="false">Pick</button>
+        </div>
+        <label class="search-box" for="selectlistSearch"><span>搜索</span><input id="selectlistSearch" type="search" autocomplete="off" placeholder="曲名 / 别名 / 曲师 / 曲包" /></label>
+        <label class="select-box" for="difficultyFilter"><span>难度</span><select id="difficultyFilter"><option value="all">全部难度</option><option value="EZ">EZ</option><option value="HD">HD</option><option value="IN">IN</option><option value="AT">AT</option></select></label>
+        <label class="select-box" for="sortBy"><span>排序</span><select id="sortBy"><option value="total">总次数</option><option value="ban">Ban 次数</option><option value="pick">Pick 次数</option><option value="name">曲名</option></select></label>
+      </div>
+
+      <div class="list-status"><span id="resultCount">0 个谱面</span><span id="updatedAt">等待同步</span></div>
+      <div class="selection-grid" id="selectionGrid" aria-live="polite"></div>
+      <p class="load-message" id="loadMessage" aria-live="polite">正在同步 BP 数据...</p>
+    </section>
+  </main>
+
+  <script src="./js/api.js"></script>
+  <script src="./js/account-link.js?v=20260705b"></script>
+  <script src="./js/song-alias-data.js?v=20260710b"></script>
+  <script src="./js/selectlist.js?v=20260711b"></script>
+  <script src="./js/site-announcement.js"></script>
+</body>
+</html>

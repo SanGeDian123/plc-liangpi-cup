@@ -10,7 +10,7 @@
   <link rel="preload" href="./assets/fonts/Phi.woff2" as="font" type="font/woff2" crossorigin />
   <link rel="preload" href="./assets/bp-background.jpg" as="image" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
-  <link rel="stylesheet" href="./css/schedule-admin.css?v=20260710c" />
+  <link rel="stylesheet" href="./css/schedule-admin.css?v=20260711a" />
 </head>
 <body>
   <main class="admin-shell">
@@ -249,6 +249,24 @@
         </div>
         <div class="match-list" id="adminMatchList"></div>
       </section>
+
+      <section class="selectlist-admin-panel" aria-labelledby="selectlistAdminTitle">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Selection List</p>
+            <h2 id="selectlistAdminTitle">BP数据统计校正</h2>
+          </div>
+          <div class="header-actions">
+            <a class="ghost-action" href="./selectlist" target="_blank" rel="noreferrer">打开前台页面</a>
+            <button class="ghost-action" id="reloadSelectListButton" type="button">刷新统计</button>
+          </div>
+        </div>
+        <p class="selectlist-admin-hint">数量默认来自全部比赛的 BP 记录。此处保存的是校正差值，新提交的 BP 仍会继续自动累计。</p>
+        <input id="selectListAdminSearch" class="search-input" type="search" placeholder="搜索曲名 / 别名 / 曲师 / 曲包 / 难度" autocomplete="off" />
+        <div class="selectlist-admin-summary" id="selectListAdminSummary">正在读取统计...</div>
+        <div class="selectlist-admin-list" id="selectListAdminList" aria-live="polite"></div>
+        <p class="admin-message" id="selectListAdminMessage" aria-live="polite"></p>
+      </section>
     </section>
   </main>
 
@@ -266,6 +284,7 @@
 
   <script src="./js/api.js"></script>
   <script src="./js/song-pool-data.js?v=20260705a"></script>
-  <script src="./js/schedule-admin.js?v=20260710d"></script>
+  <script src="./js/song-alias-data.js?v=20260710b"></script>
+  <script src="./js/schedule-admin.js?v=20260711b"></script>
 </body>
 </html>

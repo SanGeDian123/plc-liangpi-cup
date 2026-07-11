@@ -43,6 +43,10 @@ let adminToken = localStorage.getItem("adminToken");
     selectedParticipants: new Set(),
     customTrackIds: new Set(),
     isSavingPlayerConfirmation: false,
+    selectListItems: [],
+    selectListTotals: {},
+    selectListSearch: "",
+    selectListSavingKeys: new Set(),
     pendingConfirm: null
   };
 
@@ -97,6 +101,11 @@ let adminToken = localStorage.getItem("adminToken");
     saveResult: document.getElementById("saveResultButton"),
     editorMsg: document.getElementById("editorMsg"),
     matchList: document.getElementById("adminMatchList"),
+    reloadSelectList: document.getElementById("reloadSelectListButton"),
+    selectListSearch: document.getElementById("selectListAdminSearch"),
+    selectListSummary: document.getElementById("selectListAdminSummary"),
+    selectList: document.getElementById("selectListAdminList"),
+    selectListMessage: document.getElementById("selectListAdminMessage"),
     dialog: document.getElementById("confirmDialog"),
     confirmText: document.getElementById("confirmText"),
     confirmAction: document.getElementById("confirmActionButton")
@@ -1109,6 +1118,157 @@ let adminToken = localStorage.getItem("adminToken");
     renderResultEditor();
   }
 
+  function getSelectListItemKey(item) {
+    return `${item.trackId}:${item.difficulty}`;
+  }
+
+  function renderSelectListAdmin() {
+    const keyword = state.selectListSearch.trim().toLowerCase();
+    const items = state.selectListItems.filter((item) =>
+      !keyword ||
+      [
+        item.title,
+        item.artist,
+        item.pack,
+        item.difficulty,
+        ...(window.PLC_SONG_ALIASES?.[item.trackId] || [])
+      ]
+        .some((value) => String(value || "").toLowerCase().includes(keyword))
+    );
+    const totals = state.selectListTotals || {};
+
+    els.selectListSummary.textContent =
+      `${totals.matches || 0} 场比赛 · ${totals.tracks || 0} 个谱面 · ` +
+      `Ban ${totals.bans || 0} · Pick ${totals.picks || 0}`;
+    els.selectList.innerHTML = "";
+
+    if (!items.length) {
+      els.selectList.appendChild(
+        createElement("p", "empty-line", state.selectListItems.length ? "没有匹配的谱面" : "暂无可校正的 BP 数据")
+      );
+      return;
+    }
+
+    items.forEach((item) => {
+      const key = getSelectListItemKey(item);
+      const row = createElement("article", `selectlist-admin-item${item.adjusted ? " is-adjusted" : ""}`);
+      const track = createElement("div", "selectlist-admin-track");
+      track.appendChild(createElement("strong", "", `${item.title} · ${item.difficulty}`));
+      track.appendChild(
+        createElement(
+          "span",
+          "",
+          `${[item.artist, item.pack].filter(Boolean).join(" · ") || "曲目信息待补充"} · ` +
+            `自动 Ban ${item.autoBanCount || 0} / Pick ${item.autoPickCount || 0}`
+        )
+      );
+
+      const createCountField = (labelText, value, className) => {
+        const label = createElement("label", className);
+        label.appendChild(createElement("span", "", labelText));
+        const input = createElement("input");
+        input.type = "number";
+        input.min = "0";
+        input.max = "9999";
+        input.step = "1";
+        input.value = String(value || 0);
+        label.appendChild(input);
+        return { label, input };
+      };
+
+      const banField = createCountField("校正后 Ban", item.banCount, "is-ban");
+      const pickField = createCountField("校正后 Pick", item.pickCount, "is-pick");
+      const noteLabel = createElement("label");
+      noteLabel.appendChild(createElement("span", "", "校正备注"));
+      const noteInput = createElement("input");
+      noteInput.type = "text";
+      noteInput.maxLength = 240;
+      noteInput.placeholder = "可选：记录校正原因";
+      noteInput.value = item.note || "";
+      noteLabel.appendChild(noteInput);
+
+      const actions = createElement("div", "selectlist-admin-actions");
+      const saveButton = createElement("button", "primary-action", "保存");
+      saveButton.type = "button";
+      const resetButton = createElement("button", "ghost-action", "恢复自动");
+      resetButton.type = "button";
+      resetButton.disabled = !item.adjusted;
+      const isSaving = state.selectListSavingKeys.has(key);
+      saveButton.disabled = isSaving;
+      resetButton.disabled = resetButton.disabled || isSaving;
+
+      saveButton.addEventListener("click", () =>
+        saveSelectListAdjustment(item, banField.input.value, pickField.input.value, noteInput.value)
+      );
+      resetButton.addEventListener("click", () => resetSelectListAdjustment(item));
+      actions.append(saveButton, resetButton);
+      row.append(track, banField.label, pickField.label, noteLabel, actions);
+      els.selectList.appendChild(row);
+    });
+  }
+
+  async function loadSelectList() {
+    const payload = await fetchAdmin("/admin/schedule/selectlist");
+    state.selectListItems = Array.isArray(payload.items) ? payload.items : [];
+    state.selectListTotals = payload.totals || {};
+    renderSelectListAdmin();
+  }
+
+  async function saveSelectListAdjustment(item, banValue, pickValue, note) {
+    const banCount = Number(banValue);
+    const pickCount = Number(pickValue);
+
+    if (!Number.isInteger(banCount) || banCount < 0 || !Number.isInteger(pickCount) || pickCount < 0) {
+      setMessage(els.selectListMessage, "Ban / Pick 数量必须是非负整数。", true);
+      return;
+    }
+
+    const key = getSelectListItemKey(item);
+    state.selectListSavingKeys.add(key);
+    renderSelectListAdmin();
+    setMessage(els.selectListMessage, `正在保存《${item.title}》${item.difficulty} 的校正...`);
+
+    try {
+      const payload = await fetchAdmin(
+        `/admin/schedule/selectlist/${encodeURIComponent(item.trackId)}/${encodeURIComponent(item.difficulty)}`,
+        {
+          method: "PUT",
+          body: JSON.stringify({ banCount, pickCount, note: String(note || "").trim() })
+        }
+      );
+      state.selectListItems = Array.isArray(payload.items) ? payload.items : [];
+      state.selectListTotals = payload.totals || {};
+      setMessage(els.selectListMessage, "BP数据统计已校正，前台将在下一次同步时更新。");
+    } catch (error) {
+      setMessage(els.selectListMessage, error.message || "校正保存失败", true);
+    } finally {
+      state.selectListSavingKeys.delete(key);
+      renderSelectListAdmin();
+    }
+  }
+
+  async function resetSelectListAdjustment(item) {
+    const key = getSelectListItemKey(item);
+    state.selectListSavingKeys.add(key);
+    renderSelectListAdmin();
+    setMessage(els.selectListMessage, `正在恢复《${item.title}》${item.difficulty} 的自动统计...`);
+
+    try {
+      const payload = await fetchAdmin(
+        `/admin/schedule/selectlist/${encodeURIComponent(item.trackId)}/${encodeURIComponent(item.difficulty)}`,
+        { method: "DELETE" }
+      );
+      state.selectListItems = Array.isArray(payload.items) ? payload.items : [];
+      state.selectListTotals = payload.totals || {};
+      setMessage(els.selectListMessage, "已恢复为 BP 原始记录的自动统计。");
+    } catch (error) {
+      setMessage(els.selectListMessage, error.message || "恢复自动统计失败", true);
+    } finally {
+      state.selectListSavingKeys.delete(key);
+      renderSelectListAdmin();
+    }
+  }
+
   async function loadMatches() {
     const payload = await fetchAdmin("/admin/schedule/matches");
 
@@ -1230,7 +1390,7 @@ let adminToken = localStorage.getItem("adminToken");
     setMessage(els.editorMsg, "正在加载后台数据...");
 
     try {
-      await Promise.all([loadAccounts(), loadMatches(), loadLeaderboardPlayers()]);
+      await Promise.all([loadAccounts(), loadMatches(), loadLeaderboardPlayers(), loadSelectList()]);
       setMessage(els.editorMsg, "后台数据已同步。");
     } catch (error) {
       setMessage(els.editorMsg, error.message || "后台加载失败", true);
@@ -1503,6 +1663,16 @@ let adminToken = localStorage.getItem("adminToken");
     els.loginForm.addEventListener("submit", handleLogin);
     els.logout.addEventListener("click", clearSession);
     els.reload.addEventListener("click", loadDashboard);
+    els.reloadSelectList.addEventListener("click", async () => {
+      setMessage(els.selectListMessage, "正在刷新 BP 数据统计...");
+
+      try {
+        await loadSelectList();
+        setMessage(els.selectListMessage, "BP数据统计已刷新。");
+      } catch (error) {
+        setMessage(els.selectListMessage, error.message || "统计刷新失败", true);
+      }
+    });
     els.form.addEventListener("submit", saveMatch);
     els.newMatch.addEventListener("click", resetForm);
     els.resetForm.addEventListener("click", resetForm);
@@ -1511,6 +1681,10 @@ let adminToken = localStorage.getItem("adminToken");
     els.accountSearch.addEventListener("input", (event) => {
       state.accountSearch = event.target.value;
       renderAccounts();
+    });
+    els.selectListSearch.addEventListener("input", (event) => {
+      state.selectListSearch = event.target.value;
+      renderSelectListAdmin();
     });
     els.closeAccountBinding.addEventListener("click", closeAccountBinding);
     els.playerBindingSearch.addEventListener("input", (event) => {

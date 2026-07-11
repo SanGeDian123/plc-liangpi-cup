@@ -91,6 +91,7 @@ textarea{
 .account-panel,
 .editor-panel,
 .matches-panel,
+.selectlist-admin-panel,
 .helper-panel,
 .participant-picker,
 .custom-pool,
@@ -316,9 +317,56 @@ textarea:focus{
 
 .account-panel,
 .editor-panel,
-.matches-panel{
+.matches-panel,
+.selectlist-admin-panel{
   padding:18px;
 }
+
+.selectlist-admin-panel{
+  display:grid;
+  gap:14px;
+}
+
+.selectlist-admin-hint,
+.selectlist-admin-summary{
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.65;
+}
+
+.selectlist-admin-summary{
+  padding:10px 12px;
+  border:1px solid rgba(102,231,255,.16);
+  border-radius:8px;
+  background:rgba(102,231,255,.06);
+  color:var(--cyan);
+}
+
+.selectlist-admin-list{
+  display:grid;
+  gap:10px;
+}
+
+.selectlist-admin-item{
+  display:grid;
+  grid-template-columns:minmax(220px,1.25fr) minmax(95px,.35fr) minmax(95px,.35fr) minmax(180px,.8fr) auto;
+  align-items:end;
+  gap:10px;
+  padding:13px;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:8px;
+  background:rgba(255,255,255,.05);
+}
+
+.selectlist-admin-track{align-self:center;min-width:0}
+.selectlist-admin-track strong,.selectlist-admin-track span{display:block}
+.selectlist-admin-track strong{line-height:1.4}
+.selectlist-admin-track span{margin-top:5px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.selectlist-admin-item label{min-width:0}
+.selectlist-admin-item input{min-height:40px}
+.selectlist-admin-actions{display:flex;gap:8px}
+.selectlist-admin-actions button{min-height:40px;padding-inline:12px}
+.selectlist-admin-item.is-adjusted{border-color:rgba(147,255,188,.24);background:rgba(147,255,188,.055)}
 
 .account-panel{
   position:sticky;
@@ -711,6 +759,15 @@ textarea:focus{
   .result-entry{
     grid-template-columns:repeat(2, minmax(0, 1fr));
   }
+
+  .selectlist-admin-item{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+  }
+
+  .selectlist-admin-track,
+  .selectlist-admin-actions{
+    grid-column:1 / -1;
+  }
 }
 
 @media(max-width:720px){
@@ -768,5 +825,19 @@ textarea:focus{
 
   .match-card{
     grid-template-columns:1fr;
+  }
+
+  .selectlist-admin-item{
+    grid-template-columns:1fr;
+  }
+
+  .selectlist-admin-track,
+  .selectlist-admin-actions{
+    grid-column:auto;
+  }
+
+  .selectlist-admin-actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
   }
 }

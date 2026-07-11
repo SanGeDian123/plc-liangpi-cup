@@ -93,7 +93,8 @@ const DEFAULT_USER_MESSAGES = Object.freeze({
   notifications: []
 });
 const DEFAULT_SCHEDULE_DATA = Object.freeze({
-  matches: []
+  matches: [],
+  selectListAdjustments: []
 });
 
 const playersCache = {
@@ -127,7 +128,8 @@ const userMessagesCache = {
 const scheduleCache = {
   loaded: false,
   data: {
-    matches: []
+    matches: [],
+    selectListAdjustments: []
   }
 };
 let songPoolDataPromise = null;
@@ -1528,6 +1530,9 @@ function normalizeScheduleData(value = {}) {
     : [];
 
   return {
+    selectListAdjustments: Array.isArray(value.selectListAdjustments)
+      ? value.selectListAdjustments.map(normalizeSelectListAdjustment).filter(Boolean)
+      : [],
     matches: matches.sort((a, b) => {
       const aOrder = Number.isFinite(a.sortOrder) ? a.sortOrder : Number.MAX_SAFE_INTEGER;
       const bOrder = Number.isFinite(b.sortOrder) ? b.sortOrder : Number.MAX_SAFE_INTEGER;
@@ -1538,6 +1543,159 @@ function normalizeScheduleData(value = {}) {
 
       return aOrder - bOrder || titleOrder || Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
     })
+  };
+}
+
+function normalizeSelectListAdjustment(value = {}) {
+  const trackId = Number(value.trackId);
+  const difficulty = normalizeDifficulty(value.difficulty);
+
+  if (!Number.isInteger(trackId) || trackId <= 0 || !difficulty) {
+    return null;
+  }
+
+  const normalizeDelta = (delta) => {
+    const number = Number(delta);
+
+    if (!Number.isFinite(number)) {
+      return 0;
+    }
+
+    return Math.max(-9999, Math.min(9999, Math.trunc(number)));
+  };
+
+  return {
+    trackId,
+    difficulty,
+    banDelta: normalizeDelta(value.banDelta),
+    pickDelta: normalizeDelta(value.pickDelta),
+    note: normalizeTextValue(value.note, 240),
+    updatedAt: normalizeOptionalIsoDate(value.updatedAt) || new Date().toISOString()
+  };
+}
+
+function getSelectListKey(trackId, difficulty) {
+  return `${Number(trackId)}:${normalizeDifficulty(difficulty)}`;
+}
+
+async function buildScheduleSelectList(data, options = {}) {
+  const aggregates = new Map();
+  const ensureEntry = (trackId, difficulty, selection = {}) => {
+    const normalizedTrackId = Number(trackId);
+    const normalizedDifficulty = normalizeDifficulty(difficulty);
+    const key = getSelectListKey(normalizedTrackId, normalizedDifficulty);
+
+    if (!Number.isInteger(normalizedTrackId) || normalizedTrackId <= 0 || !normalizedDifficulty) {
+      return null;
+    }
+
+    if (!aggregates.has(key)) {
+      aggregates.set(key, {
+        key,
+        trackId: normalizedTrackId,
+        difficulty: normalizedDifficulty,
+        title: normalizeTextValue(selection.title, 140),
+        artist: normalizeTextValue(selection.artist, 140),
+        pack: normalizeTextValue(selection.pack, 120),
+        autoBanCount: 0,
+        autoPickCount: 0,
+        matchIds: new Set()
+      });
+    }
+
+    const entry = aggregates.get(key);
+    entry.title ||= normalizeTextValue(selection.title, 140);
+    entry.artist ||= normalizeTextValue(selection.artist, 140);
+    entry.pack ||= normalizeTextValue(selection.pack, 120);
+    return entry;
+  };
+
+  (data.matches || []).forEach((match) => {
+    (match.bp?.bans || []).forEach((selection) => {
+      const entry = ensureEntry(selection.trackId, selection.difficulty, selection);
+
+      if (entry) {
+        entry.autoBanCount += 1;
+        entry.matchIds.add(match.id);
+      }
+    });
+
+    (match.bp?.picks || []).forEach((selection) => {
+      const entry = ensureEntry(selection.trackId, selection.difficulty, selection);
+
+      if (entry) {
+        entry.autoPickCount += 1;
+        entry.matchIds.add(match.id);
+      }
+    });
+  });
+
+  const adjustments = new Map(
+    (data.selectListAdjustments || []).map((item) => [
+      getSelectListKey(item.trackId, item.difficulty),
+      item
+    ])
+  );
+
+  adjustments.forEach((adjustment) => {
+    ensureEntry(adjustment.trackId, adjustment.difficulty);
+  });
+
+  const songPool = await loadSongPoolData();
+  const tracksById = new Map(
+    (songPool.tracks || []).map((track) => [Number(track.id), track])
+  );
+  const items = Array.from(aggregates.values())
+    .map((entry) => {
+      const adjustment = adjustments.get(entry.key) || null;
+      const track = tracksById.get(entry.trackId) || {};
+      const banCount = Math.max(0, entry.autoBanCount + Number(adjustment?.banDelta || 0));
+      const pickCount = Math.max(0, entry.autoPickCount + Number(adjustment?.pickDelta || 0));
+
+      return {
+        trackId: entry.trackId,
+        title: entry.title || normalizeTextValue(track.title, 140) || `曲目 #${entry.trackId}`,
+        artist: entry.artist || normalizeTextValue(track.artist, 140),
+        pack: entry.pack || normalizeTextValue(track.pack, 120),
+        difficulty: entry.difficulty,
+        banCount,
+        pickCount,
+        totalCount: banCount + pickCount,
+        matchCount: entry.matchIds.size,
+        adjusted: Boolean(adjustment),
+        ...(options.admin
+          ? {
+              autoBanCount: entry.autoBanCount,
+              autoPickCount: entry.autoPickCount,
+              banDelta: Number(adjustment?.banDelta || 0),
+              pickDelta: Number(adjustment?.pickDelta || 0),
+              note: adjustment?.note || "",
+              adjustedAt: adjustment?.updatedAt || ""
+            }
+          : {})
+      };
+    })
+    .filter((item) => item.totalCount > 0 || (options.admin && item.adjusted))
+    .sort(
+      (a, b) =>
+        b.totalCount - a.totalCount ||
+        b.pickCount - a.pickCount ||
+        a.title.localeCompare(b.title, "zh-CN", { numeric: true, sensitivity: "base" }) ||
+        a.difficulty.localeCompare(b.difficulty)
+    );
+
+  return {
+    items,
+    totals: {
+      tracks: items.length,
+      bans: items.reduce((sum, item) => sum + item.banCount, 0),
+      picks: items.reduce((sum, item) => sum + item.pickCount, 0),
+      actions: items.reduce((sum, item) => sum + item.totalCount, 0),
+      matches: (data.matches || []).filter(
+        (match) => (match.bp?.bans || []).length || (match.bp?.picks || []).length
+      ).length
+    },
+    updatedAt: new Date().toISOString()
   };
 }
 
@@ -2938,6 +3096,14 @@ app.get("/schedule/matches", optionalUser, async (req, res) => {
   });
 });
 
+app.get("/schedule/selectlist", async (req, res) => {
+  const data = await loadScheduleDataWithAutoBp();
+  const selectList = await buildScheduleSelectList(data);
+
+  res.set("Cache-Control", "no-store");
+  res.json(selectList);
+});
+
 app.get("/schedule/matches/:id", optionalUser, async (req, res) => {
   const data = await loadScheduleDataWithAutoBp();
   const matchId = normalizeTextValue(req.params.id, 96);
@@ -3246,6 +3412,97 @@ app.get("/admin/schedule/matches", checkAdmin, async (req, res) => {
       })
     )
   });
+});
+
+app.get("/admin/schedule/selectlist", checkAdmin, async (req, res) => {
+  const data = await loadScheduleDataWithAutoBp();
+  const selectList = await buildScheduleSelectList(data, {
+    admin: true
+  });
+
+  res.set("Cache-Control", "no-store");
+  res.json(selectList);
+});
+
+app.put("/admin/schedule/selectlist/:trackId/:difficulty", checkAdmin, async (req, res) => {
+  const data = await loadScheduleDataWithAutoBp();
+  const trackId = Number(req.params.trackId);
+  const difficulty = normalizeDifficulty(req.params.difficulty);
+  const banCount = Number(req.body?.banCount);
+  const pickCount = Number(req.body?.pickCount);
+
+  if (
+    !Number.isInteger(trackId) ||
+    trackId <= 0 ||
+    !difficulty ||
+    !Number.isInteger(banCount) ||
+    banCount < 0 ||
+    banCount > 9999 ||
+    !Number.isInteger(pickCount) ||
+    pickCount < 0 ||
+    pickCount > 9999
+  ) {
+    return res.status(400).json({
+      message: "请输入有效的曲目、难度及非负整数统计数量"
+    });
+  }
+
+  const current = await buildScheduleSelectList(data, {
+    admin: true
+  });
+  const currentItem = current.items.find(
+    (item) => item.trackId === trackId && item.difficulty === difficulty
+  );
+  const adjustment = normalizeSelectListAdjustment({
+    trackId,
+    difficulty,
+    banDelta: banCount - Number(currentItem?.autoBanCount || 0),
+    pickDelta: pickCount - Number(currentItem?.autoPickCount || 0),
+    note: req.body?.note,
+    updatedAt: new Date().toISOString()
+  });
+  const key = getSelectListKey(trackId, difficulty);
+
+  data.selectListAdjustments = (data.selectListAdjustments || []).filter(
+    (item) => getSelectListKey(item.trackId, item.difficulty) !== key
+  );
+
+  if (adjustment && (adjustment.banDelta || adjustment.pickDelta || adjustment.note)) {
+    data.selectListAdjustments.push(adjustment);
+  }
+
+  const saved = await persistScheduleData(data);
+  const selectList = await buildScheduleSelectList(saved, {
+    admin: true
+  });
+
+  res.set("Cache-Control", "no-store");
+  res.json(selectList);
+});
+
+app.delete("/admin/schedule/selectlist/:trackId/:difficulty", checkAdmin, async (req, res) => {
+  const data = await loadScheduleDataWithAutoBp();
+  const trackId = Number(req.params.trackId);
+  const difficulty = normalizeDifficulty(req.params.difficulty);
+
+  if (!Number.isInteger(trackId) || trackId <= 0 || !difficulty) {
+    return res.status(400).json({
+      message: "无效的曲目或难度"
+    });
+  }
+
+  const key = getSelectListKey(trackId, difficulty);
+  data.selectListAdjustments = (data.selectListAdjustments || []).filter(
+    (item) => getSelectListKey(item.trackId, item.difficulty) !== key
+  );
+
+  const saved = await persistScheduleData(data);
+  const selectList = await buildScheduleSelectList(saved, {
+    admin: true
+  });
+
+  res.set("Cache-Control", "no-store");
+  res.json(selectList);
 });
 
 app.post("/admin/schedule/matches", checkAdmin, async (req, res) => {
