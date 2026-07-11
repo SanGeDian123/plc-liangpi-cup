@@ -1238,7 +1238,7 @@ let adminToken = localStorage.getItem("adminToken");
       );
       state.selectListItems = Array.isArray(payload.items) ? payload.items : [];
       state.selectListTotals = payload.totals || {};
-      setMessage(els.selectListMessage, "BP数据统计已校正，前台将在下一次同步时更新。");
+      setMessage(els.selectListMessage, "BP数据统计已校正；前台点击“刷新数据”后即可查看。");
     } catch (error) {
       setMessage(els.selectListMessage, error.message || "校正保存失败", true);
     } finally {

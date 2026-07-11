@@ -6,8 +6,7 @@
     search: "",
     difficulty: "all",
     sort: "total",
-    loading: false,
-    timer: 0
+    loading: false
   };
 
   const els = {
@@ -120,9 +119,9 @@
     els.message.hidden = !message;
   }
 
-  async function loadData(options = {}) {
+  async function loadData() {
     if (state.loading) return;
-    setLoading(true, options.silent ? "" : "正在同步 BP 数据...");
+    setLoading(true, "正在同步 BP 数据...");
     try {
       const response = await fetch(`${API_URL}/schedule/selectlist`, { cache: "no-store" });
       const payload = await response.json().catch(() => ({}));
@@ -138,11 +137,6 @@
     }
   }
 
-  function restartPolling() {
-    window.clearInterval(state.timer);
-    state.timer = window.setInterval(() => loadData({ silent: true }), 10000);
-  }
-
   els.typeTabs.forEach((button) => button.addEventListener("click", () => {
     state.type = button.dataset.type;
     els.typeTabs.forEach((item) => {
@@ -156,11 +150,6 @@
   els.difficulty.addEventListener("change", (event) => { state.difficulty = event.target.value; renderItems(); });
   els.sort.addEventListener("change", (event) => { state.sort = event.target.value; renderItems(); });
   els.refresh.addEventListener("click", () => loadData());
-  document.addEventListener("visibilitychange", () => {
-    restartPolling();
-    if (!document.hidden) loadData({ silent: true });
-  });
 
   loadData();
-  restartPolling();
 })();
