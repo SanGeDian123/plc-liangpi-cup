@@ -960,6 +960,64 @@ button{
   box-shadow:none;
 }
 
+.action-panel{
+  position:relative;
+  overflow:hidden;
+}
+
+.action-panel.is-phase-intro-active > :not(.bp-phase-intro){
+  visibility:hidden;
+}
+
+.bp-phase-intro{
+  position:absolute;
+  z-index:5;
+  inset:0;
+  display:grid;
+  place-items:center;
+  min-height:100%;
+  padding:24px;
+  color:#fff;
+  text-align:center;
+  isolation:isolate;
+  animation:bpPhaseIntroFade 2.2s ease-in-out both;
+}
+
+.bp-phase-intro[hidden]{
+  display:none;
+}
+
+.bp-phase-intro[data-phase="ban"]{
+  background:linear-gradient(135deg, #9f1632 0%, #d42d48 100%);
+}
+
+.bp-phase-intro[data-phase="pick"]{
+  background:linear-gradient(135deg, #075da8 0%, #168ce0 100%);
+}
+
+.bp-phase-intro::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  background:
+    linear-gradient(115deg, transparent 25%, rgba(255,255,255,.13) 48%, transparent 70%),
+    radial-gradient(circle at 50% 50%, rgba(255,255,255,.12), transparent 58%);
+}
+
+.bp-phase-intro strong{
+  font-size:clamp(22px, 3.2vw, 34px);
+  line-height:1.35;
+  letter-spacing:.06em;
+  text-shadow:0 2px 14px rgba(0,0,0,.28);
+}
+
+@keyframes bpPhaseIntroFade{
+  0%{ opacity:0; transform:scale(1.025); }
+  14%, 76%{ opacity:1; transform:scale(1); }
+  100%{ opacity:0; transform:scale(.99); }
+}
+
 .section-heading span{
   color:var(--muted);
   font-size:13px;
@@ -1919,6 +1977,15 @@ button{
     width:100%;
   }
 
+  .bp-phase-intro{
+    padding:20px 14px;
+  }
+
+  .bp-phase-intro strong{
+    font-size:clamp(20px, 6vw, 27px);
+    letter-spacing:.035em;
+  }
+
   .bp-library-dialog,
   .bp-submit-dialog{
     padding:14px;
@@ -1958,6 +2025,7 @@ button{
 }
 
 @media(prefers-reduced-motion:reduce){
+  .bp-phase-intro,
   .selection-item.is-entering,
   .practice-random-result,
   .practice-random-result::after,

@@ -22,6 +22,7 @@
   const SCHEDULE_LOAD_TIMEOUT_MS = 8000;
   const SESSION_REFRESH_TIMEOUT_MS = 1200;
   const SCHEDULE_RETRY_DELAY_MS = 3500;
+  const BP_PHASE_INTRO_DURATION_MS = 2200;
 
   const state = {
     matches: [],
@@ -62,6 +63,11 @@
     serverTimeOffsetMs: 0,
     bpCountdownTimer: 0,
     bpCountdownMatchId: "",
+    bpPhaseIntro: {
+      key: "",
+      visible: false,
+      timer: 0
+    },
     lastPresenceAt: 0,
     isSubmitting: false,
     isConfirmingPlayer: false,
@@ -114,6 +120,8 @@
     banList: document.getElementById("banList"),
     pickList: document.getElementById("pickList"),
     actionPanel: document.getElementById("actionPanel"),
+    bpPhaseIntro: document.getElementById("bpPhaseIntro"),
+    bpPhaseIntroText: document.getElementById("bpPhaseIntroText"),
     actionQuota: document.getElementById("actionQuota"),
     bpForm: document.getElementById("bpForm"),
     trackSearch: document.getElementById("trackSearch"),
@@ -662,6 +670,7 @@
 
       if (remainingMs <= 0) {
         stopBpCountdown();
+        startPolling();
         fetchActiveMatch();
       }
 
@@ -751,6 +760,53 @@
     els.actionMessage.textContent = message || "";
     els.actionMessage.classList.toggle("is-error", isError);
     els.actionMessage.classList.toggle("is-waiting", Boolean(message && isWaiting && !isError));
+  }
+
+  function syncBpPhaseIntro(match, phase) {
+    const isStagePhase = phase === "ban" || phase === "pick";
+    const shouldAnnounce = Boolean(
+      match?.viewer?.isParticipant && isBpOpen(match) && isStagePhase
+    );
+
+    if (!shouldAnnounce) {
+      window.clearTimeout(state.bpPhaseIntro.timer);
+      state.bpPhaseIntro.timer = 0;
+      state.bpPhaseIntro.visible = false;
+      els.bpPhaseIntro.hidden = true;
+      els.actionPanel.classList.remove("is-phase-intro-active");
+      delete els.bpPhaseIntro.dataset.phase;
+      return false;
+    }
+
+    const phaseKey = `${match.id}:${phase}`;
+
+    if (state.bpPhaseIntro.key !== phaseKey) {
+      window.clearTimeout(state.bpPhaseIntro.timer);
+      state.bpPhaseIntro.key = phaseKey;
+      state.bpPhaseIntro.visible = true;
+      state.bpPhaseIntro.timer = window.setTimeout(() => {
+        state.bpPhaseIntro.timer = 0;
+        state.bpPhaseIntro.visible = false;
+
+        if (state.activeMatch?.id === match.id) {
+          renderActionPanel(state.activeMatch);
+        }
+      }, BP_PHASE_INTRO_DURATION_MS);
+    }
+
+    const isVisible = state.bpPhaseIntro.visible && state.bpPhaseIntro.key === phaseKey;
+    els.bpPhaseIntro.hidden = !isVisible;
+    els.actionPanel.classList.toggle("is-phase-intro-active", isVisible);
+
+    if (isVisible) {
+      els.bpPhaseIntro.dataset.phase = phase;
+      els.bpPhaseIntroText.textContent =
+        phase === "ban" ? "当前阶段：禁用谱面" : "当前阶段：选择谱面";
+    } else {
+      delete els.bpPhaseIntro.dataset.phase;
+    }
+
+    return isVisible;
   }
 
   function renderTags(container, tags) {
@@ -2100,9 +2156,11 @@
     const progress = match.bp?.progress || {};
     const viewerUserId = getViewerUserId(match);
     const confirmed = (match.bp?.confirmedBy || []).includes(viewerUserId);
+    const isPhaseIntroVisible = syncBpPhaseIntro(match, progress.phase);
 
     els.bpForm.hidden = !action;
     els.confirmBp.hidden =
+      isPhaseIntroVisible ||
       !match.viewer?.isParticipant ||
       !isBpOpen(match) ||
       progress.phase !== "confirm" ||
@@ -2358,6 +2416,16 @@
   function getPollingInterval() {
     if (document.hidden) {
       return 15000;
+    }
+
+    const bpTime = Date.parse(state.activeMatch?.bpStartsAt || "");
+
+    if (
+      state.activeMatch?.status === "scheduled" &&
+      Number.isFinite(bpTime) &&
+      bpTime <= getServerNow()
+    ) {
+      return 750;
     }
 
     return isBpOpen(state.activeMatch) ? 2500 : 8000;

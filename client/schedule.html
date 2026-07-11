@@ -10,7 +10,7 @@
   <link rel="preload" href="./assets/bp-background.jpg" as="image" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
   <link rel="stylesheet" href="./css/account-link.css?v=20260701b" />
-  <link rel="stylesheet" href="./css/schedule.css?v=20260710f" />
+  <link rel="stylesheet" href="./css/schedule.css?v=20260711b" />
   <link rel="stylesheet" href="./css/site-announcement.css" />
 </head>
 <body>
@@ -144,6 +144,10 @@
           </div>
 
           <section class="action-panel" id="actionPanel" aria-labelledby="actionTitle">
+            <div class="bp-phase-intro" id="bpPhaseIntro" role="status" aria-live="assertive" hidden>
+              <strong id="bpPhaseIntroText"></strong>
+            </div>
+
             <div class="section-heading">
               <h3 id="actionTitle">你的操作</h3>
               <span id="actionQuota">等待比赛开始</span>
@@ -274,7 +278,7 @@
   <script src="./js/api.js"></script>
   <script src="./js/account-link.js?v=20260705b"></script>
   <script src="./js/song-alias-data.js?v=20260710b"></script>
-  <script src="./js/schedule.js?v=20260710h"></script>
+  <script src="./js/schedule.js?v=20260711b"></script>
   <script src="./js/site-announcement.js"></script>
 </body>
 </html>
