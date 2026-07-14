@@ -12,14 +12,14 @@
   <link rel="preload" href="./assets/pac-2026-preliminary-bg.png" as="image" />
   <link rel="preload" href="./assets/pac-2026-preliminary-character.png" as="image" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
-  <link rel="stylesheet" href="./css/event.css" />
+  <link rel="stylesheet" href="./css/event.css?v=20260714f" />
   <link rel="stylesheet" href="./css/account-link.css?v=20260701b" />
   <link rel="stylesheet" href="./css/site-announcement.css" />
 </head>
 <body>
   <div class="plc-restore-toast" id="plcRestoreToast" role="status" aria-live="polite" aria-hidden="true">
     <span>PLC计划</span>
-    <strong>档案还原进度提升</strong>
+    <strong>有新内容解码完成</strong>
   </div>
 
   <header class="site-header">
@@ -398,11 +398,8 @@
               disabled
             >
               <img data-src="./assets/zishiquhui-shard-05.webp" loading="lazy" decoding="async" alt="第五残片曲绘" draggable="false" />
-              <span>05 // LAYER 10</span>
             </button>
-            <a class="artifact-shard shard-six" href="./gyaku.html" aria-label="读取第六残片：Gyaku_ 解锁曲绘">
-              <span>06 // OPEN</span>
-            </a>
+            <button class="artifact-shard shard-six" type="button" aria-label="第六残片入口暂时隔断" disabled></button>
           </div>
           <div class="artifact-hitboxes" aria-label="残片入口">
             <button class="artifact-hitbox hitbox-one" type="button" data-fragment-hitbox="one" aria-label="读取第一残片"></button>
@@ -410,7 +407,7 @@
             <button class="artifact-hitbox hitbox-three" type="button" data-fragment-hitbox="three" aria-label="读取第三残片"></button>
             <button class="artifact-hitbox hitbox-four" type="button" data-fragment-hitbox="four" aria-label="读取第四残片"></button>
             <button class="artifact-hitbox hitbox-five" type="button" data-fragment-hitbox="five" aria-label="读取第五残片"></button>
-            <a class="artifact-hitbox hitbox-six" href="./gyaku.html" aria-label="读取第六残片：Gyaku_ 解锁曲绘"></a>
+            <button class="artifact-hitbox hitbox-six" type="button" aria-label="第六残片入口暂时隔断" disabled></button>
           </div>
         </div>
 
@@ -666,11 +663,46 @@
               >
                 <img data-src="./assets/first-layer-shard-01.webp" loading="lazy" decoding="async" alt="" draggable="false" />
               </button>
+              <button
+                class="first-layer-shard first-layer-shard-two"
+                id="openFragmentEightRift"
+                type="button"
+                aria-label="Read fragment 08"
+                disabled
+              >
+                <img data-src="./assets/first-layer-shard-02.webp" loading="lazy" decoding="async" alt="" draggable="false" />
+              </button>
             </span>
+            <div class="first-layer-restored-map" aria-label="残片8至残片11原始曲绘">
+              <img
+                src="./assets/image/fragment-archive-original.webp"
+                loading="lazy"
+                decoding="async"
+                alt="绿色与紫色几何图形构成的原始曲绘"
+                draggable="false"
+              />
+              <span class="first-layer-restored-scan" aria-hidden="true"></span>
+              <button class="first-layer-restored-entry entry-seven" type="button" data-decoded-fragment="07" aria-label="进入残片7">
+                <span>FRAGMENT 07</span>
+              </button>
+              <button class="first-layer-restored-entry entry-eight" type="button" data-decoded-fragment="08" aria-label="进入残片8">
+                <span>FRAGMENT 08</span>
+              </button>
+              <button class="first-layer-restored-entry entry-nine" type="button" data-decoded-fragment="09" aria-label="进入残片9">
+                <span>FRAGMENT 09</span>
+              </button>
+              <button class="first-layer-restored-entry entry-ten" type="button" data-decoded-fragment="10" aria-label="进入残片10">
+                <span>FRAGMENT 10</span>
+              </button>
+              <button class="first-layer-restored-entry entry-eleven" type="button" data-decoded-fragment="11" aria-label="进入残片11">
+                <span>FRAGMENT 11</span>
+              </button>
+              <button class="first-layer-restored-entry entry-twelve is-sealed" type="button" aria-label="残片12尚未开启" disabled>
+                <span>FRAGMENT 12 // SEALED</span>
+              </button>
+            </div>
             <span class="first-layer-art-mask" aria-hidden="true"></span>
             <span class="first-layer-question" aria-hidden="true">?</span>
-            <span class="first-layer-fragment-one" id="firstLayerFragmentOne" aria-hidden="true">FRAGMENT 07 // OPEN</span>
-            <span class="final-art-status">LAYER 01 // SEALED</span>
           </div>
         </div>
 
@@ -755,6 +787,122 @@
     </section>
   </div>
 
+  <div class="fragment-audit" id="fragmentAudit" aria-hidden="true">
+    <div class="fragment-audit-backdrop"></div>
+    <section class="fragment-audit-panel" role="dialog" aria-modal="true" aria-labelledby="fragmentAuditTitle">
+      <header class="fragment-audit-header">
+        <div>
+          <p>PLC LAB // IDENTIFICATION TERMINAL</p>
+          <h2 id="fragmentAuditTitle">残片鉴别</h2>
+        </div>
+      </header>
+
+      <div class="fragment-audit-status">
+        <span id="fragmentAuditBatch">批次 01 / 02</span>
+        <strong id="fragmentAuditProgress">01 / 10</strong>
+        <b id="fragmentAuditTimer">TIME 30.0s</b>
+        <span>每五张统一结算</span>
+      </div>
+
+      <figure class="fragment-audit-image-frame">
+        <img id="fragmentAuditImage" src="" alt="待鉴别残片画面" draggable="false" />
+        <figcaption id="fragmentAuditImageLabel">样本 01</figcaption>
+      </figure>
+
+      <div class="fragment-audit-actions" aria-label="鉴别选项">
+        <button type="button" data-fragment-verdict="normal">
+          <small>STATUS 00</small>
+          <strong>正常</strong>
+        </button>
+        <button type="button" data-fragment-verdict="abnormal">
+          <small>STATUS 01</small>
+          <strong>异常</strong>
+        </button>
+      </div>
+
+      <p class="fragment-audit-hint">选择后将直接写入本批次缓存，不会即时显示对错。</p>
+    </section>
+
+    <div class="fragment-audit-settlement" id="fragmentAuditSettlement" aria-hidden="true">
+      <span id="fragmentAuditSettlementCode">BATCH CHECK</span>
+      <strong id="fragmentAuditSettlementTitle">正在结算本批次</strong>
+      <p id="fragmentAuditSettlementText">正在比对五份残片数据……</p>
+    </div>
+
+    <div class="fragment-audit-fault" aria-hidden="true">
+      <span>FATAL IDENTIFICATION ERROR</span>
+      <strong>故障</strong>
+      <p>残片污染已越过安全阈值</p>
+    </div>
+  </div>
+
+  <div class="decoded-fragment-placeholder" id="decodedFragmentPlaceholder" aria-hidden="true">
+    <div class="decoded-fragment-placeholder-backdrop" data-close-decoded-placeholder></div>
+    <section role="dialog" aria-modal="true" aria-labelledby="decodedFragmentPlaceholderTitle">
+      <button type="button" data-close-decoded-placeholder aria-label="关闭残片入口">×</button>
+      <p>DECODED ARCHIVE CHANNEL</p>
+      <h2 id="decodedFragmentPlaceholderTitle">FRAGMENT 08</h2>
+      <strong id="decodedFragmentCountdown">--:--:--</strong>
+      <span id="decodedFragmentCountdownTarget">OPEN AT --</span>
+      <div class="decoded-fragment-time-shift" id="decodedFragmentTimeShift" hidden>
+        <button id="decodedFragmentTimeShiftButton" type="button">怎么这么慢？</button>
+      </div>
+
+      <div class="fragment-nine-game" id="fragmentNineGame" hidden>
+        <div class="fragment-nine-game-intro" id="fragmentNineGameIntro">
+          <p>NUMBER TRACE // 3 QUESTIONS</p>
+          <strong>从被隐藏的数字中辨认三首曲目。</strong>
+          <span>三组数据将依次接入。每题可以揭示三次数字，写入正确曲名后进入下一题。</span>
+          <button id="fragmentNineStartButton" type="button">开始解析</button>
+        </div>
+
+        <div class="fragment-nine-game-board" id="fragmentNineGameBoard" hidden>
+          <header>
+            <div>
+              <span>ARCHIVE SAMPLE // NUMERIC MASK</span>
+              <b id="fragmentNineQuestionProgress">QUESTION 01 / 03</b>
+            </div>
+            <strong id="fragmentNineAttempts">剩余数字次数 3 / 3</strong>
+          </header>
+
+          <div class="fragment-nine-clue" id="fragmentNineClue" aria-live="polite"></div>
+
+          <div class="fragment-nine-revealed">
+            <span>已揭示数字</span>
+            <strong id="fragmentNineRevealedDigits">[ ]</strong>
+          </div>
+
+          <div class="fragment-nine-keypad" id="fragmentNineKeypad" aria-label="选择要揭示的数字">
+            <button type="button" data-fragment-nine-digit="0">0</button>
+            <button type="button" data-fragment-nine-digit="1">1</button>
+            <button type="button" data-fragment-nine-digit="2">2</button>
+            <button type="button" data-fragment-nine-digit="3">3</button>
+            <button type="button" data-fragment-nine-digit="4">4</button>
+            <button type="button" data-fragment-nine-digit="5">5</button>
+            <button type="button" data-fragment-nine-digit="6">6</button>
+            <button type="button" data-fragment-nine-digit="7">7</button>
+            <button type="button" data-fragment-nine-digit="8">8</button>
+            <button type="button" data-fragment-nine-digit="9">9</button>
+          </div>
+
+          <form class="fragment-nine-answer" id="fragmentNineAnswerForm">
+            <label for="fragmentNineAnswerInput">写入曲名</label>
+            <div>
+              <input id="fragmentNineAnswerInput" type="text" autocomplete="off" spellcheck="false" maxlength="64" placeholder="SONG TITLE" />
+              <button type="submit">VERIFY</button>
+            </div>
+          </form>
+          <p class="fragment-nine-status" id="fragmentNineStatus" aria-live="polite"></p>
+        </div>
+
+        <div class="fragment-nine-result" id="fragmentNineResult" hidden aria-live="polite">
+          <span>FRAGMENT 09 // OPEN</span>
+          <strong>Chart：The Rulers ~InkyStar~</strong>
+        </div>
+      </div>
+    </section>
+  </div>
+
   <div class="first-layer-terminal" id="firstLayerTerminal" aria-hidden="true">
     <div class="first-layer-terminal-backdrop" data-close-first-layer-terminal></div>
     <section class="first-layer-terminal-panel" role="dialog" aria-modal="true" aria-labelledby="firstLayerTerminalTitle">
@@ -805,6 +953,38 @@
       </form>
       <p class="fragment-answer-status" id="fragmentSevenAnswerStatus" aria-live="polite"></p>
       <p class="fragment-result" id="fragmentSevenResult" aria-hidden="true"></p>
+    </section>
+  </div>
+
+  <div class="signal-rift fragment-rift fragment-eight-rift" id="fragmentEightRift" aria-hidden="true">
+    <div class="signal-rift-backdrop" data-close-fragment-eight-rift></div>
+    <section
+      class="signal-rift-panel fragment-rift-panel fragment-eight-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="fragmentEightRiftTitle"
+    >
+      <button class="signal-rift-close" type="button" data-close-fragment-eight-rift aria-label="Close fragment 08 window">&times;</button>
+      <p class="signal-rift-code">FRAGMENT 08 // LUMINANCE LOCK</p>
+      <h2 id="fragmentEightRiftTitle">FRAGMENT 08</h2>
+      <figure class="fragment-eight-clue" aria-label="Fragment 08 hidden archive image">
+        <img data-src="./assets/fragment-08-domination-clue.webp" loading="lazy" decoding="async" alt="Extremely dark Fragment 08 archive image" draggable="false" />
+      </figure>
+      <form class="fragment-answer" id="fragmentEightAnswerForm">
+        <label for="fragmentEightAnswerInput">ARCHIVE KEY</label>
+        <div>
+          <input
+            id="fragmentEightAnswerInput"
+            type="text"
+            autocomplete="off"
+            maxlength="24"
+            placeholder="----------"
+          />
+          <button id="fragmentEightAnswerSubmit" type="button">WRITE</button>
+        </div>
+      </form>
+      <p class="fragment-answer-status" id="fragmentEightAnswerStatus" aria-live="polite"></p>
+      <p class="fragment-result" id="fragmentEightResult" aria-hidden="true"></p>
     </section>
   </div>
 
@@ -1314,9 +1494,7 @@
           <img class="reboot-shard reboot-shard-three" src="./assets/zishiquhui-shard-03.webp" alt="" draggable="false" />
           <img class="reboot-shard reboot-shard-four" src="./assets/zishiquhui-shard-04.webp" alt="" draggable="false" />
           <img class="reboot-shard reboot-shard-five" src="./assets/zishiquhui-shard-05.webp" alt="" draggable="false" role="button" tabindex="0" aria-label="读取第五残片" data-open-fragment-five-rift />
-          <button class="fragment-five-entry" id="openFragmentFiveRift" type="button" data-open-fragment-five-rift>
-            <span>05 // LAYER 10</span>
-          </button>
+          <button class="fragment-five-entry" id="openFragmentFiveRift" type="button" data-open-fragment-five-rift aria-label="读取第五残片"></button>
         </div>
       </div>
     </section>
@@ -1510,7 +1688,8 @@
   <script src="./js/api.js"></script>
   <script src="./js/players-cache.js"></script>
   <script src="./js/account-link.js?v=20260705b"></script>
-  <script src="./js/event.js"></script>
+  <script src="./js/song-alias-data.js?v=20260710b"></script>
+  <script src="./js/event.js?v=20260714i"></script>
   <script src="./js/site-announcement.js"></script>
 </body>
 </html>

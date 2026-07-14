@@ -80,6 +80,38 @@ const firstLayerTerminalForm = document.getElementById("firstLayerTerminalForm")
 const firstLayerTerminalInput = document.getElementById("firstLayerTerminalInput");
 const firstLayerTerminalLog = document.getElementById("firstLayerTerminalLog");
 const firstLayerTerminalStatus = document.getElementById("firstLayerTerminalStatus");
+const decodedFragmentEntryTargets = document.querySelectorAll("[data-decoded-fragment]");
+const decodedFragmentPlaceholder = document.getElementById("decodedFragmentPlaceholder");
+const decodedFragmentPlaceholderTitle = document.getElementById("decodedFragmentPlaceholderTitle");
+const decodedFragmentCountdown = document.getElementById("decodedFragmentCountdown");
+const decodedFragmentCountdownTarget = document.getElementById("decodedFragmentCountdownTarget");
+const decodedFragmentTimeShift = document.getElementById("decodedFragmentTimeShift");
+const decodedFragmentTimeShiftButton = document.getElementById("decodedFragmentTimeShiftButton");
+const decodedFragmentPlaceholderCloseTargets = document.querySelectorAll("[data-close-decoded-placeholder]");
+const fragmentNineGame = document.getElementById("fragmentNineGame");
+const fragmentNineGameIntro = document.getElementById("fragmentNineGameIntro");
+const fragmentNineStartButton = document.getElementById("fragmentNineStartButton");
+const fragmentNineGameBoard = document.getElementById("fragmentNineGameBoard");
+const fragmentNineQuestionProgress = document.getElementById("fragmentNineQuestionProgress");
+const fragmentNineAttempts = document.getElementById("fragmentNineAttempts");
+const fragmentNineClue = document.getElementById("fragmentNineClue");
+const fragmentNineRevealedDigits = document.getElementById("fragmentNineRevealedDigits");
+const fragmentNineDigitButtons = document.querySelectorAll("[data-fragment-nine-digit]");
+const fragmentNineAnswerForm = document.getElementById("fragmentNineAnswerForm");
+const fragmentNineAnswerInput = document.getElementById("fragmentNineAnswerInput");
+const fragmentNineStatus = document.getElementById("fragmentNineStatus");
+const fragmentNineResult = document.getElementById("fragmentNineResult");
+const fragmentAudit = document.getElementById("fragmentAudit");
+const fragmentAuditImage = document.getElementById("fragmentAuditImage");
+const fragmentAuditImageLabel = document.getElementById("fragmentAuditImageLabel");
+const fragmentAuditBatch = document.getElementById("fragmentAuditBatch");
+const fragmentAuditProgress = document.getElementById("fragmentAuditProgress");
+const fragmentAuditTimer = document.getElementById("fragmentAuditTimer");
+const fragmentAuditVerdictButtons = document.querySelectorAll("[data-fragment-verdict]");
+const fragmentAuditSettlement = document.getElementById("fragmentAuditSettlement");
+const fragmentAuditSettlementCode = document.getElementById("fragmentAuditSettlementCode");
+const fragmentAuditSettlementTitle = document.getElementById("fragmentAuditSettlementTitle");
+const fragmentAuditSettlementText = document.getElementById("fragmentAuditSettlementText");
 const fragmentSevenDialogueStage = document.getElementById("fragmentSevenDialogueStage");
 const fragmentSevenDialogueStack = document.getElementById("fragmentSevenDialogueStack");
 const fragmentSevenRift = document.getElementById("fragmentSevenRift");
@@ -90,6 +122,14 @@ const fragmentSevenAnswerInput = document.getElementById("fragmentSevenAnswerInp
 const fragmentSevenAnswerSubmit = document.getElementById("fragmentSevenAnswerSubmit");
 const fragmentSevenAnswerStatus = document.getElementById("fragmentSevenAnswerStatus");
 const fragmentSevenResult = document.getElementById("fragmentSevenResult");
+const fragmentEightRift = document.getElementById("fragmentEightRift");
+const openFragmentEightRiftButton = document.getElementById("openFragmentEightRift");
+const fragmentEightRiftCloseTargets = document.querySelectorAll("[data-close-fragment-eight-rift]");
+const fragmentEightAnswerForm = document.getElementById("fragmentEightAnswerForm");
+const fragmentEightAnswerInput = document.getElementById("fragmentEightAnswerInput");
+const fragmentEightAnswerSubmit = document.getElementById("fragmentEightAnswerSubmit");
+const fragmentEightAnswerStatus = document.getElementById("fragmentEightAnswerStatus");
+const fragmentEightResult = document.getElementById("fragmentEightResult");
 const signalGatePanel = document.querySelector(".signal-gate-panel");
 const signalGateStatus = document.getElementById("signalGateStatus");
 const offsetTableValue = document.getElementById("offsetTableValue");
@@ -208,6 +248,7 @@ let fragmentThreeRiftCloseTimer = null;
 let fragmentFourRiftCloseTimer = null;
 let fragmentFiveRiftCloseTimer = null;
 let fragmentSevenRiftCloseTimer = null;
+let fragmentEightRiftCloseTimer = null;
 let fragmentFiveMainReturnTimer = null;
 let saturnSimulationTimers = [];
 let mobileLandscapeNoticeTimers = [];
@@ -227,6 +268,7 @@ let fragmentThreeRiftLastFocusedElement = null;
 let fragmentFourRiftLastFocusedElement = null;
 let fragmentFiveRiftLastFocusedElement = null;
 let fragmentSevenRiftLastFocusedElement = null;
+let fragmentEightRiftLastFocusedElement = null;
 let phasePlateLastFocusedElement = null;
 let settlementRiftLastFocusedElement = null;
 let palaceRiftLastFocusedElement = null;
@@ -250,6 +292,18 @@ let qualifierRankingDraftSnapshot = "";
 let firstLayerTerminalTimers = [];
 let plcRestoreToastTimer = null;
 let fragmentSevenDialogueTimers = [];
+let fragmentAuditTimers = [];
+let fragmentAuditQuestionIndex = 0;
+let fragmentAuditBatchAnswers = [];
+let fragmentAuditCountdownTimer = null;
+let fragmentAuditDeadline = 0;
+let fragmentAuditLastFocusedElement = null;
+let decodedFragmentPlaceholderLastFocusedElement = null;
+let decodedFragmentCountdownTimer = null;
+let decodedFragmentCountdownDeadline = 0;
+let decodedFragmentTimeShiftAnimation = null;
+let decodedFragmentActiveNumber = "";
+let fragmentNineRenderTimer = null;
 let rankingPreviewMode = "normal";
 let tips = Array.isArray(window.PLC_TIPS) && window.PLC_TIPS.length > 0
   ? window.PLC_TIPS
@@ -321,12 +375,21 @@ const firstLayerEchoStorageKey = "plc.event.firstLayerEcho.v1";
 const firstLayerEchoCacheVersion = "2026-06-20-first-layer-echo-v1";
 const firstLayerFragmentOneStorageKey = "plc.event.firstLayerFragmentOne.v1";
 const firstLayerFragmentOneCacheVersion = "2026-06-20-first-layer-fragment-one-v1";
+const firstLayerFragmentTwoStorageKey = "plc.event.firstLayerFragmentTwo.v1";
+const firstLayerFragmentTwoCacheVersion = "2026-07-07-first-layer-fragment-two-v1";
 const fragmentSevenAnswerStorageKey = "plc.event.fragment07.v1";
 const fragmentSevenAnswerCacheVersion = "2026-06-20-fragment-07-bpm-v1";
 const fragmentSevenIntroStorageKey = "plc.event.fragment07Intro.v1";
 const fragmentSevenIntroCacheVersion = "2026-06-20-fragment-07-intro-v1";
-const decryptSkipEndpointLabel = "第一层回声 / FRAGMENT 07";
+const fragmentEightAnswerStorageKey = "plc.event.fragment08.v1";
+const fragmentEightAnswerCacheVersion = "2026-07-07-fragment-08-artist-v1";
+const fragmentAuditStorageKey = "plc.event.fragmentAudit.v1";
+const fragmentAuditCacheVersion = "2026-07-14-fragment-audit-v1";
+const decodedFragmentHubStorageKey = "plc.event.decodedFragmentHub.v1";
+const decodedFragmentHubCacheVersion = "2026-07-14-decoded-fragment-hub-v1";
+const decryptSkipEndpointLabel = "第一层回声 / FRAGMENT 08";
 const fragmentSevenAnswer = "retribution";
+const fragmentEightAnswer = "domination";
 const fragmentSevenDialogueIntervalMs = 3200;
 const fragmentSevenDialogueTexts = [
   "你也许也意识到了这件事。",
@@ -334,6 +397,63 @@ const fragmentSevenDialogueTexts = [
   "硬币掷出之后，正逆的转换从未停止。",
   "前方是毁灭亦是重生。"
 ];
+const fragmentAuditQuestions = [
+  { source: "./assets/image/scan-a7c2.webp", answer: "normal" },
+  { source: "./assets/image/scan-f14b.webp", answer: "abnormal" },
+  { source: "./assets/image/scan-c83e.webp", answer: "abnormal" },
+  { source: "./assets/image/scan-91ad.webp", answer: "abnormal" },
+  { source: "./assets/image/scan-b260.webp", answer: "normal" },
+  { source: "./assets/image/scan-e57c.webp", answer: "abnormal" },
+  { source: "./assets/image/scan-4d39.webp", answer: "normal" },
+  { source: "./assets/image/scan-d806.webp", answer: "abnormal" },
+  { source: "./assets/image/scan-38af.webp", answer: "normal" },
+  { source: "./assets/image/scan-6be1.webp", answer: "abnormal" }
+];
+const decodedFragmentReleaseTimes = Object.freeze({
+  "09": "2026-07-15T20:00:00+08:00",
+  "10": "2026-07-16T20:00:00+08:00",
+  "11": "2026-07-17T20:00:00+08:00"
+});
+const decodedFragmentAdjustedReleaseTimes = Object.freeze({
+  "09": "2026-07-14T20:00:00+08:00",
+  "10": "2026-07-15T20:00:00+08:00",
+  "11": "2026-07-16T20:00:00+08:00"
+});
+const decodedFragmentNineTimeShiftStorageKey = "plc.event.fragment09TimeShift.v1";
+const decodedFragmentNineTimeShiftCacheVersion = "2026-07-14-fragment09-time-shift-v1";
+const fragmentNinePuzzleStorageKey = "plc.event.fragment09Puzzle.v1";
+const fragmentNinePuzzleCacheVersion = "2026-07-14-fragment09-number-trace-v2";
+const fragmentNineMaxDigitGuesses = 3;
+const fragmentNineSongData = Object.freeze([
+  {
+    trackId: 177,
+    title: "Der Schneid",
+    charts: [
+      { difficulty: "EZ", rating: "7.0", notes: "457" },
+      { difficulty: "HD", rating: "11.9", notes: "710" },
+      { difficulty: "IN", rating: "16.1", notes: "1426" },
+      { difficulty: "AT", rating: "17.5", notes: "1555" }
+    ]
+  },
+  {
+    trackId: 94,
+    title: "Bounded Quietude",
+    charts: [
+      { difficulty: "EZ", rating: "7.0", notes: "1127" },
+      { difficulty: "HD", rating: "7.5", notes: "303" },
+      { difficulty: "IN", rating: "16.2", notes: "1286" }
+    ]
+  },
+  {
+    trackId: 58,
+    title: "Fractured Angel",
+    charts: [
+      { difficulty: "EZ", rating: "4.0", notes: "626" },
+      { difficulty: "HD", rating: "10.9", notes: "796" },
+      { difficulty: "IN", rating: "16.3", notes: "1084" }
+    ]
+  }
+]);
 const plcPlanHiddenLetters = {
   1: "W",
   2: "L",
@@ -508,8 +628,44 @@ const plcDatabaseEntries = [
   },
   {
     title: "PLC计划 #8",
-    collectedAt: "??/?/??",
-    keeper: "正在解析",
+    collectedAt: "26/7/14",
+    keeper: "像素塔",
+    level: "Main",
+    body: [
+      "又是新的一天——",
+      "刺眼的阳光穿过实验室的窗户，投射在堆满残片的地板上。",
+      "这些残片或多或少受到了一些污染，导致它们并不能全部用于实验。",
+      "当然，它们并不属于那十二块重要残片。",
+      "鉴别它们的重任又回到了一众研究员的身上。",
+      "以下为一张正确残片的实例，在接下来的任务中，你将收到若干残片，",
+      "请逐一辨别它们的真伪。",
+      "注意：请保证完成的准确率。",
+      "为了新世界，再向前踏出一步吧。"
+    ].join("\n")
+  },
+  {
+    title: "PLC计划 #9",
+    collectedAt: "26/7/14",
+    keeper: "像素塔",
+    level: "Main",
+    body: [
+      "看来，辨别残片的任务已经圆满完成了。",
+      "走出昏暗的实验房间，步入阳光之中。",
+      "眼前是一片欣欣向荣的模样——尽管“音轨”的问题仍未解决，但人们总是在积极寻找出路。",
+      "有了那些残片的帮助，人们很快便找到了有关残片#8、残片#9、残片#10的线索。",
+      "不久，在一声声欢呼中，残片#11也被破解。",
+      "或许，距离这场无妄之灾的末尾，仅剩那两块至关重要的残片——",
+      "残片#6与残片#12。",
+      "没人知道它们藏于何方，有传言道，两块残片被古代的秘术所诅咒，获得它们，就等于毁灭自己。",
+      "为了尽快破解残片的真相，研究员们各担己责，决定分为两个小组，各自寻找残片#6与残片#12。",
+      "于是那天，名为LT组、LH组的两支实验小组，在人们期许的目光中，在明亮的阳光下，缓缓走出了幸存者营地。",
+      "现在，回去看看，那些已被破译的残片吧。"
+    ].join("\n")
+  },
+  {
+    title: "PLC计划 #10",
+    collectedAt: "??/?/?",
+    keeper: "???",
     level: "Main",
     body: [
       "后续记录仍在整理。",
@@ -5616,6 +5772,30 @@ function writeFirstLayerFragmentOneState() {
   }));
 }
 
+function readFirstLayerFragmentTwoState() {
+  try {
+    const cachedValue = readStoredValue(firstLayerFragmentTwoStorageKey);
+
+    if (!cachedValue) {
+      return false;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    return payload?.version === firstLayerFragmentTwoCacheVersion &&
+      payload?.unlocked === true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function writeFirstLayerFragmentTwoState() {
+  writeStoredValue(firstLayerFragmentTwoStorageKey, JSON.stringify({
+    version: firstLayerFragmentTwoCacheVersion,
+    unlocked: true,
+    completedAt: new Date().toISOString()
+  }));
+}
+
 function readFragmentSevenAnswerCache() {
   try {
     const cachedValue = readStoredValue(fragmentSevenAnswerStorageKey);
@@ -5638,6 +5818,163 @@ function writeFragmentSevenAnswerCache() {
     solved: true,
     completedAt: new Date().toISOString()
   }));
+}
+
+function readFragmentEightAnswerCache() {
+  try {
+    const cachedValue = readStoredValue(fragmentEightAnswerStorageKey);
+
+    if (!cachedValue) {
+      return false;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    return payload?.version === fragmentEightAnswerCacheVersion &&
+      payload?.solved === true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function writeFragmentEightAnswerCache() {
+  writeStoredValue(fragmentEightAnswerStorageKey, JSON.stringify({
+    version: fragmentEightAnswerCacheVersion,
+    solved: true,
+    completedAt: new Date().toISOString()
+  }));
+}
+
+function readFragmentAuditState() {
+  try {
+    const cachedValue = readStoredValue(fragmentAuditStorageKey);
+
+    if (!cachedValue) {
+      return false;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    return payload?.version === fragmentAuditCacheVersion && payload?.completed === true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function writeFragmentAuditState() {
+  writeStoredValue(fragmentAuditStorageKey, JSON.stringify({
+    version: fragmentAuditCacheVersion,
+    completed: true,
+    completedAt: new Date().toISOString()
+  }));
+}
+
+function readDecodedFragmentHubState() {
+  try {
+    const cachedValue = readStoredValue(decodedFragmentHubStorageKey);
+
+    if (!cachedValue) {
+      return false;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    return payload?.version === decodedFragmentHubCacheVersion && payload?.unlocked === true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function writeDecodedFragmentHubState() {
+  writeStoredValue(decodedFragmentHubStorageKey, JSON.stringify({
+    version: decodedFragmentHubCacheVersion,
+    unlocked: true,
+    unlockedAt: new Date().toISOString()
+  }));
+}
+
+function readDecodedFragmentNineTimeShiftState() {
+  try {
+    const cachedValue = readStoredValue(decodedFragmentNineTimeShiftStorageKey);
+
+    if (!cachedValue) {
+      return false;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    return payload?.version === decodedFragmentNineTimeShiftCacheVersion && payload?.adjusted === true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function writeDecodedFragmentNineTimeShiftState() {
+  writeStoredValue(decodedFragmentNineTimeShiftStorageKey, JSON.stringify({
+    version: decodedFragmentNineTimeShiftCacheVersion,
+    adjusted: true,
+    adjustedAt: new Date().toISOString()
+  }));
+}
+
+function createDefaultFragmentNinePuzzleState() {
+  return {
+    started: false,
+    currentQuestionIndex: 0,
+    revealedDigits: [],
+    guessesUsed: 0,
+    solved: false
+  };
+}
+
+function sanitizeFragmentNinePuzzleState(payload) {
+  if (payload?.version !== fragmentNinePuzzleCacheVersion) {
+    return createDefaultFragmentNinePuzzleState();
+  }
+
+  const solved = payload.solved === true;
+  const currentQuestionIndex = solved
+    ? fragmentNineSongData.length
+    : Number.isInteger(payload.currentQuestionIndex) &&
+      payload.currentQuestionIndex >= 0 &&
+      payload.currentQuestionIndex < fragmentNineSongData.length
+        ? payload.currentQuestionIndex
+        : 0;
+  const started = payload.started === true;
+  const revealedDigits = started && Array.isArray(payload.revealedDigits)
+    ? [...new Set(payload.revealedDigits
+      .map((digit) => String(digit))
+      .filter((digit) => /^\d$/.test(digit)))]
+      .slice(0, fragmentNineMaxDigitGuesses)
+    : [];
+
+  return {
+    started,
+    currentQuestionIndex: started ? currentQuestionIndex : 0,
+    revealedDigits: solved ? [] : revealedDigits,
+    guessesUsed: revealedDigits.length,
+    solved: started && solved
+  };
+}
+
+function readFragmentNinePuzzleState() {
+  try {
+    const cachedValue = readStoredValue(fragmentNinePuzzleStorageKey);
+    return cachedValue
+      ? sanitizeFragmentNinePuzzleState(JSON.parse(cachedValue))
+      : createDefaultFragmentNinePuzzleState();
+  } catch (error) {
+    return createDefaultFragmentNinePuzzleState();
+  }
+}
+
+function writeFragmentNinePuzzleState(state) {
+  const safeState = sanitizeFragmentNinePuzzleState({
+    version: fragmentNinePuzzleCacheVersion,
+    ...state
+  });
+  writeStoredValue(fragmentNinePuzzleStorageKey, JSON.stringify({
+    version: fragmentNinePuzzleCacheVersion,
+    ...safeState,
+    updatedAt: new Date().toISOString()
+  }));
+  return safeState;
 }
 
 function readFragmentSevenIntroCache() {
@@ -5700,6 +6037,10 @@ function writeCurrentDecryptionEndpointCache() {
     writeFirstLayerFragmentOneState,
     writeFragmentSevenIntroCache,
     writeFragmentSevenAnswerCache,
+    writeFirstLayerFragmentTwoState,
+    writeFragmentEightAnswerCache,
+    writeFragmentAuditState,
+    writeDecodedFragmentHubState,
     writeAllPlcDatabaseEntriesSeen
   ].forEach((writeStep) => {
     writeStep();
@@ -5717,7 +6058,10 @@ function closeDecryptionSurfacesForSkip() {
     restoreFocus: false
   });
   closeMobileLandscapeNotice();
+  closeFragmentAudit({ restoreFocus: false });
+  closeDecodedFragmentPlaceholder();
   hideFragmentSevenDialogueStage();
+  closeFragmentEightRift();
   closeFragmentSevenRift();
   closeFirstLayerTerminal();
   closePlcDatabase();
@@ -5783,6 +6127,9 @@ function renderCurrentDecryptionEndpoint({ scroll = true } = {}) {
     scroll
   });
   revealFragmentSevenAnswer({
+    fromCache: true
+  });
+  revealFragmentEightAnswer({
     fromCache: true
   });
 }
@@ -5972,13 +6319,20 @@ function applyPlcDatabaseReplayState(enabled, { restoreFirstLayer = true } = {})
 }
 
 function getPlcPlanEntriesForCurrentState() {
-  if (readFirstLayerEchoState()) {
-    return plcDatabaseEntries;
+  if (!readFirstLayerEchoState()) {
+    return plcDatabaseEntries
+      .filter((entry) => getPlcPlanEntryNumber(entry) < 7)
+      .concat(plcDatabasePendingPlanEntry);
   }
 
-  return plcDatabaseEntries
-    .filter((entry) => getPlcPlanEntryNumber(entry) < 7)
-    .concat(plcDatabasePendingPlanEntry);
+  const fragmentEightSolved = readFragmentEightAnswerCache();
+  const highestUnlockedEntry = fragmentEightSolved && readFragmentAuditState()
+    ? 9
+    : fragmentEightSolved ? 8 : 7;
+
+  return plcDatabaseEntries.filter((entry) => {
+    return getPlcPlanEntryNumber(entry) <= highestUnlockedEntry;
+  });
 }
 
 function getPlcDatabaseEntryKey(categoryKey, index) {
@@ -6269,6 +6623,765 @@ function renderPlcDatabaseEntryContent(body = "") {
   });
 }
 
+function appendPlcPlanEightAuditEntry() {
+  if (!plcDatabaseEntryContent) {
+    return;
+  }
+
+  const section = document.createElement("section");
+  section.className = "plc-fragment-audit-entry";
+
+  const label = document.createElement("span");
+  label.textContent = "REFERENCE // NORMAL";
+
+  const figure = document.createElement("figure");
+  const image = document.createElement("img");
+  image.src = "./assets/image/sample-reference.webp";
+  image.alt = "正确残片示例";
+  image.loading = "lazy";
+  image.decoding = "async";
+  const caption = document.createElement("figcaption");
+  caption.textContent = "正确残片示例";
+  figure.append(image, caption);
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "plc-db-start-button plc-fragment-audit-start";
+  button.textContent = readFragmentAuditState() ? "重新进行残片鉴别" : "进入残片鉴别";
+  button.addEventListener("click", openFragmentAudit);
+
+  section.append(label, figure, button);
+  plcDatabaseEntryContent.appendChild(section);
+}
+
+function appendPlcPlanNineHomeButton() {
+  if (!plcDatabaseEntryContent) {
+    return;
+  }
+
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "plc-db-start-button plc-return-home-button";
+  button.innerHTML = "<span>RETURN TO HOME</span><strong>返回主页</strong>";
+  button.addEventListener("click", unlockDecodedFragmentHubFromDatabase);
+  plcDatabaseEntryContent.appendChild(button);
+}
+
+function clearFragmentAuditTimers() {
+  fragmentAuditTimers.forEach((timer) => window.clearTimeout(timer));
+  fragmentAuditTimers = [];
+  window.clearInterval(fragmentAuditCountdownTimer);
+  fragmentAuditCountdownTimer = null;
+  fragmentAuditDeadline = 0;
+}
+
+function setFragmentAuditControlsDisabled(disabled) {
+  fragmentAuditVerdictButtons.forEach((button) => {
+    button.disabled = disabled;
+  });
+}
+
+function renderFragmentAuditQuestion() {
+  const question = fragmentAuditQuestions[fragmentAuditQuestionIndex];
+
+  if (!question || !fragmentAuditImage) {
+    return;
+  }
+
+  fragmentAudit?.classList.add("is-switching");
+  fragmentAuditImage.onload = () => {
+    fragmentAudit?.classList.remove("is-switching");
+  };
+  fragmentAuditImage.src = question.source;
+  fragmentAuditImage.alt = "待鉴别残片样本 " + String(fragmentAuditQuestionIndex + 1).padStart(2, "0");
+
+  if (fragmentAuditImageLabel) {
+    fragmentAuditImageLabel.textContent = "样本 " + String(fragmentAuditQuestionIndex + 1).padStart(2, "0");
+  }
+
+  if (fragmentAuditProgress) {
+    fragmentAuditProgress.textContent = String(fragmentAuditQuestionIndex + 1).padStart(2, "0") + " / 10";
+  }
+
+  if (fragmentAuditBatch) {
+    fragmentAuditBatch.textContent = "批次 0" + (Math.floor(fragmentAuditQuestionIndex / 5) + 1) + " / 02";
+  }
+
+  setFragmentAuditControlsDisabled(false);
+  startFragmentAuditCountdown();
+}
+
+function updateFragmentAuditCountdown() {
+  const remainingMs = Math.max(0, fragmentAuditDeadline - Date.now());
+  const remainingSeconds = (remainingMs / 1000).toFixed(1);
+
+  if (fragmentAuditTimer) {
+    fragmentAuditTimer.textContent = "TIME " + remainingSeconds + "s";
+    fragmentAuditTimer.classList.toggle("is-warning", remainingMs <= 10000);
+  }
+
+  if (remainingMs <= 0) {
+    window.clearInterval(fragmentAuditCountdownTimer);
+    fragmentAuditCountdownTimer = null;
+    triggerFragmentAuditFailure("TIME LIMIT EXCEEDED");
+  }
+}
+
+function startFragmentAuditCountdown() {
+  window.clearInterval(fragmentAuditCountdownTimer);
+  fragmentAuditDeadline = Date.now() + 30000;
+  updateFragmentAuditCountdown();
+  fragmentAuditCountdownTimer = window.setInterval(updateFragmentAuditCountdown, 100);
+}
+
+function resetFragmentAuditSettlement() {
+  fragmentAuditSettlement?.classList.remove("is-open", "is-success", "is-complete");
+  fragmentAuditSettlement?.setAttribute("aria-hidden", "true");
+}
+
+function openFragmentAudit(event) {
+  event?.preventDefault();
+
+  if (!fragmentAudit || !readFragmentEightAnswerCache()) {
+    return;
+  }
+
+  clearFragmentAuditTimers();
+  resetFragmentAuditSettlement();
+  fragmentAuditQuestionIndex = 0;
+  fragmentAuditBatchAnswers = [];
+  fragmentAuditLastFocusedElement = document.activeElement;
+  fragmentAudit.classList.remove("is-dimming", "is-fault", "is-switching");
+  fragmentAudit.classList.add("is-open");
+  fragmentAudit.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open", "fragment-audit-open");
+  renderFragmentAuditQuestion();
+}
+
+function closeFragmentAudit({ restoreFocus = true } = {}) {
+  if (!fragmentAudit?.classList.contains("is-open")) {
+    return;
+  }
+
+  clearFragmentAuditTimers();
+  resetFragmentAuditSettlement();
+  fragmentAudit.classList.remove("is-open", "is-dimming", "is-fault", "is-switching");
+  fragmentAudit.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("fragment-audit-open");
+
+  if (!plcDatabase?.classList.contains("is-open")) {
+    document.body.classList.remove("modal-open");
+  }
+
+  if (restoreFocus && fragmentAuditLastFocusedElement?.focus) {
+    fragmentAuditLastFocusedElement.focus({ preventScroll: true });
+  }
+}
+
+function returnFragmentAuditToPlanEight() {
+  closeFragmentAudit({ restoreFocus: false });
+  showPlcDatabaseDetail("first");
+  const planEightIndex = getPlcDatabaseEntryIndexByTitle("first", "PLC计划 #8");
+  selectPlcDatabaseEntry(planEightIndex >= 0 ? planEightIndex : 0);
+}
+
+function finishFragmentAuditSuccess() {
+  writeFragmentAuditState();
+  updatePlcDatabaseProgress();
+  renderPlcDatabaseEntryList();
+  updateFirstLayerNextAnalysis();
+
+  fragmentAuditSettlement?.classList.add("is-success", "is-complete");
+  if (fragmentAuditSettlementCode) {
+    fragmentAuditSettlementCode.textContent = "IDENTIFICATION COMPLETE";
+  }
+  if (fragmentAuditSettlementTitle) {
+    fragmentAuditSettlementTitle.textContent = "残片鉴别完成";
+  }
+  if (fragmentAuditSettlementText) {
+    fragmentAuditSettlementText.textContent = "10 / 10 样本已完成校验。";
+  }
+
+  const completeTimer = window.setTimeout(() => {
+    closeFragmentAudit({ restoreFocus: false });
+    showPlcRestoreToast();
+  }, 2200);
+  fragmentAuditTimers.push(completeTimer);
+}
+
+function triggerFragmentAuditFailure(reason = "IDENTIFICATION ERROR") {
+  if (!fragmentAudit?.classList.contains("is-open") || fragmentAudit.classList.contains("is-dimming")) {
+    return;
+  }
+
+  window.clearInterval(fragmentAuditCountdownTimer);
+  fragmentAuditCountdownTimer = null;
+  setFragmentAuditControlsDisabled(true);
+  fragmentAuditSettlement?.classList.remove("is-open");
+  fragmentAuditSettlement?.setAttribute("aria-hidden", "true");
+  fragmentAudit?.setAttribute("data-fault-reason", reason);
+  fragmentAudit?.classList.add("is-dimming");
+
+  const faultTimer = window.setTimeout(() => {
+    fragmentAudit?.classList.add("is-fault");
+  }, 1050);
+  const returnTimer = window.setTimeout(returnFragmentAuditToPlanEight, 2650);
+  fragmentAuditTimers.push(faultTimer, returnTimer);
+}
+
+function settleFragmentAuditBatch() {
+  setFragmentAuditControlsDisabled(true);
+  fragmentAuditSettlement?.classList.add("is-open");
+  fragmentAuditSettlement?.setAttribute("aria-hidden", "false");
+
+  if (fragmentAuditSettlementCode) {
+    fragmentAuditSettlementCode.textContent = "BATCH " + (fragmentAuditQuestionIndex / 5) + " // CHECK";
+  }
+  if (fragmentAuditSettlementTitle) {
+    fragmentAuditSettlementTitle.textContent = "正在结算本批次";
+  }
+  if (fragmentAuditSettlementText) {
+    fragmentAuditSettlementText.textContent = "正在比对五份残片数据……";
+  }
+
+  const checkTimer = window.setTimeout(() => {
+    const batchPassed = fragmentAuditBatchAnswers.length === 5 && fragmentAuditBatchAnswers.every(Boolean);
+
+    if (!batchPassed) {
+      triggerFragmentAuditFailure("BATCH IDENTIFICATION ERROR");
+      return;
+    }
+
+    fragmentAuditSettlement?.classList.add("is-success");
+    if (fragmentAuditSettlementTitle) {
+      fragmentAuditSettlementTitle.textContent = "批次校验通过";
+    }
+    if (fragmentAuditSettlementText) {
+      fragmentAuditSettlementText.textContent = "5 / 5 数据一致。";
+    }
+
+    if (fragmentAuditQuestionIndex >= fragmentAuditQuestions.length) {
+      finishFragmentAuditSuccess();
+      return;
+    }
+
+    const continueTimer = window.setTimeout(() => {
+      resetFragmentAuditSettlement();
+      fragmentAuditBatchAnswers = [];
+      renderFragmentAuditQuestion();
+    }, 1500);
+    fragmentAuditTimers.push(continueTimer);
+  }, 950);
+  fragmentAuditTimers.push(checkTimer);
+}
+
+function handleFragmentAuditVerdict(event) {
+  const button = event.currentTarget;
+  const question = fragmentAuditQuestions[fragmentAuditQuestionIndex];
+
+  if (!question || button.disabled) {
+    return;
+  }
+
+  setFragmentAuditControlsDisabled(true);
+  window.clearInterval(fragmentAuditCountdownTimer);
+  fragmentAuditCountdownTimer = null;
+  fragmentAuditBatchAnswers.push(button.dataset.fragmentVerdict === question.answer);
+  fragmentAuditQuestionIndex += 1;
+
+  if (fragmentAuditQuestionIndex % 5 === 0) {
+    settleFragmentAuditBatch();
+    return;
+  }
+
+  const nextTimer = window.setTimeout(renderFragmentAuditQuestion, 180);
+  fragmentAuditTimers.push(nextTimer);
+}
+
+function applyDecodedFragmentHubState() {
+  const unlocked = readDecodedFragmentHubState();
+  firstLayerEchoSection?.classList.toggle("is-fragment-archive-open", unlocked);
+  document.body.classList.toggle("decoded-fragment-hub-unlocked", unlocked);
+  updateFirstLayerNextAnalysis();
+
+  if (!unlocked || !firstLayerEchoSection) {
+    return;
+  }
+
+  const kicker = firstLayerEchoSection.querySelector(".first-layer-copy .signal-kicker");
+  const heading = firstLayerEchoSection.querySelector(".first-layer-copy h3");
+  const description = firstLayerEchoSection.querySelector(".first-layer-copy > p:not(.signal-kicker)");
+  const artStatus = firstLayerEchoSection.querySelector(".final-art-status");
+
+  if (kicker) {
+    kicker.textContent = "AUDIO TRACE / FRAGMENTS 07—12";
+  }
+  if (heading) {
+    heading.textContent = "第一层回声已接入五块残片。";
+  }
+  if (description) {
+    description.textContent = "残片 #7 至 #11 已开启；残片 #12 仍处于封存状态。";
+  }
+  if (firstLayerFragmentOne) {
+    firstLayerFragmentOne.textContent = "FRAGMENTS 07—11 // OPEN";
+  }
+  if (artStatus) {
+    artStatus.textContent = "LAYER 01 // FRAGMENTS 07—12";
+  }
+
+}
+
+function unlockDecodedFragmentHubFromDatabase(event) {
+  event?.preventDefault();
+  writeDecodedFragmentHubState();
+  closePlcDatabase();
+  applyDecodedFragmentHubState();
+
+  window.setTimeout(() => {
+    firstLayerEchoSection?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, 120);
+}
+
+function formatDecodedFragmentCountdown(remainingMs) {
+  const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  return [hours, minutes, seconds]
+    .map((value) => String(value).padStart(2, "0"))
+    .join(":");
+}
+
+function updateDecodedFragmentCountdown() {
+  if (!decodedFragmentCountdown || !decodedFragmentCountdownDeadline) {
+    return;
+  }
+
+  const remainingMs = Math.max(0, decodedFragmentCountdownDeadline - Date.now());
+  decodedFragmentCountdown.textContent = formatDecodedFragmentCountdown(remainingMs);
+  decodedFragmentCountdown.classList.toggle("is-complete", remainingMs <= 0);
+
+  if (remainingMs <= 0) {
+    window.clearInterval(decodedFragmentCountdownTimer);
+    decodedFragmentCountdownTimer = null;
+    if (decodedFragmentCountdownTarget) {
+      decodedFragmentCountdownTarget.textContent = "开放时间已到 // SIGNAL READY";
+    }
+
+    if (decodedFragmentActiveNumber === "09" && isFragmentNineReleased()) {
+      showFragmentNinePuzzle();
+    }
+  }
+}
+
+function isFragmentNineReleased() {
+  const isLocalPreview = window.location.protocol === "file:" ||
+    ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
+
+  return isLocalPreview || Date.now() >= new Date(decodedFragmentAdjustedReleaseTimes["09"]).getTime();
+}
+
+function setDecodedFragmentCountdownVisibility(visible) {
+  if (decodedFragmentCountdown) {
+    decodedFragmentCountdown.hidden = !visible;
+  }
+  if (decodedFragmentCountdownTarget) {
+    decodedFragmentCountdownTarget.hidden = !visible;
+  }
+  if (!visible && decodedFragmentTimeShift) {
+    decodedFragmentTimeShift.hidden = true;
+  }
+}
+
+function normalizeFragmentNineSongTitle(value = "") {
+  return String(value)
+    .normalize("NFKC")
+    .trim()
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, "");
+}
+
+function isFragmentNineSongAnswer(song, value) {
+  const normalizedAnswer = normalizeFragmentNineSongTitle(value);
+  if (!normalizedAnswer) {
+    return false;
+  }
+
+  const aliases = Array.isArray(window.PLC_SONG_ALIASES?.[song.trackId])
+    ? window.PLC_SONG_ALIASES[song.trackId]
+    : [];
+
+  return [song.title, ...aliases]
+    .map(normalizeFragmentNineSongTitle)
+    .filter(Boolean)
+    .includes(normalizedAnswer);
+}
+
+function renderFragmentNineClue(song, revealedDigits, newlyRevealedDigit = "") {
+  if (!fragmentNineClue) {
+    return;
+  }
+
+  const revealedDigitSet = new Set(revealedDigits);
+  fragmentNineClue.replaceChildren();
+
+  song.charts.forEach((chart) => {
+    const line = document.createElement("p");
+    const difficulty = document.createElement("strong");
+    const chartData = document.createElement("span");
+    difficulty.textContent = chart.difficulty;
+
+    `${chart.rating} ${chart.notes}`.split("").forEach((character) => {
+      const characterNode = document.createElement("i");
+      const isDigit = /^\d$/.test(character);
+      const isRevealed = isDigit && revealedDigitSet.has(character);
+      characterNode.textContent = isDigit && !isRevealed ? "*" : character;
+      characterNode.classList.toggle("is-masked", isDigit && !isRevealed);
+      characterNode.classList.toggle("is-revealed", isRevealed);
+      characterNode.classList.toggle("is-newly-revealed", isRevealed && character === newlyRevealedDigit);
+      chartData.appendChild(characterNode);
+    });
+
+    line.append(difficulty, chartData);
+    fragmentNineClue.appendChild(line);
+  });
+}
+
+function renderFragmentNinePuzzle(state = readFragmentNinePuzzleState(), newlyRevealedDigit = "") {
+  if (!fragmentNineGame) {
+    return;
+  }
+
+  fragmentNineGame.hidden = false;
+  fragmentNineGameIntro.hidden = state.started;
+  fragmentNineGameBoard.hidden = !state.started || state.solved;
+  fragmentNineResult.hidden = !state.solved;
+  decodedFragmentPlaceholder?.classList.toggle("is-fragment-nine-solved", state.solved);
+
+  if (!state.started || state.solved) {
+    return;
+  }
+
+  const song = fragmentNineSongData[state.currentQuestionIndex];
+  const remainingGuesses = Math.max(0, fragmentNineMaxDigitGuesses - state.guessesUsed);
+  renderFragmentNineClue(song, state.revealedDigits, newlyRevealedDigit);
+
+  if (fragmentNineQuestionProgress) {
+    fragmentNineQuestionProgress.textContent =
+      `QUESTION ${String(state.currentQuestionIndex + 1).padStart(2, "0")} / ${String(fragmentNineSongData.length).padStart(2, "0")}`;
+  }
+  if (fragmentNineAttempts) {
+    fragmentNineAttempts.textContent = `剩余数字次数 ${remainingGuesses} / ${fragmentNineMaxDigitGuesses}`;
+  }
+  if (fragmentNineRevealedDigits) {
+    fragmentNineRevealedDigits.textContent = state.revealedDigits.length
+      ? `[ ${state.revealedDigits.join("  ")} ]`
+      : "[ ]";
+  }
+
+  fragmentNineDigitButtons.forEach((button) => {
+    const used = state.revealedDigits.includes(button.dataset.fragmentNineDigit);
+    button.disabled = used || state.guessesUsed >= fragmentNineMaxDigitGuesses || state.solved;
+    button.classList.toggle("is-used", used);
+  });
+
+  if (fragmentNineAnswerInput) {
+    fragmentNineAnswerInput.disabled = state.solved;
+  }
+}
+
+function showFragmentNinePuzzle() {
+  window.clearInterval(decodedFragmentCountdownTimer);
+  decodedFragmentCountdownTimer = null;
+  decodedFragmentCountdownDeadline = 0;
+  setDecodedFragmentCountdownVisibility(false);
+  decodedFragmentPlaceholder?.classList.add("is-fragment-nine");
+  renderFragmentNinePuzzle();
+}
+
+function startFragmentNinePuzzle(event) {
+  event?.preventDefault();
+
+  if (!isFragmentNineReleased()) {
+    return;
+  }
+
+  let state = readFragmentNinePuzzleState();
+  if (!state.started) {
+    state = writeFragmentNinePuzzleState({
+      started: true,
+      currentQuestionIndex: 0,
+      revealedDigits: [],
+      solved: false
+    });
+  }
+
+  if (fragmentNineStatus) {
+    fragmentNineStatus.textContent = "";
+    fragmentNineStatus.classList.remove("is-error", "is-complete");
+  }
+  renderFragmentNinePuzzle(state);
+  window.requestAnimationFrame(() => fragmentNineAnswerInput?.focus());
+}
+
+function revealFragmentNineDigit(event) {
+  const digit = event.currentTarget.dataset.fragmentNineDigit;
+  let state = readFragmentNinePuzzleState();
+
+  if (
+    !state.started ||
+    state.solved ||
+    state.guessesUsed >= fragmentNineMaxDigitGuesses ||
+    state.revealedDigits.includes(digit)
+  ) {
+    return;
+  }
+
+  state = writeFragmentNinePuzzleState({
+    ...state,
+    revealedDigits: [...state.revealedDigits, digit]
+  });
+  renderFragmentNinePuzzle(state, digit);
+
+  const song = fragmentNineSongData[state.currentQuestionIndex];
+  const digitExists = song.charts.some((chart) => `${chart.rating}${chart.notes}`.includes(digit));
+  if (fragmentNineStatus) {
+    fragmentNineStatus.textContent = digitExists
+      ? `数字 ${digit} 已写回全部数据。`
+      : `样本中未检出数字 ${digit}。`;
+    fragmentNineStatus.classList.remove("is-error", "is-complete");
+  }
+}
+
+function handleFragmentNineAnswerSubmit(event) {
+  event?.preventDefault();
+  let state = readFragmentNinePuzzleState();
+
+  if (!state.started || state.solved || !fragmentNineAnswerInput) {
+    return;
+  }
+
+  const song = fragmentNineSongData[state.currentQuestionIndex];
+  const answer = normalizeFragmentNineSongTitle(fragmentNineAnswerInput.value);
+  if (isFragmentNineSongAnswer(song, fragmentNineAnswerInput.value)) {
+    const isFinalQuestion = state.currentQuestionIndex >= fragmentNineSongData.length - 1;
+    if (isFinalQuestion) {
+      state = writeFragmentNinePuzzleState({
+        ...state,
+        solved: true
+      });
+      fragmentNineStatus?.classList.remove("is-error");
+      renderFragmentNinePuzzle(state);
+      return;
+    }
+
+    const nextQuestionIndex = state.currentQuestionIndex + 1;
+    state = writeFragmentNinePuzzleState({
+      started: true,
+      currentQuestionIndex: nextQuestionIndex,
+      revealedDigits: [],
+      solved: false
+    });
+    fragmentNineGameBoard?.classList.add("is-question-complete");
+    fragmentNineDigitButtons.forEach((button) => {
+      button.disabled = true;
+    });
+    fragmentNineAnswerInput.disabled = true;
+    if (fragmentNineStatus) {
+      fragmentNineStatus.textContent = `第 ${nextQuestionIndex} 题确认完成，正在接入第 ${nextQuestionIndex + 1} 题…`;
+      fragmentNineStatus.classList.remove("is-error");
+      fragmentNineStatus.classList.add("is-complete");
+    }
+    window.clearTimeout(fragmentNineRenderTimer);
+    fragmentNineRenderTimer = window.setTimeout(() => {
+      fragmentNineRenderTimer = null;
+      fragmentNineGameBoard?.classList.remove("is-question-complete");
+      fragmentNineAnswerInput.value = "";
+      fragmentNineAnswerInput.disabled = false;
+      if (fragmentNineStatus) {
+        fragmentNineStatus.textContent = `第 ${nextQuestionIndex + 1} / ${fragmentNineSongData.length} 题已接入。`;
+        fragmentNineStatus.classList.remove("is-complete");
+      }
+      renderFragmentNinePuzzle(state);
+      fragmentNineAnswerInput.focus();
+    }, 520);
+    return;
+  }
+
+  if (fragmentNineStatus) {
+    fragmentNineStatus.textContent = answer ? "曲名不匹配，请重新检索。" : "请输入曲名。";
+    fragmentNineStatus.classList.remove("is-complete");
+    fragmentNineStatus.classList.add("is-error");
+  }
+  fragmentNineGameBoard?.classList.remove("is-answer-rejected");
+  void fragmentNineGameBoard?.offsetWidth;
+  fragmentNineGameBoard?.classList.add("is-answer-rejected");
+  window.clearTimeout(fragmentNineRenderTimer);
+  fragmentNineRenderTimer = window.setTimeout(() => {
+    fragmentNineGameBoard?.classList.remove("is-answer-rejected");
+  }, 420);
+  fragmentNineAnswerInput.select();
+}
+
+function getDecodedFragmentReleaseTime(fragmentNumber) {
+  if (readDecodedFragmentNineTimeShiftState() && decodedFragmentAdjustedReleaseTimes[fragmentNumber]) {
+    return decodedFragmentAdjustedReleaseTimes[fragmentNumber];
+  }
+
+  return decodedFragmentReleaseTimes[fragmentNumber];
+}
+
+function updateDecodedFragmentTimeShiftControl(fragmentNumber) {
+  if (!decodedFragmentTimeShift || !decodedFragmentTimeShiftButton) {
+    return;
+  }
+
+  const isFragmentNine = fragmentNumber === "09";
+  const adjusted = isFragmentNine && readDecodedFragmentNineTimeShiftState();
+  decodedFragmentTimeShift.hidden = !isFragmentNine;
+  decodedFragmentTimeShiftButton.disabled = adjusted;
+  decodedFragmentTimeShiftButton.textContent = adjusted ? "时间偏移已校正" : "怎么这么慢？";
+}
+
+function startDecodedFragmentCountdown(fragmentNumber) {
+  const releaseTime = getDecodedFragmentReleaseTime(fragmentNumber);
+
+  window.clearInterval(decodedFragmentCountdownTimer);
+  decodedFragmentCountdownTimer = null;
+
+  if (!releaseTime) {
+    return;
+  }
+
+  setDecodedFragmentCountdownVisibility(true);
+  if (fragmentNineGame) {
+    fragmentNineGame.hidden = true;
+  }
+  decodedFragmentPlaceholder?.classList.remove("is-fragment-nine", "is-fragment-nine-solved");
+  decodedFragmentCountdownDeadline = new Date(releaseTime).getTime();
+  decodedFragmentCountdown?.classList.remove("is-complete");
+  updateDecodedFragmentTimeShiftControl(fragmentNumber);
+
+  if (decodedFragmentCountdownTarget) {
+    const day = releaseTime.slice(8, 10);
+    decodedFragmentCountdownTarget.textContent = "开放时间：2026/07/" + day + " 20:00（北京时间）";
+  }
+
+  updateDecodedFragmentCountdown();
+  if (decodedFragmentCountdownDeadline > Date.now()) {
+    decodedFragmentCountdownTimer = window.setInterval(updateDecodedFragmentCountdown, 1000);
+  }
+}
+
+function runDecodedFragmentNineTimeShift(event) {
+  event?.preventDefault();
+
+  if (
+    decodedFragmentActiveNumber !== "09" ||
+    readDecodedFragmentNineTimeShiftState() ||
+    decodedFragmentTimeShiftAnimation !== null
+  ) {
+    return;
+  }
+
+  window.clearInterval(decodedFragmentCountdownTimer);
+  decodedFragmentCountdownTimer = null;
+  decodedFragmentTimeShiftButton.disabled = true;
+  decodedFragmentTimeShiftButton.textContent = "正在校正时间偏移…";
+  decodedFragmentPlaceholder?.classList.add("is-time-shifting");
+
+  const initialDeadline = new Date(decodedFragmentReleaseTimes["09"]).getTime();
+  const adjustedDeadline = new Date(decodedFragmentAdjustedReleaseTimes["09"]).getTime();
+  const animationDuration = 2200;
+  const animationStartedAt = performance.now();
+
+  if (decodedFragmentCountdownTarget) {
+    decodedFragmentCountdownTarget.textContent = "检测到时间偏移 // 正在回卷 24 小时";
+  }
+
+  const animate = (timestamp) => {
+    const progress = Math.min(1, (timestamp - animationStartedAt) / animationDuration);
+    const easedProgress = 1 - Math.pow(1 - progress, 3);
+    decodedFragmentCountdownDeadline = Math.round(
+      initialDeadline - (initialDeadline - adjustedDeadline) * easedProgress
+    );
+    updateDecodedFragmentCountdown();
+
+    if (progress < 1) {
+      decodedFragmentTimeShiftAnimation = window.requestAnimationFrame(animate);
+      return;
+    }
+
+    decodedFragmentTimeShiftAnimation = null;
+    writeDecodedFragmentNineTimeShiftState();
+    startDecodedFragmentCountdown("09");
+
+    window.setTimeout(() => {
+      decodedFragmentPlaceholder?.classList.remove("is-time-shifting");
+    }, 420);
+  };
+
+  decodedFragmentTimeShiftAnimation = window.requestAnimationFrame(animate);
+}
+
+function openDecodedFragmentPlaceholder(event) {
+  event?.preventDefault();
+
+  if (!decodedFragmentPlaceholder || !readDecodedFragmentHubState()) {
+    return;
+  }
+
+  if (event.currentTarget.dataset.decodedFragment === "07") {
+    openFragmentSevenRift(event, { forceWindow: true });
+    return;
+  }
+
+  if (event.currentTarget.dataset.decodedFragment === "08") {
+    openFragmentEightRift(event);
+    return;
+  }
+
+  const fragmentNumber = event.currentTarget.dataset.decodedFragment;
+  decodedFragmentActiveNumber = fragmentNumber;
+  decodedFragmentPlaceholderLastFocusedElement = event.currentTarget;
+  if (decodedFragmentPlaceholderTitle) {
+    decodedFragmentPlaceholderTitle.textContent = "FRAGMENT " + fragmentNumber;
+  }
+  if (fragmentNumber === "09" && isFragmentNineReleased()) {
+    showFragmentNinePuzzle();
+  } else {
+    startDecodedFragmentCountdown(fragmentNumber);
+  }
+  decodedFragmentPlaceholder.classList.add("is-open");
+  decodedFragmentPlaceholder.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+}
+
+function closeDecodedFragmentPlaceholder() {
+  if (!decodedFragmentPlaceholder?.classList.contains("is-open")) {
+    return;
+  }
+
+  decodedFragmentPlaceholder.classList.remove("is-open");
+  decodedFragmentPlaceholder.classList.remove("is-time-shifting");
+  decodedFragmentPlaceholder.classList.remove("is-fragment-nine", "is-fragment-nine-solved");
+  decodedFragmentPlaceholder.setAttribute("aria-hidden", "true");
+  window.clearInterval(decodedFragmentCountdownTimer);
+  decodedFragmentCountdownTimer = null;
+  decodedFragmentCountdownDeadline = 0;
+  if (decodedFragmentTimeShiftAnimation !== null) {
+    window.cancelAnimationFrame(decodedFragmentTimeShiftAnimation);
+    decodedFragmentTimeShiftAnimation = null;
+  }
+  window.clearTimeout(fragmentNineRenderTimer);
+  fragmentNineRenderTimer = null;
+  fragmentNineGameBoard?.classList.remove("is-answer-rejected");
+  decodedFragmentActiveNumber = "";
+  document.body.classList.remove("modal-open");
+  decodedFragmentPlaceholderLastFocusedElement?.focus?.({ preventScroll: true });
+}
+
 function clearFirstLayerTerminalTimers() {
   firstLayerTerminalTimers.forEach((timer) => window.clearTimeout(timer));
   firstLayerTerminalTimers = [];
@@ -6300,6 +7413,39 @@ function showPlcRestoreToast() {
   }, 3600);
 }
 
+function updateFirstLayerNextAnalysis() {
+  if (!firstLayerNextAnalysis) {
+    return;
+  }
+
+  if (readDecodedFragmentHubState()) {
+    firstLayerNextAnalysis.textContent = "残片 #7—#11 已开启 / #12 封存";
+    return;
+  }
+
+  if (readFragmentEightAnswerCache() && readFragmentAuditState()) {
+    firstLayerNextAnalysis.textContent = "PLC计划 #9 已解锁";
+    return;
+  }
+
+  if (readFragmentEightAnswerCache()) {
+    firstLayerNextAnalysis.textContent = "PLC计划 #8 已解锁";
+    return;
+  }
+
+  if (readFragmentSevenAnswerCache()) {
+    firstLayerNextAnalysis.textContent = "残片 #8 等待解析";
+    return;
+  }
+
+  if (readFirstLayerFragmentOneState()) {
+    firstLayerNextAnalysis.textContent = "残片 #7 等待解析";
+    return;
+  }
+
+  firstLayerNextAnalysis.textContent = "等待回声稳定";
+}
+
 function applyFirstLayerFragmentOneState() {
   const unlocked = readFirstLayerFragmentOneState();
   firstLayerEchoSection?.classList.toggle("is-fragment-one-open", unlocked);
@@ -6313,12 +7459,11 @@ function applyFirstLayerFragmentOneState() {
     );
   }
 
-  if (firstLayerNextAnalysis) {
-    firstLayerNextAnalysis.textContent = unlocked ? "残片 #7 已开启" : "等待回声稳定";
-  }
-
   if (firstLayerFragmentOne) {
     firstLayerFragmentOne.setAttribute("aria-hidden", unlocked ? "false" : "true");
+    firstLayerFragmentOne.textContent = readFirstLayerFragmentTwoState()
+      ? "FRAGMENT 08 // OPEN"
+      : "FRAGMENT 07 // OPEN";
   }
 
   if (openFragmentSevenRiftButton) {
@@ -6328,8 +7473,46 @@ function applyFirstLayerFragmentOneState() {
 
   const status = firstLayerEchoSection?.querySelector(".final-art-status");
   if (status) {
-    status.textContent = unlocked ? "LAYER 01 // FRAGMENT 07" : "LAYER 01 // SEALED";
+    status.textContent = readFirstLayerFragmentTwoState()
+      ? "LAYER 01 // FRAGMENT 08"
+      : unlocked ? "LAYER 01 // FRAGMENT 07" : "LAYER 01 // SEALED";
   }
+
+  applyFirstLayerFragmentTwoState();
+  updateFirstLayerNextAnalysis();
+}
+
+function applyFirstLayerFragmentTwoState() {
+  const unlocked = readFirstLayerFragmentTwoState();
+  firstLayerEchoSection?.classList.toggle("is-fragment-two-open", unlocked);
+
+  if (openFragmentEightRiftButton) {
+    openFragmentEightRiftButton.disabled = !unlocked;
+    openFragmentEightRiftButton.setAttribute("aria-disabled", unlocked ? "false" : "true");
+  }
+
+  if (firstLayerFragmentOne && unlocked) {
+    firstLayerFragmentOne.textContent = "FRAGMENT 08 // OPEN";
+  }
+
+  const status = firstLayerEchoSection?.querySelector(".final-art-status");
+  if (status && unlocked) {
+    status.textContent = "LAYER 01 // FRAGMENT 08";
+  }
+
+  updateFirstLayerNextAnalysis();
+}
+
+function unlockFirstLayerFragmentTwo() {
+  if (!readFirstLayerFragmentOneState()) {
+    return;
+  }
+
+  if (!readFirstLayerFragmentTwoState()) {
+    writeFirstLayerFragmentTwoState();
+  }
+
+  applyFirstLayerFragmentTwoState();
 }
 
 function resetFirstLayerTerminal() {
@@ -6380,6 +7563,14 @@ function closeFirstLayerTerminal() {
 }
 
 function normalizeFragmentSevenAnswer(value = "") {
+  return String(value)
+    .trim()
+    .replace(/\s+/g, "")
+    .replace(/[-_]/g, "")
+    .toLowerCase();
+}
+
+function normalizeFragmentEightAnswer(value = "") {
   return String(value)
     .trim()
     .replace(/\s+/g, "")
@@ -6479,6 +7670,10 @@ function revealFragmentSevenAnswer({ fromCache = false } = {}) {
     fragmentSevenAnswerStatus.classList.remove("is-failed");
     fragmentSevenAnswerStatus.classList.add("is-complete");
   }
+
+  unlockFirstLayerFragmentTwo();
+  updatePlcDatabaseProgress();
+  renderPlcDatabaseEntryList();
 }
 
 function openFragmentSevenRift(event, { forceWindow = false } = {}) {
@@ -6516,6 +7711,117 @@ function openFragmentSevenRift(event, { forceWindow = false } = {}) {
     : fragmentSevenAnswerInput;
   if (focusTarget && typeof focusTarget.focus === "function") {
     focusTarget.focus();
+  }
+}
+
+function openFragmentEightRift(event) {
+  event?.preventDefault();
+
+  if (
+    !fragmentEightRift ||
+    !readFirstLayerFragmentTwoState() ||
+    openFragmentEightRiftButton?.disabled
+  ) {
+    return;
+  }
+
+  window.clearTimeout(fragmentEightRiftCloseTimer);
+  fragmentEightRiftLastFocusedElement = document.activeElement;
+  fragmentEightRift.classList.remove("is-closing");
+  fragmentEightRift.classList.add("is-open");
+  fragmentEightRift.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+  loadDeferredImages(fragmentEightRift);
+
+  if (readFragmentEightAnswerCache()) {
+    revealFragmentEightAnswer({
+      fromCache: true
+    });
+  }
+
+  const focusTarget = fragmentEightAnswerInput?.disabled
+    ? fragmentEightRift.querySelector(".signal-rift-close")
+    : fragmentEightAnswerInput;
+  if (focusTarget && typeof focusTarget.focus === "function") {
+    focusTarget.focus();
+  }
+}
+
+function revealFragmentEightAnswer({ fromCache = false } = {}) {
+  fragmentEightRift?.classList.add("is-fragment-solved");
+
+  if (fragmentEightResult) {
+    fragmentEightResult.textContent = "Artist\uFF1ANOMA";
+    fragmentEightResult.setAttribute("aria-hidden", "false");
+  }
+
+  if (fragmentEightAnswerInput) {
+    fragmentEightAnswerInput.value = "DOMINATION";
+    fragmentEightAnswerInput.disabled = true;
+  }
+
+  if (fragmentEightAnswerSubmit) {
+    fragmentEightAnswerSubmit.disabled = true;
+  }
+
+  if (fragmentEightAnswerStatus) {
+    fragmentEightAnswerStatus.textContent = fromCache
+      ? "ARCHIVE RESTORED."
+      : "ARCHIVE KEY ACCEPTED.";
+    fragmentEightAnswerStatus.classList.remove("is-failed");
+    fragmentEightAnswerStatus.classList.add("is-complete");
+  }
+
+  updatePlcDatabaseProgress();
+  renderPlcDatabaseEntryList();
+  updateFirstLayerNextAnalysis();
+
+  if (!fromCache) {
+    showPlcRestoreToast();
+  }
+}
+
+function closeFragmentEightRift() {
+  if (!fragmentEightRift?.classList.contains("is-open")) {
+    return;
+  }
+
+  fragmentEightRift.classList.add("is-closing");
+  fragmentEightRift.classList.remove("is-open");
+  fragmentEightRift.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+
+  fragmentEightRiftCloseTimer = window.setTimeout(() => {
+    fragmentEightRift.classList.remove("is-closing");
+
+    if (
+      fragmentEightRiftLastFocusedElement &&
+      typeof fragmentEightRiftLastFocusedElement.focus === "function"
+    ) {
+      fragmentEightRiftLastFocusedElement.focus();
+    }
+  }, 340);
+}
+
+function handleFragmentEightAnswerSubmit(event) {
+  event?.preventDefault();
+
+  if (!fragmentEightAnswerInput || readFragmentEightAnswerCache()) {
+    return;
+  }
+
+  const answer = normalizeFragmentEightAnswer(fragmentEightAnswerInput.value);
+
+  if (answer === fragmentEightAnswer) {
+    writeFragmentEightAnswerCache();
+    revealFragmentEightAnswer();
+    return;
+  }
+
+  if (fragmentEightAnswerStatus) {
+    fragmentEightAnswerStatus.textContent = "ARCHIVE KEY REJECTED.";
+    fragmentEightAnswerStatus.classList.remove("is-complete");
+    fragmentEightAnswerStatus.classList.add("is-failed");
   }
 }
 
@@ -6660,6 +7966,7 @@ function revealFirstLayerEcho({ animate = true, scroll = true } = {}) {
   firstLayerEchoSection.setAttribute("aria-hidden", "false");
   loadDeferredImages(firstLayerEchoSection);
   applyFirstLayerFragmentOneState();
+  applyDecodedFragmentHubState();
 
   if (animate) {
     window.setTimeout(() => {
@@ -6827,6 +8134,12 @@ function selectPlcDatabaseEntry(index = 0) {
   }
 
   renderPlcDatabaseEntryContent(entry.body);
+  if (activeCategory.key === "first" && entry.title === "PLC计划 #8") {
+    appendPlcPlanEightAuditEntry();
+  }
+  if (activeCategory.key === "first" && entry.title === "PLC计划 #9") {
+    appendPlcPlanNineHomeButton();
+  }
   if (activeCategory.key === "secret" && isPlcSecretFragmentFourEntry(entry)) {
     appendPlcDatabaseStartButton();
   }
@@ -7449,6 +8762,54 @@ if (openFragmentSevenRiftButton) {
   openFragmentSevenRiftButton.addEventListener("click", openFragmentSevenRift);
 }
 
+if (openFragmentEightRiftButton) {
+  openFragmentEightRiftButton.addEventListener("click", openFragmentEightRift);
+}
+
+if (fragmentEightAnswerForm) {
+  fragmentEightAnswerForm.addEventListener("submit", handleFragmentEightAnswerSubmit);
+}
+
+if (fragmentEightAnswerSubmit) {
+  fragmentEightAnswerSubmit.addEventListener("click", handleFragmentEightAnswerSubmit);
+}
+
+if (fragmentEightAnswerInput) {
+  fragmentEightAnswerInput.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      handleFragmentEightAnswerSubmit(event);
+    }
+  });
+}
+
+fragmentAuditVerdictButtons.forEach((button) => {
+  button.addEventListener("click", handleFragmentAuditVerdict);
+});
+
+decodedFragmentEntryTargets.forEach((target) => {
+  target.addEventListener("click", openDecodedFragmentPlaceholder);
+});
+
+decodedFragmentPlaceholderCloseTargets.forEach((target) => {
+  target.addEventListener("click", closeDecodedFragmentPlaceholder);
+});
+
+if (decodedFragmentTimeShiftButton) {
+  decodedFragmentTimeShiftButton.addEventListener("click", runDecodedFragmentNineTimeShift);
+}
+
+if (fragmentNineStartButton) {
+  fragmentNineStartButton.addEventListener("click", startFragmentNinePuzzle);
+}
+
+fragmentNineDigitButtons.forEach((button) => {
+  button.addEventListener("click", revealFragmentNineDigit);
+});
+
+if (fragmentNineAnswerForm) {
+  fragmentNineAnswerForm.addEventListener("submit", handleFragmentNineAnswerSubmit);
+}
+
 if (fragmentSevenAnswerForm) {
   fragmentSevenAnswerForm.addEventListener("submit", handleFragmentSevenAnswerSubmit);
 }
@@ -7475,6 +8836,10 @@ firstLayerTerminalCloseTargets.forEach((target) => {
 
 fragmentSevenRiftCloseTargets.forEach((target) => {
   target.addEventListener("click", closeFragmentSevenRift);
+});
+
+fragmentEightRiftCloseTargets.forEach((target) => {
+  target.addEventListener("click", closeFragmentEightRift);
 });
 
 if (plcDatabaseReplayButton) {
@@ -7760,6 +9125,11 @@ fragmentFiveRiftCloseTargets.forEach((target) => {
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    if (decodedFragmentPlaceholder?.classList.contains("is-open")) {
+      closeDecodedFragmentPlaceholder();
+      return;
+    }
+
     if (decryptSkipConfirm?.classList.contains("is-open")) {
       closeDecryptSkipConfirm({
         statusText: "已取消跳过。"
@@ -7772,6 +9142,7 @@ document.addEventListener("keydown", (event) => {
       return;
     }
 
+    closeFragmentEightRift();
     closeFragmentSevenRift();
     closeFirstLayerTerminal();
     closePlcDatabase();
@@ -7863,6 +9234,7 @@ updatePlcDatabaseProgress();
 applyPlcDatabaseReplayState(readPlcDatabaseReplayState(), {
   restoreFirstLayer: false
 });
+applyDecodedFragmentHubState();
 if (!lockPlcSecretSignalGateSelection({ fromCache: true })) {
   preparePlcSecretSignalGate();
 }
