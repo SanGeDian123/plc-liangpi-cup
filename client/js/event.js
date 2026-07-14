@@ -102,6 +102,12 @@ const fragmentNineAnswerInput = document.getElementById("fragmentNineAnswerInput
 const fragmentNineStatus = document.getElementById("fragmentNineStatus");
 const fragmentNineResult = document.getElementById("fragmentNineResult");
 const fragmentAudit = document.getElementById("fragmentAudit");
+const fragmentAuditLoader = document.getElementById("fragmentAuditLoader");
+const fragmentAuditLoaderFill = document.getElementById("fragmentAuditLoaderFill");
+const fragmentAuditLoaderProgress = document.getElementById("fragmentAuditLoaderProgress");
+const fragmentAuditLoaderStatus = document.getElementById("fragmentAuditLoaderStatus");
+const fragmentAuditLoaderRetry = document.getElementById("fragmentAuditLoaderRetry");
+const fragmentAuditPanel = fragmentAudit?.querySelector(".fragment-audit-panel");
 const fragmentAuditImage = document.getElementById("fragmentAuditImage");
 const fragmentAuditImageLabel = document.getElementById("fragmentAuditImageLabel");
 const fragmentAuditBatch = document.getElementById("fragmentAuditBatch");
@@ -298,6 +304,8 @@ let fragmentAuditBatchAnswers = [];
 let fragmentAuditCountdownTimer = null;
 let fragmentAuditDeadline = 0;
 let fragmentAuditLastFocusedElement = null;
+let fragmentAuditPreloadRunId = 0;
+const fragmentAuditPreloadedSources = new Set();
 let decodedFragmentPlaceholderLastFocusedElement = null;
 let decodedFragmentCountdownTimer = null;
 let decodedFragmentCountdownDeadline = 0;
@@ -6681,6 +6689,111 @@ function setFragmentAuditControlsDisabled(disabled) {
   });
 }
 
+function updateFragmentAuditPreloadProgress() {
+  const sources = [...new Set(fragmentAuditQuestions.map((question) => question.source))];
+  const loadedCount = sources.filter((source) => fragmentAuditPreloadedSources.has(source)).length;
+  const percentage = sources.length > 0
+    ? Math.round((loadedCount / sources.length) * 100)
+    : 100;
+
+  if (fragmentAuditLoaderFill) {
+    fragmentAuditLoaderFill.style.width = percentage + "%";
+  }
+  if (fragmentAuditLoaderProgress) {
+    fragmentAuditLoaderProgress.textContent = percentage + "%";
+  }
+  if (fragmentAuditLoaderStatus) {
+    fragmentAuditLoaderStatus.textContent = `正在优先载入残片图片 ${loadedCount} / ${sources.length}`;
+  }
+
+  return { loadedCount, percentage, sources };
+}
+
+function loadFragmentAuditAsset(source) {
+  return new Promise((resolve, reject) => {
+    const preloadImage = new Image();
+    preloadImage.fetchPriority = "high";
+    preloadImage.decoding = "async";
+
+    preloadImage.onload = async () => {
+      try {
+        if (typeof preloadImage.decode === "function") {
+          await preloadImage.decode();
+        }
+      } catch (error) {
+        if (!preloadImage.naturalWidth) {
+          reject(error);
+          return;
+        }
+      }
+
+      fragmentAuditPreloadedSources.add(source);
+      updateFragmentAuditPreloadProgress();
+      resolve();
+    };
+    preloadImage.onerror = () => reject(new Error("Failed to preload fragment asset: " + source));
+    preloadImage.src = source;
+  });
+}
+
+async function preloadFragmentAuditAssets(runId) {
+  const { sources } = updateFragmentAuditPreloadProgress();
+  const pendingSources = sources.filter((source) => !fragmentAuditPreloadedSources.has(source));
+  const results = await Promise.allSettled(pendingSources.map(loadFragmentAuditAsset));
+
+  if (runId !== fragmentAuditPreloadRunId || !fragmentAudit?.classList.contains("is-open")) {
+    return;
+  }
+
+  const failedCount = results.filter((result) => result.status === "rejected").length;
+  const progress = updateFragmentAuditPreloadProgress();
+  if (failedCount > 0 || progress.percentage < 100) {
+    fragmentAuditLoader?.classList.add("is-failed");
+    if (fragmentAuditLoaderStatus) {
+      fragmentAuditLoaderStatus.textContent = `有 ${sources.length - progress.loadedCount} 张残片图片加载失败，鉴别尚未开始。`;
+    }
+    if (fragmentAuditLoaderRetry) {
+      fragmentAuditLoaderRetry.hidden = false;
+    }
+    return;
+  }
+
+  fragmentAuditLoader?.classList.remove("is-failed");
+  if (fragmentAuditLoaderStatus) {
+    fragmentAuditLoaderStatus.textContent = "残片图片加载完成，正在启动鉴别……";
+  }
+
+  const startTimer = window.setTimeout(() => {
+    if (runId !== fragmentAuditPreloadRunId || !fragmentAudit?.classList.contains("is-open")) {
+      return;
+    }
+
+    fragmentAudit.classList.remove("is-preloading");
+    fragmentAuditLoader?.setAttribute("aria-hidden", "true");
+    fragmentAuditPanel?.setAttribute("aria-hidden", "false");
+    renderFragmentAuditQuestion();
+  }, 320);
+  fragmentAuditTimers.push(startTimer);
+}
+
+function startFragmentAuditPreload() {
+  if (!fragmentAudit?.classList.contains("is-open")) {
+    return;
+  }
+
+  fragmentAuditPreloadRunId += 1;
+  const runId = fragmentAuditPreloadRunId;
+  fragmentAudit.classList.add("is-preloading");
+  fragmentAuditLoader?.classList.remove("is-failed");
+  fragmentAuditLoader?.setAttribute("aria-hidden", "false");
+  fragmentAuditPanel?.setAttribute("aria-hidden", "true");
+  if (fragmentAuditLoaderRetry) {
+    fragmentAuditLoaderRetry.hidden = true;
+  }
+  setFragmentAuditControlsDisabled(true);
+  preloadFragmentAuditAssets(runId);
+}
+
 function renderFragmentAuditQuestion() {
   const question = fragmentAuditQuestions[fragmentAuditQuestionIndex];
 
@@ -6752,10 +6865,13 @@ function openFragmentAudit(event) {
   fragmentAuditBatchAnswers = [];
   fragmentAuditLastFocusedElement = document.activeElement;
   fragmentAudit.classList.remove("is-dimming", "is-fault", "is-switching");
-  fragmentAudit.classList.add("is-open");
+  fragmentAudit.classList.add("is-open", "is-preloading");
   fragmentAudit.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open", "fragment-audit-open");
-  renderFragmentAuditQuestion();
+  if (fragmentAuditImage) {
+    fragmentAuditImage.removeAttribute("src");
+  }
+  startFragmentAuditPreload();
 }
 
 function closeFragmentAudit({ restoreFocus = true } = {}) {
@@ -6763,10 +6879,13 @@ function closeFragmentAudit({ restoreFocus = true } = {}) {
     return;
   }
 
+  fragmentAuditPreloadRunId += 1;
   clearFragmentAuditTimers();
   resetFragmentAuditSettlement();
-  fragmentAudit.classList.remove("is-open", "is-dimming", "is-fault", "is-switching");
+  fragmentAudit.classList.remove("is-open", "is-preloading", "is-dimming", "is-fault", "is-switching");
   fragmentAudit.setAttribute("aria-hidden", "true");
+  fragmentAuditLoader?.setAttribute("aria-hidden", "true");
+  fragmentAuditPanel?.setAttribute("aria-hidden", "false");
   document.body.classList.remove("fragment-audit-open");
 
   if (!plcDatabase?.classList.contains("is-open")) {
@@ -8785,6 +8904,10 @@ if (fragmentEightAnswerInput) {
 fragmentAuditVerdictButtons.forEach((button) => {
   button.addEventListener("click", handleFragmentAuditVerdict);
 });
+
+if (fragmentAuditLoaderRetry) {
+  fragmentAuditLoaderRetry.addEventListener("click", startFragmentAuditPreload);
+}
 
 decodedFragmentEntryTargets.forEach((target) => {
   target.addEventListener("click", openDecodedFragmentPlaceholder);

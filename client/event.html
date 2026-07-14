@@ -12,7 +12,7 @@
   <link rel="preload" href="./assets/pac-2026-preliminary-bg.png" as="image" />
   <link rel="preload" href="./assets/pac-2026-preliminary-character.png" as="image" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
-  <link rel="stylesheet" href="./css/event.css?v=20260714f" />
+  <link rel="stylesheet" href="./css/event.css?v=20260714g" />
   <link rel="stylesheet" href="./css/account-link.css?v=20260701b" />
   <link rel="stylesheet" href="./css/site-announcement.css" />
 </head>
@@ -789,6 +789,16 @@
 
   <div class="fragment-audit" id="fragmentAudit" aria-hidden="true">
     <div class="fragment-audit-backdrop"></div>
+    <section class="fragment-audit-loader" id="fragmentAuditLoader" role="dialog" aria-modal="true" aria-labelledby="fragmentAuditLoaderTitle">
+      <p>PLC LAB // ASSET PRELOAD</p>
+      <h2 id="fragmentAuditLoaderTitle">正在载入残片数据</h2>
+      <div class="fragment-audit-loader-track" aria-hidden="true">
+        <i id="fragmentAuditLoaderFill"></i>
+      </div>
+      <strong id="fragmentAuditLoaderProgress">0%</strong>
+      <span id="fragmentAuditLoaderStatus">正在优先载入残片图片 0 / 10</span>
+      <button id="fragmentAuditLoaderRetry" type="button" hidden>重新加载</button>
+    </section>
     <section class="fragment-audit-panel" role="dialog" aria-modal="true" aria-labelledby="fragmentAuditTitle">
       <header class="fragment-audit-header">
         <div>
@@ -1689,7 +1699,7 @@
   <script src="./js/players-cache.js"></script>
   <script src="./js/account-link.js?v=20260705b"></script>
   <script src="./js/song-alias-data.js?v=20260710b"></script>
-  <script src="./js/event.js?v=20260714i"></script>
+  <script src="./js/event.js?v=20260714j"></script>
   <script src="./js/site-announcement.js"></script>
 </body>
 </html>
