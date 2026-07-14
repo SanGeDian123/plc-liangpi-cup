@@ -499,7 +499,7 @@ async function readSupabaseRuntimeJson(storageKey, label) {
 async function writeSupabaseRuntimeJson(storageKey, data) {
   await ensureSupabaseRuntimeBucket();
 
-  const body = Buffer.from(`${JSON.stringify(data, null, 2)}\n`, "utf8");
+  const body = Buffer.from(JSON.stringify(data), "utf8");
   const { error } = await supabaseAdmin.storage
     .from(SUPABASE_RUNTIME_BUCKET)
     .upload(storageKey, body, {
@@ -790,6 +790,39 @@ function getAuthUserNickname(user) {
   );
 }
 
+async function getVerifiedAuthUser(token) {
+  const { data, error } = await supabase.auth.getClaims(token);
+  const claims = data?.claims;
+  const audiences = Array.isArray(claims?.aud) ? claims.aud : [claims?.aud];
+  const expectedIssuer = `${SUPABASE_URL}/auth/v1`;
+
+  if (
+    error ||
+    !claims?.sub ||
+    claims.iss !== expectedIssuer ||
+    !audiences.includes("authenticated")
+  ) {
+    return null;
+  }
+
+  return {
+    id: String(claims.sub),
+    aud: claims.aud,
+    role: claims.role,
+    email: typeof claims.email === "string" ? claims.email : "",
+    phone: typeof claims.phone === "string" ? claims.phone : "",
+    app_metadata:
+      claims.app_metadata && typeof claims.app_metadata === "object"
+        ? claims.app_metadata
+        : {},
+    user_metadata:
+      claims.user_metadata && typeof claims.user_metadata === "object"
+        ? claims.user_metadata
+        : {},
+    is_anonymous: claims.is_anonymous === true
+  };
+}
+
 async function requireUser(req, res, next) {
   try {
     const token = getBearerToken(req);
@@ -800,15 +833,15 @@ async function requireUser(req, res, next) {
       });
     }
 
-    const { data, error } = await supabase.auth.getUser(token);
+    const user = await getVerifiedAuthUser(token);
 
-    if (error || !data?.user) {
+    if (!user) {
       return res.status(401).json({
         message: "登录状态已失效"
       });
     }
 
-    req.authUser = data.user;
+    req.authUser = user;
     return next();
   } catch (error) {
     return res.status(401).json({
@@ -826,8 +859,7 @@ async function optionalUser(req, res, next) {
       return next();
     }
 
-    const { data, error } = await supabase.auth.getUser(token);
-    req.authUser = error ? null : data?.user || null;
+    req.authUser = await getVerifiedAuthUser(token);
     return next();
   } catch (error) {
     req.authUser = null;

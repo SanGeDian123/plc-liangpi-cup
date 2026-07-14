@@ -58,7 +58,14 @@
     songPoolLoadPromise: null,
     songPoolLastAttemptAt: 0,
     songPoolRetryTimer: 0,
-    scheduleLoadRetryTimer: 0,
+    scheduleLoadRetryTimers: {
+      omit: 0,
+      auto: 0
+    },
+    scheduleLoadsInFlight: 0,
+    scheduleRequestSerial: 0,
+    lastAppliedScheduleRequestId: 0,
+    lastAppliedScheduleAuthPriority: -1,
     hasRequestedAccountRefresh: false,
     serverTimeOffsetMs: 0,
     bpCountdownTimer: 0,
@@ -2288,10 +2295,17 @@
   }
 
   function scheduleMatchesRetry(options = {}) {
-    window.clearTimeout(state.scheduleLoadRetryTimer);
-    state.scheduleLoadRetryTimer = window.setTimeout(() => {
+    const retryKey = options.authMode === "omit" ? "omit" : "auto";
+    window.clearTimeout(state.scheduleLoadRetryTimers[retryKey]);
+    state.scheduleLoadRetryTimers[retryKey] = window.setTimeout(() => {
       loadMatches(false, options);
     }, SCHEDULE_RETRY_DELAY_MS);
+  }
+
+  function clearScheduleMatchesRetry(authMode) {
+    const retryKey = authMode === "omit" ? "omit" : "auto";
+    window.clearTimeout(state.scheduleLoadRetryTimers[retryKey]);
+    state.scheduleLoadRetryTimers[retryKey] = 0;
   }
 
   function refreshMatchesAfterAccountReady() {
@@ -2302,18 +2316,32 @@
     state.hasRequestedAccountRefresh = true;
     waitForPromise(window.PLCAccount?.ready, 2500).then(() => {
       loadMatches(false, {
-        authMode: "auto"
+        authMode: "auto",
+        allowConcurrent: true
       });
       fetchActiveMatch();
     });
   }
 
+  function shouldApplyScheduleResponse(requestId, authPriority) {
+    return (
+      authPriority > state.lastAppliedScheduleAuthPriority ||
+      (
+        authPriority === state.lastAppliedScheduleAuthPriority &&
+        requestId > state.lastAppliedScheduleRequestId
+      )
+    );
+  }
+
   async function loadMatches(showLoading = true, options = {}) {
-    if (state.isLoadingMatches) {
+    if (state.isLoadingMatches && !options.allowConcurrent) {
       return;
     }
 
     const authMode = options.authMode || "auto";
+    const authPriority = authMode === "omit" ? 0 : 1;
+    const requestId = ++state.scheduleRequestSerial;
+    state.scheduleLoadsInFlight += 1;
     state.isLoadingMatches = true;
     els.refresh.disabled = true;
 
@@ -2327,14 +2355,20 @@
         refreshSession: authMode !== "omit",
         timeoutMs: options.timeoutMs || SCHEDULE_LOAD_TIMEOUT_MS
       });
+      clearScheduleMatchesRetry(authMode);
+
+      if (!shouldApplyScheduleResponse(requestId, authPriority)) {
+        return;
+      }
+
+      state.lastAppliedScheduleRequestId = requestId;
+      state.lastAppliedScheduleAuthPriority = authPriority;
 
       syncServerTime(payload.serverNow);
       state.matches = Array.isArray(payload.matches) ? payload.matches : [];
       els.summary.textContent = state.matches.length
         ? `当前有 ${state.matches.length} 场可见比赛。`
         : "暂无可见比赛；公开赛事会直接显示，定向赛事需要登录对应账号。";
-      window.clearTimeout(state.scheduleLoadRetryTimer);
-
       if (state.activeMatchId) {
         const active = state.matches.find((match) => match.id === state.activeMatchId);
 
@@ -2349,15 +2383,22 @@
       renderMatchList();
       renderActiveMatch();
     } catch (error) {
-      els.summary.textContent = `${error.message || "赛程加载失败，请稍后重试。"} 正在自动重试...`;
-      state.matches = [];
-      renderMatchList();
+      if (!shouldApplyScheduleResponse(requestId, authPriority)) {
+        return;
+      }
+
+      if (!state.matches.length) {
+        els.summary.textContent = `${error.message || "赛程加载失败，请稍后重试。"} 正在自动重试...`;
+        renderMatchList();
+      }
       scheduleMatchesRetry({
-        authMode
+        authMode,
+        allowConcurrent: options.allowConcurrent
       });
     } finally {
-      state.isLoadingMatches = false;
-      els.refresh.disabled = false;
+      state.scheduleLoadsInFlight = Math.max(0, state.scheduleLoadsInFlight - 1);
+      state.isLoadingMatches = state.scheduleLoadsInFlight > 0;
+      els.refresh.disabled = state.isLoadingMatches;
       refreshMatchesAfterAccountReady();
     }
   }
@@ -2552,8 +2593,8 @@
       return;
     }
 
-    let match = state.activeMatch;
-    let validation = validateBpSelection(match, pending.action, pending.trackId, pending.difficulty);
+    const match = state.activeMatch;
+    const validation = validateBpSelection(match, pending.action, pending.trackId, pending.difficulty);
 
     if (pending.matchId !== match?.id || validation.error) {
       const message = validation.error || "当前比赛已经变化，请重新选择。";
@@ -2571,15 +2612,6 @@
     setActionMessage(pending.action === "ban" ? "正在提交禁用..." : "正在提交选曲...");
 
     try {
-      await fetchActiveMatch();
-
-      match = state.activeMatch;
-      validation = validateBpSelection(match, pending.action, pending.trackId, pending.difficulty);
-
-      if (pending.matchId !== match?.id || validation.error) {
-        throw new Error(validation.error || "当前比赛已经变化，请重新选择。");
-      }
-
       const payload = await fetchJson(
         `/schedule/matches/${encodeURIComponent(pending.matchId)}/bp/actions`,
         {
@@ -2589,6 +2621,7 @@
             trackId: pending.trackId,
             difficulty: pending.difficulty
           }),
+          refreshSession: false,
           timeoutMs: 12000
         }
       );
@@ -2806,7 +2839,11 @@
   }
 
   bindEvents();
+  loadSongPoolData().catch(() => {
+    // The active-match renderer will show the retry state if the preload fails.
+  });
   loadMatches(true, {
     authMode: "omit"
   });
+  refreshMatchesAfterAccountReady();
 })();
