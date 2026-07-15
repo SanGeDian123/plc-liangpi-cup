@@ -480,7 +480,7 @@ const fragmentAuditStorageKey = "plc.event.fragmentAudit.v1";
 const fragmentAuditCacheVersion = "2026-07-14-fragment-audit-v1";
 const decodedFragmentHubStorageKey = "plc.event.decodedFragmentHub.v1";
 const decodedFragmentHubCacheVersion = "2026-07-14-decoded-fragment-hub-v1";
-const decryptSkipEndpointLabel = "第一层回声 / FRAGMENT 08";
+const decryptSkipEndpointLabel = "第一层回声 / FRAGMENT 07 COMPLETE";
 const fragmentSevenAnswer = "retribution";
 const fragmentEightAnswer = "domination";
 const fragmentSevenDialogueIntervalMs = 3200;
@@ -6306,18 +6306,6 @@ function writeFragmentSevenIntroCache() {
   }));
 }
 
-function writeAllPlcDatabaseEntriesSeen() {
-  const seenSet = new Set();
-
-  Object.keys(plcDatabaseCategories).forEach((categoryKey) => {
-    getPlcDatabaseCategory(categoryKey).entries.forEach((_entry, index) => {
-      seenSet.add(getPlcDatabaseEntryKey(categoryKey, index));
-    });
-  });
-
-  writePlcDatabaseSeenSet(seenSet);
-}
-
 function writeCurrentDecryptionEndpointCache() {
   [
     writeSignalGateCache,
@@ -6341,12 +6329,7 @@ function writeCurrentDecryptionEndpointCache() {
     writeFirstLayerEchoState,
     writeFirstLayerFragmentOneState,
     writeFragmentSevenIntroCache,
-    writeFragmentSevenAnswerCache,
-    writeFirstLayerFragmentTwoState,
-    writeFragmentEightAnswerCache,
-    writeFragmentAuditState,
-    writeDecodedFragmentHubState,
-    writeAllPlcDatabaseEntriesSeen
+    writeFragmentSevenAnswerCache
   ].forEach((writeStep) => {
     writeStep();
   });
@@ -6432,9 +6415,6 @@ function renderCurrentDecryptionEndpoint({ scroll = true } = {}) {
     scroll
   });
   revealFragmentSevenAnswer({
-    fromCache: true
-  });
-  revealFragmentEightAnswer({
     fromCache: true
   });
 }
