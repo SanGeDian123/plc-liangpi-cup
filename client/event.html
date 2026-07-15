@@ -12,7 +12,8 @@
   <link rel="preload" href="./assets/pac-2026-preliminary-bg.png" as="image" />
   <link rel="preload" href="./assets/pac-2026-preliminary-character.png" as="image" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
-  <link rel="stylesheet" href="./css/event.css?v=20260714g" />
+  <link rel="stylesheet" href="./css/event.css?v=20260715q" />
+  <link rel="stylesheet" href="./css/fragment-ten.css?v=20260715o" />
   <link rel="stylesheet" href="./css/account-link.css?v=20260701b" />
   <link rel="stylesheet" href="./css/site-announcement.css" />
 </head>
@@ -854,6 +855,9 @@
       <h2 id="decodedFragmentPlaceholderTitle">FRAGMENT 08</h2>
       <strong id="decodedFragmentCountdown">--:--:--</strong>
       <span id="decodedFragmentCountdownTarget">OPEN AT --</span>
+      <p class="decoded-fragment-prerequisite" id="decodedFragmentPrerequisite" hidden>
+        前置条件 阶段达成 0/3
+      </p>
       <div class="decoded-fragment-time-shift" id="decodedFragmentTimeShift" hidden>
         <button id="decodedFragmentTimeShiftButton" type="button">怎么这么慢？</button>
       </div>
@@ -908,6 +912,245 @@
         <div class="fragment-nine-result" id="fragmentNineResult" hidden aria-live="polite">
           <span>FRAGMENT 09 // OPEN</span>
           <strong>Chart：The Rulers ~InkyStar~</strong>
+        </div>
+      </div>
+
+      <div class="fragment-ten-loader" id="fragmentTenLoader" hidden aria-live="polite">
+        <div class="fragment-ten-loader-copy">
+          <span>FRAGMENT 10 // RESOURCE CHECK</span>
+          <strong>正在载入矿车资源</strong>
+          <p id="fragmentTenLoaderStatus">等待建立资源清单。</p>
+        </div>
+        <div class="fragment-ten-loader-track" aria-hidden="true">
+          <i id="fragmentTenLoaderFill"></i>
+        </div>
+        <b id="fragmentTenLoaderProgress">0%</b>
+        <button id="fragmentTenLoaderRetry" type="button" hidden>重新加载</button>
+      </div>
+
+      <div class="fragment-ten-game" id="fragmentTenGame" hidden>
+        <header class="fragment-ten-header">
+          <div>
+            <p>FRAGMENT 10 // FIELD LOGISTICS</p>
+            <h2>断轨运输协议</h2>
+          </div>
+          <div class="fragment-ten-header-state">
+            <span>OPERATION</span>
+            <strong id="fragmentTenRunState">STANDBY</strong>
+          </div>
+        </header>
+
+        <div class="fragment-ten-route-progress" aria-label="矿车线路进度">
+          <i id="fragmentTenProgressFill"></i>
+          <b style="--checkpoint:32%"></b>
+          <b style="--checkpoint:61%"></b>
+          <b style="--checkpoint:85%"></b>
+          <span id="fragmentTenProgressText">矿车尚未发车</span>
+        </div>
+
+        <div class="fragment-ten-intro" id="fragmentTenIntro">
+          <div class="fragment-ten-intro-mark" aria-hidden="true">
+            <span>10</span>
+            <i></i>
+          </div>
+          <div class="fragment-ten-intro-copy">
+            <span>MISSION BRIEFING</span>
+            <h3>在矿车之前，<br />把路铺到终点。</h3>
+            <p>矿车不会停车。两支调度组需要往返资源区、运输材料并抢修三处断轨；中央基地同一时间只能加工一套轨组。</p>
+          </div>
+          <div class="fragment-ten-rules" aria-label="行动规则">
+            <div><b>02</b><span>调度组</span><small>采集与抢修共用</small></div>
+            <div><b>01</b><span>加工线</span><small>轨组按顺序制造</small></div>
+            <div><b>03</b><span>断轨</span><small>抵达前必须修复</small></div>
+          </div>
+          <button id="fragmentTenStartButton" type="button"><span>开始行动</span><small>矿车立即发车</small></button>
+        </div>
+
+        <div class="fragment-ten-board" id="fragmentTenBoard" hidden>
+          <section class="fragment-ten-map" aria-label="五区域等高线运输地图">
+            <img class="fragment-ten-map-art" data-fragment-ten-src="./assets/fragment-10-contour-map.webp?v=20260714b" alt="" draggable="false" />
+            <svg class="fragment-ten-map-svg" viewBox="0 0 1000 560" preserveAspectRatio="none" aria-hidden="true">
+              <path class="fragment-ten-track-shadow" d="M50 500 L950 75" />
+              <path class="fragment-ten-track" id="fragmentTenTrackPath" d="M50 500 L950 75" />
+              <path class="fragment-ten-break" data-fragment-ten-segment="0" d="M300 382 L355 356" />
+              <path class="fragment-ten-break" data-fragment-ten-segment="1" d="M565 257 L620 231" />
+              <path class="fragment-ten-break" data-fragment-ten-segment="2" d="M780 156 L835 130" />
+            </svg>
+
+            <div class="fragment-ten-cart" id="fragmentTenCart" aria-label="运输矿车">
+              <i></i><b></b><b></b><span></span>
+            </div>
+
+            <button class="fragment-ten-zone zone-ore" type="button" data-fragment-ten-collect="ore">
+              <small>01</small><strong>赤砂矿区</strong><span>铁矿 +2</span><em>9s</em>
+            </button>
+            <button class="fragment-ten-zone zone-fiber" type="button" data-fragment-ten-collect="fiber">
+              <small>02</small><strong>苔原林带</strong><span>纤维 +1</span><em>11s</em>
+            </button>
+            <div class="fragment-ten-zone zone-base">
+              <small>03</small><strong>加工基地</strong><span>单线运行</span>
+            </div>
+            <button class="fragment-ten-zone zone-crystal" type="button" data-fragment-ten-collect="crystal">
+              <small>04</small><strong>晶脊谷地</strong><span>晶体 +1</span><em>13s</em>
+            </button>
+            <div class="fragment-ten-zone zone-end">
+              <small>05</small><strong>高地终站</strong><span>终点</span>
+            </div>
+
+            <div class="fragment-ten-checkpoint checkpoint-a"><b>A</b><span>断轨</span></div>
+            <div class="fragment-ten-checkpoint checkpoint-b"><b>B</b><span>断轨</span></div>
+            <div class="fragment-ten-checkpoint checkpoint-c"><b>C</b><span>断轨</span></div>
+
+            <div class="fragment-ten-map-log" id="fragmentTenLog" aria-live="polite">
+              <p>运输协议等待启动。</p>
+            </div>
+          </section>
+
+          <aside class="fragment-ten-console">
+            <section class="fragment-ten-command-bar">
+              <div class="fragment-ten-crews">
+                <span>调度组</span>
+                <b id="fragmentTenCrewA">A · 待命</b>
+                <b id="fragmentTenCrewB">B · 待命</b>
+              </div>
+              <div class="fragment-ten-inventory">
+                <span>基地库存</span>
+                <div><small>铁矿</small><strong id="fragmentTenOre">0</strong></div>
+                <div><small>纤维</small><strong id="fragmentTenFiber">0</strong></div>
+                <div><small>晶体</small><strong id="fragmentTenCrystal">0</strong></div>
+              </div>
+              <div class="fragment-ten-deadline">
+                <span>NEXT BREAK</span>
+                <b id="fragmentTenNextBreak">A · 48.0s</b>
+              </div>
+            </section>
+
+            <section class="fragment-ten-dispatch" aria-label="材料派遣">
+              <header>
+                <span>STEP 01 · MATERIAL DISPATCH</span>
+                <b>点击派遣调度组</b>
+              </header>
+              <div>
+                <button type="button" data-fragment-ten-collect="ore">
+                  <span>铁矿</span><small>每次 +2</small><em>9s</em>
+                </button>
+                <button type="button" data-fragment-ten-collect="fiber">
+                  <span>纤维</span><small>每次 +1</small><em>11s</em>
+                </button>
+                <button type="button" data-fragment-ten-collect="crystal">
+                  <span>晶体</span><small>每次 +1</small><em>13s</em>
+                </button>
+              </div>
+            </section>
+
+            <section class="fragment-ten-work-orders" aria-label="轨道工单">
+              <article class="fragment-ten-work-order" data-fragment-ten-order="0">
+                <header><b>A</b><span>标准轨组</span><em>32%</em></header>
+                <p><span>铁矿 ×4</span><strong data-fragment-ten-order-status="0">等待材料</strong></p>
+                <div>
+                  <button type="button" data-fragment-ten-process="0"><span>① 加工轨组</span><small>5s</small><b>加工</b></button>
+                  <button type="button" data-fragment-ten-repair="0"><span>② 派往断点</span><small>占用调度组 · 8s</small><b>抢修</b></button>
+                </div>
+              </article>
+              <article class="fragment-ten-work-order" data-fragment-ten-order="1">
+                <header><b>B</b><span>加固轨组</span><em>61%</em></header>
+                <p><span>铁矿 ×2 · 纤维 ×2</span><strong data-fragment-ten-order-status="1">等待材料</strong></p>
+                <div>
+                  <button type="button" data-fragment-ten-process="1"><span>① 加工轨组</span><small>7s</small><b>加工</b></button>
+                  <button type="button" data-fragment-ten-repair="1"><span>② 派往断点</span><small>占用调度组 · 10s</small><b>抢修</b></button>
+                </div>
+              </article>
+              <article class="fragment-ten-work-order" data-fragment-ten-order="2">
+                <header><b>C</b><span>耐蚀轨组</span><em>85%</em></header>
+                <p><span>纤维 ×1 · 晶体 ×2</span><strong data-fragment-ten-order-status="2">等待材料</strong></p>
+                <div>
+                  <button type="button" data-fragment-ten-process="2"><span>① 加工轨组</span><small>9s</small><b>加工</b></button>
+                  <button type="button" data-fragment-ten-repair="2"><span>② 派往断点</span><small>占用调度组 · 12s</small><b>抢修</b></button>
+                </div>
+              </article>
+            </section>
+          </aside>
+        </div>
+
+        <div class="fragment-ten-failure" id="fragmentTenFailure" hidden aria-live="assertive">
+          <span>ROUTE INTERRUPTED</span>
+          <strong>矿车脱轨</strong>
+          <p id="fragmentTenFailureText">矿车抵达未修复断点，运输协议终止。</p>
+          <button id="fragmentTenRetryButton" type="button">重新规划</button>
+        </div>
+
+        <div class="fragment-ten-breach" id="fragmentTenBreach" hidden>
+          <div class="fragment-ten-breach-intro" id="fragmentTenBreachIntro" hidden aria-live="polite">
+            <p>必要的材料已被运抵，</p>
+            <p>请完成加密验证后取用。</p>
+          </div>
+
+          <section class="fragment-ten-breach-panel" id="fragmentTenBreachPanel" hidden aria-label="加密验证协议">
+            <header class="fragment-ten-breach-header">
+              <div>
+                <small>PLC // BREACH PROTOCOL</small>
+                <strong>加密验证</strong>
+              </div>
+              <div class="fragment-ten-breach-timer">
+                  <span>剩余验证时间</span>
+                <b id="fragmentTenBreachTimer">120.0</b>
+              </div>
+            </header>
+
+            <div class="fragment-ten-buffer">
+              <div>
+                <span>缓冲</span>
+                <small id="fragmentTenMoveHint">从代码矩阵顶行选择起始代码</small>
+              </div>
+              <ol id="fragmentTenBufferSlots" aria-label="已输入代码缓冲区"></ol>
+            </div>
+
+            <div class="fragment-ten-breach-workspace">
+              <section class="fragment-ten-code-area">
+                <header>
+                  <span>代码矩阵</span>
+                  <small>横纵交替 // 坐标不可重复</small>
+                </header>
+                <div class="fragment-ten-code-matrix" id="fragmentTenCodeMatrix" role="grid" aria-label="六乘六代码矩阵"></div>
+              </section>
+
+              <aside class="fragment-ten-sequence-area">
+                <header>
+                  <span>上传所需序列</span>
+                  <small>全部匹配后解除加密</small>
+                </header>
+                <div class="fragment-ten-sequence-list" id="fragmentTenSequenceList"></div>
+                <div class="fragment-ten-breach-rules">
+                  <strong>规则</strong>
+                  <p>首码被缓冲区触发后开始比对；下一码不符会中断本次比对，之后遇到首码可重新触发。</p>
+                  <p>第一步从顶行开始，随后同列、同行交替移动，不能重复选择同一坐标。</p>
+                  <p>蓝色竖条表示下一写入位；未触发的序列会随缓冲区向后移动，三条序列可以首尾衔接。</p>
+                </div>
+              </aside>
+            </div>
+
+            <footer class="fragment-ten-breach-footer">
+              <p id="fragmentTenBreachStatus" aria-live="polite">等待接入代码矩阵。</p>
+              <button id="fragmentTenBreachResetButton" type="button">重置缓冲</button>
+            </footer>
+          </section>
+
+          <div class="fragment-ten-breach-failure" id="fragmentTenBreachFailure" hidden aria-live="assertive">
+            <span>BREACH FAILED</span>
+            <strong id="fragmentTenBreachFailureTitle">入侵时间耗尽</strong>
+            <p id="fragmentTenBreachFailureText">验证协议已断开，代码矩阵即将重置。</p>
+            <button id="fragmentTenBreachRetryButton" type="button">重新接入</button>
+          </div>
+        </div>
+
+        <div class="fragment-ten-plan-unlock" id="fragmentTenPlanUnlock" hidden aria-live="polite">
+          <p>新的档案索引已被重组，</p>
+          <p>PLC计划 #10 / #11 解码完成。</p>
+        </div>
+
+        <div class="fragment-ten-result" id="fragmentTenResult" hidden aria-live="polite">
+          <span>FRAGMENT 10 // OPEN</span>
+          <strong>SongName：DOMINATOR</strong>
         </div>
       </div>
     </section>
@@ -1694,12 +1937,61 @@
     </section>
   </div>
 
+  <div class="plc-plan-ten-reveal" id="plcPlanTenReveal" aria-hidden="true">
+    <div class="plc-plan-ten-reveal-inner" role="status" aria-live="polite">
+      <div class="plc-plan-ten-phrase" id="plcPlanTenPhrase" aria-label="FTDH 解码语句">
+        <span><b>F</b><i data-plc-plan-ten-suffix="0"></i></span>
+        <span><b>T</b><i data-plc-plan-ten-suffix="1"></i></span>
+        <span><b>D</b><i data-plc-plan-ten-suffix="2"></i></span>
+        <span><b>H</b><i data-plc-plan-ten-suffix="3"></i></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="plc-plan-hope-search" id="plcPlanHopeSearch" aria-hidden="true">
+    <div class="plc-plan-hope-sky" aria-hidden="true">
+      <i></i>
+      <i></i>
+      <i></i>
+      <span></span>
+    </div>
+    <div class="plc-plan-hope-beacon" id="plcPlanHopeBeacon" aria-hidden="true"></div>
+    <div
+      class="plc-plan-hope-lens"
+      id="plcPlanHopeLens"
+      role="application"
+      tabindex="0"
+      aria-label="远望镜。移动鼠标、拖动手指或使用方向键寻找远处信号。"
+    >
+      <i></i>
+      <span></span>
+    </div>
+    <div class="plc-plan-hope-hud">
+      <p>LONG-RANGE TRACE // DISTANT HOPE</p>
+      <strong id="plcPlanHopeSignal">SIGNAL 00%</strong>
+      <small id="plcPlanHopeStatus" role="status" aria-live="polite">移动远望镜，寻找远处的微光。</small>
+    </div>
+    <button class="plc-plan-hope-close" id="plcPlanHopeClose" type="button">退出远望</button>
+  </div>
+
+  <div class="plc-plan-twelve-stage" id="plcPlanTwelveStage" aria-hidden="true">
+    <div class="plc-plan-twelve-glow" aria-hidden="true">
+      <i></i>
+      <i></i>
+      <i></i>
+    </div>
+    <div class="plc-plan-twelve-surface" aria-hidden="true"></div>
+    <p class="plc-plan-twelve-stage-text" id="plcPlanTwelveStageText" role="status" aria-live="polite">
+      阶段达成 <strong>1/3</strong>
+    </p>
+  </div>
+
   <script src="./js/tips-data.js"></script>
   <script src="./js/api.js"></script>
   <script src="./js/players-cache.js"></script>
   <script src="./js/account-link.js?v=20260705b"></script>
   <script src="./js/song-alias-data.js?v=20260710b"></script>
-  <script src="./js/event.js?v=20260714j"></script>
+  <script src="./js/event.js?v=20260715y"></script>
   <script src="./js/site-announcement.js"></script>
 </body>
 </html>

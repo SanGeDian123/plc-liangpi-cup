@@ -47,6 +47,18 @@ const plcDatabaseEntryKeeper = document.getElementById("plcDatabaseEntryKeeper")
 const plcDatabaseEntryLevel = document.getElementById("plcDatabaseEntryLevel");
 const plcDatabaseEntryContent = document.getElementById("plcDatabaseEntryContent");
 const plcDatabaseFile = plcDatabaseDetail?.querySelector(".plc-db-file");
+const plcPlanTenReveal = document.getElementById("plcPlanTenReveal");
+const plcPlanTenPhrase = document.getElementById("plcPlanTenPhrase");
+const plcPlanTenRevealProgress = document.getElementById("plcPlanTenRevealProgress");
+const plcPlanTenSuffixes = document.querySelectorAll("[data-plc-plan-ten-suffix]");
+const plcPlanHopeSearch = document.getElementById("plcPlanHopeSearch");
+const plcPlanHopeBeacon = document.getElementById("plcPlanHopeBeacon");
+const plcPlanHopeLens = document.getElementById("plcPlanHopeLens");
+const plcPlanHopeSignal = document.getElementById("plcPlanHopeSignal");
+const plcPlanHopeStatus = document.getElementById("plcPlanHopeStatus");
+const plcPlanHopeClose = document.getElementById("plcPlanHopeClose");
+const plcPlanTwelveStage = document.getElementById("plcPlanTwelveStage");
+const plcPlanTwelveStageText = document.getElementById("plcPlanTwelveStageText");
 const plcDatabaseEntryCount = document.getElementById("plcDatabaseEntryCount");
 const plcTotalProgressBar = document.getElementById("plcTotalProgressBar");
 const plcTotalProgressText = document.getElementById("plcTotalProgressText");
@@ -85,6 +97,7 @@ const decodedFragmentPlaceholder = document.getElementById("decodedFragmentPlace
 const decodedFragmentPlaceholderTitle = document.getElementById("decodedFragmentPlaceholderTitle");
 const decodedFragmentCountdown = document.getElementById("decodedFragmentCountdown");
 const decodedFragmentCountdownTarget = document.getElementById("decodedFragmentCountdownTarget");
+const decodedFragmentPrerequisite = document.getElementById("decodedFragmentPrerequisite");
 const decodedFragmentTimeShift = document.getElementById("decodedFragmentTimeShift");
 const decodedFragmentTimeShiftButton = document.getElementById("decodedFragmentTimeShiftButton");
 const decodedFragmentPlaceholderCloseTargets = document.querySelectorAll("[data-close-decoded-placeholder]");
@@ -101,6 +114,53 @@ const fragmentNineAnswerForm = document.getElementById("fragmentNineAnswerForm")
 const fragmentNineAnswerInput = document.getElementById("fragmentNineAnswerInput");
 const fragmentNineStatus = document.getElementById("fragmentNineStatus");
 const fragmentNineResult = document.getElementById("fragmentNineResult");
+const fragmentTenGame = document.getElementById("fragmentTenGame");
+const fragmentTenLoader = document.getElementById("fragmentTenLoader");
+const fragmentTenLoaderFill = document.getElementById("fragmentTenLoaderFill");
+const fragmentTenLoaderProgress = document.getElementById("fragmentTenLoaderProgress");
+const fragmentTenLoaderStatus = document.getElementById("fragmentTenLoaderStatus");
+const fragmentTenLoaderRetry = document.getElementById("fragmentTenLoaderRetry");
+const fragmentTenMapArt = fragmentTenGame?.querySelector(".fragment-ten-map-art");
+const fragmentTenIntro = document.getElementById("fragmentTenIntro");
+const fragmentTenStartButton = document.getElementById("fragmentTenStartButton");
+const fragmentTenBoard = document.getElementById("fragmentTenBoard");
+const fragmentTenRunState = document.getElementById("fragmentTenRunState");
+const fragmentTenProgressFill = document.getElementById("fragmentTenProgressFill");
+const fragmentTenProgressText = document.getElementById("fragmentTenProgressText");
+const fragmentTenTrackPath = document.getElementById("fragmentTenTrackPath");
+const fragmentTenCart = document.getElementById("fragmentTenCart");
+const fragmentTenBreakSegments = document.querySelectorAll("[data-fragment-ten-segment]");
+const fragmentTenCollectButtons = document.querySelectorAll("[data-fragment-ten-collect]");
+const fragmentTenProcessButtons = document.querySelectorAll("[data-fragment-ten-process]");
+const fragmentTenRepairButtons = document.querySelectorAll("[data-fragment-ten-repair]");
+const fragmentTenWorkOrders = document.querySelectorAll("[data-fragment-ten-order]");
+const fragmentTenOrderStatusElements = document.querySelectorAll("[data-fragment-ten-order-status]");
+const fragmentTenNextBreak = document.getElementById("fragmentTenNextBreak");
+const fragmentTenCrewA = document.getElementById("fragmentTenCrewA");
+const fragmentTenCrewB = document.getElementById("fragmentTenCrewB");
+const fragmentTenOre = document.getElementById("fragmentTenOre");
+const fragmentTenFiber = document.getElementById("fragmentTenFiber");
+const fragmentTenCrystal = document.getElementById("fragmentTenCrystal");
+const fragmentTenLog = document.getElementById("fragmentTenLog");
+const fragmentTenFailure = document.getElementById("fragmentTenFailure");
+const fragmentTenFailureText = document.getElementById("fragmentTenFailureText");
+const fragmentTenRetryButton = document.getElementById("fragmentTenRetryButton");
+const fragmentTenBreach = document.getElementById("fragmentTenBreach");
+const fragmentTenBreachIntro = document.getElementById("fragmentTenBreachIntro");
+const fragmentTenBreachPanel = document.getElementById("fragmentTenBreachPanel");
+const fragmentTenBreachTimer = document.getElementById("fragmentTenBreachTimer");
+const fragmentTenMoveHint = document.getElementById("fragmentTenMoveHint");
+const fragmentTenBufferSlots = document.getElementById("fragmentTenBufferSlots");
+const fragmentTenCodeMatrix = document.getElementById("fragmentTenCodeMatrix");
+const fragmentTenSequenceList = document.getElementById("fragmentTenSequenceList");
+const fragmentTenBreachStatus = document.getElementById("fragmentTenBreachStatus");
+const fragmentTenBreachResetButton = document.getElementById("fragmentTenBreachResetButton");
+const fragmentTenBreachFailure = document.getElementById("fragmentTenBreachFailure");
+const fragmentTenBreachFailureTitle = document.getElementById("fragmentTenBreachFailureTitle");
+const fragmentTenBreachFailureText = document.getElementById("fragmentTenBreachFailureText");
+const fragmentTenBreachRetryButton = document.getElementById("fragmentTenBreachRetryButton");
+const fragmentTenPlanUnlock = document.getElementById("fragmentTenPlanUnlock");
+const fragmentTenResult = document.getElementById("fragmentTenResult");
 const fragmentAudit = document.getElementById("fragmentAudit");
 const fragmentAuditLoader = document.getElementById("fragmentAuditLoader");
 const fragmentAuditLoaderFill = document.getElementById("fragmentAuditLoaderFill");
@@ -312,6 +372,31 @@ let decodedFragmentCountdownDeadline = 0;
 let decodedFragmentTimeShiftAnimation = null;
 let decodedFragmentActiveNumber = "";
 let fragmentNineRenderTimer = null;
+let fragmentTenAnimationFrame = null;
+let fragmentTenTaskTimers = [];
+let fragmentTenRuntime = null;
+let fragmentTenBreachAnimationFrame = null;
+let fragmentTenBreachTimers = [];
+let fragmentTenBreachRuntime = null;
+let fragmentTenAssetLoadRunId = 0;
+let fragmentTenAssetsReady = false;
+let plcPlanTenRevealTimers = [];
+let plcPlanTwelveStageTimers = [];
+let plcPlanTwelveOverscrollResetTimer = null;
+let plcPlanTwelveOverscroll = 0;
+let plcPlanTwelveTouchY = null;
+let plcPlanTwelveStageActive = false;
+let plcPlanTwelveActiveStageNumber = 0;
+let plcPlanHorizonFocusTimer = null;
+let plcPlanHorizonFocusFrame = null;
+const plcPlanHorizonInitialDevicePixelRatio = window.devicePixelRatio || 1;
+const plcPlanHorizonInitialViewportScale = window.visualViewport?.scale || 1;
+let plcPlanHopeSearchActive = false;
+let plcPlanHopeLensX = 0.5;
+let plcPlanHopeLensY = 0.68;
+let plcPlanHopeLockTimer = null;
+let plcPlanHopeGuideTimers = [];
+let plcPlanHopeLastFocusedElement = null;
 let rankingPreviewMode = "normal";
 let tips = Array.isArray(window.PLC_TIPS) && window.PLC_TIPS.length > 0
   ? window.PLC_TIPS
@@ -462,6 +547,70 @@ const fragmentNineSongData = Object.freeze([
     ]
   }
 ]);
+const fragmentTenStorageKey = "plc.event.fragment10Railway.v1";
+const fragmentTenCacheVersion = "2026-07-15-fragment10-breach-v4";
+const fragmentTenDurationMs = 150000;
+const fragmentTenCheckpoints = Object.freeze([0.32, 0.61, 0.85]);
+const fragmentTenCollections = Object.freeze({
+  ore: { duration: 9000, cargo: { ore: 2 }, label: "赤砂矿区", shortLabel: "铁矿运输" },
+  fiber: { duration: 11000, cargo: { fiber: 1 }, label: "苔原林带", shortLabel: "纤维运输" },
+  crystal: { duration: 13000, cargo: { crystal: 1 }, label: "晶脊谷地", shortLabel: "晶体运输" }
+});
+const fragmentTenResourceLabels = Object.freeze({ ore: "铁矿", fiber: "纤维", crystal: "晶体" });
+const fragmentTenRecipes = Object.freeze([
+  { duration: 5000, cost: { ore: 4 }, label: "标准轨组" },
+  { duration: 7000, cost: { ore: 2, fiber: 2 }, label: "加固轨组" },
+  { duration: 9000, cost: { fiber: 1, crystal: 2 }, label: "耐蚀轨组" }
+]);
+const fragmentTenRepairs = Object.freeze([
+  { duration: 8000, label: "断点 A" },
+  { duration: 10000, label: "断点 B" },
+  { duration: 12000, label: "断点 C" }
+]);
+const fragmentTenBreachDurationMs = 120000;
+const fragmentTenBreachBufferSize = 8;
+const fragmentTenBreachMatrix = Object.freeze([
+  Object.freeze(["7A", "1C", "55", "E9", "7A", "FF"]),
+  Object.freeze(["55", "7A", "55", "FF", "BD", "E9"]),
+  Object.freeze(["E9", "55", "FF", "1C", "7A", "BD"]),
+  Object.freeze(["7A", "BD", "1C", "BD", "1C", "FF"]),
+  Object.freeze(["FF", "1C", "E9", "55", "BD", "55"]),
+  Object.freeze(["BD", "FF", "55", "7A", "E9", "1C"])
+]);
+const fragmentTenBreachSequences = Object.freeze([
+  Object.freeze(["BD", "55"]),
+  Object.freeze(["1C", "BD", "1C"]),
+  Object.freeze(["55", "E9", "55"])
+]);
+const plcPlanTenStorageKey = "plc.event.plan10Metadata.v1";
+const plcPlanTenCacheVersion = "2026-07-15-plan10-metadata-v1";
+const plcPlanTwelveStorageKey = "plc.event.plan12Progress.20260715.v1";
+const plcPlanTwelveLegacyCacheVersion = "2026-07-15-plan12-progress-v1";
+const plcPlanTwelveCacheVersion = "2026-07-15-plan12-stages-v2";
+const plcPlanTwelveGlowThreshold = 72;
+const plcPlanTwelveStageThreshold = 320;
+const plcPlanHorizonZoomThreshold = 1.45;
+const plcPlanHorizonFocusDuration = 680;
+const plcPlanHopeBeaconPosition = Object.freeze({ x: 0.78, y: 0.32 });
+const plcPlanHopeLockRadius = 0.065;
+const plcPlanHopeLockDuration = 1200;
+const plcPlanTenAnswers = Object.freeze(["F", "T", "D", "H"]);
+const plcPlanTenMetadataRows = Object.freeze([
+  Object.freeze([11, 527, "F"]),
+  Object.freeze([37, 236, "T"]),
+  Object.freeze([64, 642, "D"]),
+  Object.freeze([78, 853, "H"]),
+  Object.freeze([120, 616, "T"]),
+  Object.freeze([129, 324, "?"]),
+  Object.freeze([136, 244, "?"]),
+  Object.freeze([151, 7, "?"]),
+  Object.freeze([167, 27, "?"])
+]);
+const plcPlanTenPhrases = Object.freeze([
+  Object.freeze(["eel", "he", "eep", "armony."]),
+  Object.freeze(["ollow", "he", "istant", "orizon."]),
+  Object.freeze(["ind", "he", "istant", "ope."])
+]);
 const plcPlanHiddenLetters = {
   1: "W",
   2: "L",
@@ -498,7 +647,10 @@ const plcDatabaseEntries = [
     collectedAt: "26/6/19",
     keeper: "像素塔",
     level: "Main",
-    body: "于一切破碎的音符残片中，我得以窥得虚空的一隅。"
+    body: [
+      "于一切破碎的音符残片中，我得以窥得虚空的一隅。",
+      "追随遥远的[地平线]，我看到了……"
+    ].join("\n")
   },
   {
     title: "PLC计划 #1",
@@ -672,13 +824,35 @@ const plcDatabaseEntries = [
   },
   {
     title: "PLC计划 #10",
-    collectedAt: "??/?/?",
+    collectedAt: "26/7/15",
+    keeper: "?",
+    level: "Main",
+    body: [
+      "LT组、LH组的寻找过程并不顺利。",
+      "有趣的是，在探索一处废弃的地下实验室时，它们找到了如下的信息：",
+      "",
+      "[以下数据均按[名称]进行顺序排列，数据截止版本号：3.19.4]",
+      "",
+      "请完成表格的残余部分，以解锁新的内容。"
+    ].join("\n")
+  },
+  {
+    title: "PLC计划 #11",
+    collectedAt: "?/?/??",
     keeper: "???",
     level: "Main",
     body: [
-      "后续记录仍在整理。",
-      "若有新的纸页被找到，本档案将继续补全。"
+      "Feel The Deep Harmony.",
+      "Follow The Distant Horizon.",
+      "Find The Distant Hope."
     ].join("\n")
+  },
+  {
+    title: "PLC计划 #12",
+    collectedAt: "?/?/??",
+    keeper: "???",
+    level: "Main",
+    body: "阶段达成 0/3"
   }
 ];
 const plcDatabasePendingPlanEntry = {
@@ -5985,6 +6159,129 @@ function writeFragmentNinePuzzleState(state) {
   return safeState;
 }
 
+function readFragmentTenCompletionState() {
+  try {
+    const cachedValue = readStoredValue(fragmentTenStorageKey);
+    if (!cachedValue) {
+      return { transportComplete: false, solved: false };
+    }
+
+    const payload = JSON.parse(cachedValue);
+    if (payload?.version === "2026-07-15-fragment10-railway-v3" && payload?.solved === true) {
+      return { transportComplete: true, solved: false };
+    }
+    if (payload?.version !== fragmentTenCacheVersion) {
+      return { transportComplete: false, solved: false };
+    }
+
+    return {
+      transportComplete: payload.transportComplete === true || payload.solved === true,
+      solved: payload.solved === true
+    };
+  } catch (error) {
+    return { transportComplete: false, solved: false };
+  }
+}
+
+function readFragmentTenSolvedState() {
+  return readFragmentTenCompletionState().solved;
+}
+
+function writeFragmentTenCompletionState({ solved = false } = {}) {
+  writeStoredValue(fragmentTenStorageKey, JSON.stringify({
+    version: fragmentTenCacheVersion,
+    transportComplete: true,
+    solved,
+    completedAt: new Date().toISOString()
+  }));
+}
+
+function readPlcPlanTenDecodedState() {
+  try {
+    const cachedValue = readStoredValue(plcPlanTenStorageKey);
+    if (!cachedValue) {
+      return false;
+    }
+
+    const payload = JSON.parse(cachedValue);
+    return payload?.version === plcPlanTenCacheVersion && payload?.decoded === true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function writePlcPlanTenDecodedState() {
+  writeStoredValue(plcPlanTenStorageKey, JSON.stringify({
+    version: plcPlanTenCacheVersion,
+    decoded: true,
+    completedAt: new Date().toISOString()
+  }));
+}
+
+function createEmptyPlcPlanTwelveStageState() {
+  return { 1: false, 2: false, 3: false };
+}
+
+function readPlcPlanTwelveStageState() {
+  try {
+    const cachedValue = readStoredValue(plcPlanTwelveStorageKey);
+    if (!cachedValue) {
+      return createEmptyPlcPlanTwelveStageState();
+    }
+
+    const payload = JSON.parse(cachedValue);
+    if (payload?.version === plcPlanTwelveCacheVersion) {
+      return {
+        1: payload.stages?.[1] === true,
+        2: payload.stages?.[2] === true,
+        3: payload.stages?.[3] === true
+      };
+    }
+
+    if (payload?.version === plcPlanTwelveLegacyCacheVersion) {
+      return {
+        1: Math.max(0, Math.min(3, Number(payload.progress) || 0)) >= 1,
+        2: false,
+        3: false
+      };
+    }
+  } catch (error) {
+    return createEmptyPlcPlanTwelveStageState();
+  }
+
+  return createEmptyPlcPlanTwelveStageState();
+}
+
+function readPlcPlanTwelveProgress() {
+  return Object.values(readPlcPlanTwelveStageState()).filter(Boolean).length;
+}
+
+function writePlcPlanTwelveStageState(stages) {
+  const normalizedStages = {
+    1: stages?.[1] === true,
+    2: stages?.[2] === true,
+    3: stages?.[3] === true
+  };
+  writeStoredValue(plcPlanTwelveStorageKey, JSON.stringify({
+    version: plcPlanTwelveCacheVersion,
+    stages: normalizedStages,
+    progress: Object.values(normalizedStages).filter(Boolean).length,
+    updatedAt: new Date().toISOString()
+  }));
+  updateDecodedFragmentPrerequisite();
+}
+
+function completePlcPlanTwelveStage(stageNumber) {
+  const stages = readPlcPlanTwelveStageState();
+  if (stages[stageNumber]) {
+    return Object.values(stages).filter(Boolean).length;
+  }
+
+  stages[stageNumber] = true;
+  writePlcPlanTwelveStageState(stages);
+  return Object.values(stages).filter(Boolean).length;
+}
+
 function readFragmentSevenIntroCache() {
   try {
     const cachedValue = readStoredValue(fragmentSevenIntroStorageKey);
@@ -6266,6 +6563,22 @@ function getPlcPlanEntryNumber(entry, fallbackIndex = 0) {
   return Number(match[1]);
 }
 
+function isPlcPlanTenEntry(entry) {
+  return entry?.title === "PLC计划 #10";
+}
+
+function isPlcPlanZeroEntry(entry) {
+  return entry?.title === "PLC计划 #0";
+}
+
+function isPlcPlanElevenEntry(entry) {
+  return entry?.title === "PLC计划 #11";
+}
+
+function isPlcPlanTwelveEntry(entry) {
+  return entry?.title === "PLC计划 #12";
+}
+
 function applyPlcPlanHiddenLetter(categoryKey, entry, index = 0) {
   if (!plcDatabaseFile) {
     return;
@@ -6334,9 +6647,11 @@ function getPlcPlanEntriesForCurrentState() {
   }
 
   const fragmentEightSolved = readFragmentEightAnswerCache();
-  const highestUnlockedEntry = fragmentEightSolved && readFragmentAuditState()
-    ? 9
-    : fragmentEightSolved ? 8 : 7;
+  const highestUnlockedEntry = readFragmentTenSolvedState()
+    ? readPlcPlanTenDecodedState() ? 12 : 11
+    : fragmentEightSolved && readFragmentAuditState()
+      ? 9
+      : fragmentEightSolved ? 8 : 7;
 
   return plcDatabaseEntries.filter((entry) => {
     return getPlcPlanEntryNumber(entry) <= highestUnlockedEntry;
@@ -6508,6 +6823,11 @@ function renderPlcDatabaseEntryList() {
       button.classList.add("is-active");
     }
 
+    if (activeCategory.key === "first" && isPlcPlanElevenEntry(entry) && !readPlcPlanTenDecodedState()) {
+      button.classList.add("is-locked");
+      button.setAttribute("aria-label", "PLC计划 #11");
+    }
+
     if (
       shouldRenderPlcDatabaseVerification(activeCategory.key) &&
       isPlcSecretFragmentEntry(entry)
@@ -6655,7 +6975,7 @@ function appendPlcPlanEightAuditEntry() {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "plc-db-start-button plc-fragment-audit-start";
-  button.textContent = readFragmentAuditState() ? "重新进行残片鉴别" : "进入残片鉴别";
+  button.textContent = readFragmentAuditState() ? "重新进入残片鉴别" : "进入残片鉴别";
   button.addEventListener("click", openFragmentAudit);
 
   section.append(label, figure, button);
@@ -6673,6 +6993,838 @@ function appendPlcPlanNineHomeButton() {
   button.innerHTML = "<span>RETURN TO HOME</span><strong>返回主页</strong>";
   button.addEventListener("click", unlockDecodedFragmentHubFromDatabase);
   plcDatabaseEntryContent.appendChild(button);
+}
+
+function clearPlcPlanTenRevealTimers() {
+  plcPlanTenRevealTimers.forEach((timer) => window.clearTimeout(timer));
+  plcPlanTenRevealTimers = [];
+}
+
+function finishPlcPlanTenReveal() {
+  clearPlcPlanTenRevealTimers();
+  plcPlanTenReveal?.classList.remove("is-open", "is-aligned", "is-phrase-visible");
+  plcPlanTenReveal?.setAttribute("aria-hidden", "true");
+  renderPlcDatabaseEntryList();
+  updatePlcDatabaseProgress();
+
+  if (plcDatabaseActiveCategoryKey === "first") {
+    const planElevenIndex = getPlcDatabaseEntryIndexByTitle("first", "PLC计划 #11");
+    if (planElevenIndex >= 0) {
+      selectPlcDatabaseEntry(planElevenIndex);
+    }
+  }
+}
+
+function runPlcPlanTenReveal() {
+  if (!plcPlanTenReveal || !plcPlanTenPhrase || plcPlanTenSuffixes.length !== 4) {
+    finishPlcPlanTenReveal();
+    return;
+  }
+
+  clearPlcPlanTenRevealTimers();
+  plcPlanTenSuffixes.forEach((suffix) => {
+    suffix.textContent = "";
+  });
+  plcPlanTenPhrase.classList.remove("is-phrase-visible");
+  plcPlanTenReveal.classList.remove("is-aligned", "is-phrase-visible");
+  plcPlanTenReveal.classList.add("is-open");
+  plcPlanTenReveal.setAttribute("aria-hidden", "false");
+  if (plcPlanTenRevealProgress) plcPlanTenRevealProgress.textContent = "ALIGNING INITIALS";
+
+  window.requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
+      plcPlanTenReveal.classList.add("is-aligned");
+    });
+  });
+
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  const alignDuration = reduceMotion ? 280 : 1650;
+  const phraseDuration = reduceMotion ? 900 : 2100;
+  const phraseGap = reduceMotion ? 180 : 480;
+
+  const showPhrase = (phraseIndex) => {
+    if (phraseIndex >= plcPlanTenPhrases.length) {
+      const finishTimer = window.setTimeout(finishPlcPlanTenReveal, phraseGap + 260);
+      plcPlanTenRevealTimers.push(finishTimer);
+      return;
+    }
+
+    plcPlanTenPhrases[phraseIndex].forEach((suffixText, suffixIndex) => {
+      plcPlanTenSuffixes[suffixIndex].textContent = suffixText;
+    });
+    if (plcPlanTenRevealProgress) {
+      plcPlanTenRevealProgress.textContent = `DECODED LINE ${String(phraseIndex + 1).padStart(2, "0")} / 03`;
+    }
+    plcPlanTenReveal.classList.add("is-phrase-visible");
+
+    const hideTimer = window.setTimeout(() => {
+      plcPlanTenReveal.classList.remove("is-phrase-visible");
+      const nextTimer = window.setTimeout(() => showPhrase(phraseIndex + 1), phraseGap);
+      plcPlanTenRevealTimers.push(nextTimer);
+    }, phraseDuration);
+    plcPlanTenRevealTimers.push(hideTimer);
+  };
+
+  const startTimer = window.setTimeout(() => showPhrase(0), alignDuration);
+  plcPlanTenRevealTimers.push(startTimer);
+}
+
+function appendPlcPlanTenMetadataEntry() {
+  if (!plcDatabaseEntryContent) {
+    return;
+  }
+
+  const decoded = readPlcPlanTenDecodedState();
+  const section = document.createElement("section");
+  section.className = "plc-plan-ten-metadata";
+  section.classList.toggle("is-decoded", decoded);
+
+  const label = document.createElement("span");
+  label.className = "plc-plan-ten-metadata-label";
+  label.textContent = "METADATA TABLE // VERSION 3.19.4";
+
+  const form = document.createElement("form");
+  form.className = "plc-plan-ten-form";
+  const table = document.createElement("table");
+  table.setAttribute("aria-label", "PLC计划 #10 元数据解码表");
+  const head = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  ["元数据", "片段序号", "解码后数据"].forEach((heading) => {
+    const cell = document.createElement("th");
+    cell.scope = "col";
+    cell.textContent = heading;
+    headRow.appendChild(cell);
+  });
+  head.appendChild(headRow);
+
+  const body = document.createElement("tbody");
+  const inputs = [];
+  plcPlanTenMetadataRows.forEach((row, rowIndex) => {
+    const rowElement = document.createElement("tr");
+    row.forEach((value, columnIndex) => {
+      const cell = document.createElement("td");
+      if (columnIndex !== 2 || value !== "?") {
+        cell.textContent = String(value);
+      } else {
+        const answerIndex = rowIndex - 5;
+        if (decoded) {
+          const answer = document.createElement("strong");
+          answer.textContent = plcPlanTenAnswers[answerIndex];
+          answer.className = "plc-plan-ten-decoded-letter";
+          cell.appendChild(answer);
+        } else {
+          const input = document.createElement("input");
+          input.type = "text";
+          input.maxLength = 1;
+          input.autocomplete = "off";
+          input.spellcheck = false;
+          input.inputMode = "text";
+          input.placeholder = "?";
+          input.dataset.plcPlanTenAnswer = String(answerIndex);
+          input.setAttribute("aria-label", `元数据 ${row[0]} 的解码后数据`);
+          input.addEventListener("input", () => {
+            input.value = input.value.replace(/[^a-z]/gi, "").slice(0, 1).toUpperCase();
+            input.classList.remove("is-error");
+            if (input.value) {
+              inputs[answerIndex + 1]?.focus({ preventScroll: true });
+            }
+          });
+          inputs.push(input);
+          cell.appendChild(input);
+        }
+      }
+      rowElement.appendChild(cell);
+    });
+    body.appendChild(rowElement);
+  });
+
+  table.append(head, body);
+  form.appendChild(table);
+
+  const actions = document.createElement("div");
+  actions.className = "plc-plan-ten-actions";
+  const status = document.createElement("p");
+  status.className = "plc-plan-ten-status";
+  status.setAttribute("aria-live", "polite");
+
+  if (decoded) {
+    status.textContent = "四项元数据已完成解码，PLC计划 #11 / #12 已开放。";
+  } else {
+    status.textContent = "等待写入四个缺失的大写字母。";
+    const submit = document.createElement("button");
+    submit.type = "submit";
+    submit.textContent = "VERIFY DATA";
+    actions.appendChild(submit);
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const submittedAnswers = inputs.map((input) => input.value.toUpperCase());
+      const correct = plcPlanTenAnswers.every((answer, index) => submittedAnswers[index] === answer);
+
+      if (!correct) {
+        inputs.forEach((input, index) => {
+          input.classList.toggle("is-error", submittedAnswers[index] !== plcPlanTenAnswers[index]);
+        });
+        status.textContent = "元数据校验未通过，请重新检查四个缺口。";
+        status.classList.add("is-error");
+        inputs.find((input) => input.classList.contains("is-error"))?.focus({ preventScroll: true });
+        return;
+      }
+
+      writePlcPlanTenDecodedState();
+      inputs.forEach((input) => {
+        input.disabled = true;
+        input.classList.remove("is-error");
+        input.classList.add("is-correct");
+      });
+      submit.disabled = true;
+      status.classList.remove("is-error");
+      status.textContent = "校验通过，正在重组 FTDH 数据。";
+      renderPlcDatabaseEntryList();
+      runPlcPlanTenReveal();
+    });
+  }
+
+  actions.prepend(status);
+  form.appendChild(actions);
+  section.append(label, form);
+  plcDatabaseEntryContent.appendChild(section);
+}
+
+function renderPlcPlanElevenLockedEntry() {
+  if (!plcDatabaseEntryContent) {
+    return;
+  }
+
+  renderPlcDatabaseEntryContent([
+    "后续记录仍在整理。",
+    "若有新的纸页被找到，本档案将继续补全。"
+  ].join("\n"));
+}
+
+function renderPlcPlanZeroEntry() {
+  if (!plcDatabaseEntryContent) {
+    return;
+  }
+
+  plcDatabaseEntryContent.replaceChildren();
+
+  const opening = document.createElement("p");
+  opening.textContent = "于一切破碎的音符残片中，我得以窥得虚空的一隅。";
+  plcDatabaseEntryContent.appendChild(opening);
+
+  if (!readPlcPlanTenDecodedState()) {
+    return;
+  }
+
+  const stages = readPlcPlanTwelveStageState();
+  const clue = document.createElement("p");
+  clue.className = "plc-plan-zero-horizon-clue";
+  clue.classList.toggle("is-complete", stages[2]);
+  clue.appendChild(document.createTextNode("追随遥远的["));
+
+  const target = document.createElement("mark");
+  target.id = "plcPlanZeroHorizonTarget";
+  target.className = "plc-plan-zero-horizon-target";
+  target.textContent = "地平线";
+  target.setAttribute("tabindex", "0");
+  target.setAttribute("aria-label", "地平线，放大并聚焦此处");
+  target.addEventListener("focus", schedulePlcPlanHorizonFocusCheck);
+  clue.appendChild(target);
+  clue.appendChild(document.createTextNode("]，我看到了……"));
+  plcDatabaseEntryContent.appendChild(clue);
+
+  if (!stages[2]) {
+    const hint = document.createElement("span");
+    hint.className = "plc-plan-zero-zoom-hint";
+    hint.setAttribute("aria-hidden", "true");
+    hint.innerHTML = "<i></i><b>放大并聚焦</b>";
+    plcDatabaseEntryContent.appendChild(hint);
+    schedulePlcPlanHorizonFocusCheck();
+  }
+}
+
+function renderPlcPlanElevenEntry() {
+  const stages = readPlcPlanTwelveStageState();
+  plcDatabaseEntryContent?.replaceChildren();
+
+  const appendLine = (english, translation = "") => {
+    const paragraph = document.createElement("p");
+    paragraph.appendChild(document.createTextNode(english));
+    if (translation) {
+      paragraph.append(document.createElement("br"), document.createTextNode(translation));
+    }
+    plcDatabaseEntryContent?.appendChild(paragraph);
+    return paragraph;
+  };
+
+  appendLine("Feel The Deep Harmony.", stages[1] ? "感受深层的和谐。" : "");
+  appendLine("Follow The Distant Horizon.", stages[2] ? "追随遥远的地平线。" : "");
+
+  if (stages[3]) {
+    appendLine("Find The Distant Hope.", "寻找遥远的希望。");
+    return;
+  }
+
+  const hopeLine = document.createElement("p");
+  hopeLine.className = "plc-plan-eleven-hope-line";
+  hopeLine.appendChild(document.createTextNode("Find The Distant "));
+  const hopeTrigger = document.createElement("button");
+  hopeTrigger.type = "button";
+  hopeTrigger.className = "plc-plan-eleven-hope-trigger";
+  hopeTrigger.textContent = "Hope.";
+  hopeTrigger.setAttribute("aria-label", "Hope，开启远距寻光");
+  hopeTrigger.addEventListener("click", openPlcPlanHopeSearch);
+  hopeLine.appendChild(hopeTrigger);
+  plcDatabaseEntryContent?.appendChild(hopeLine);
+}
+
+function renderPlcPlanTwelveEntry() {
+  if (!plcDatabaseEntryContent) {
+    return;
+  }
+
+  const stages = readPlcPlanTwelveStageState();
+  const progress = Object.values(stages).filter(Boolean).length;
+  plcDatabaseEntryContent.replaceChildren();
+
+  const section = document.createElement("section");
+  section.className = "plc-plan-twelve-entry";
+
+  const status = document.createElement("h3");
+  status.className = "plc-plan-twelve-progress";
+  status.textContent = `阶段达成 ${progress}/3`;
+
+  if (progress < 1) {
+    section.appendChild(status);
+    plcDatabaseEntryContent.appendChild(section);
+    return;
+  }
+
+  const label = document.createElement("span");
+  label.textContent = "PLC PLAN // HARMONIC TRACE";
+
+  const objectives = [
+    { stage: 1, phrase: "Feel The Deep Harmony.", translation: "感受深层的和谐。" },
+    { stage: 2, phrase: "Follow The Distant Horizon.", translation: "追随遥远的地平线。" },
+    { stage: 3, phrase: "Find The Distant Hope.", translation: "寻找遥远的希望。" }
+  ];
+
+  section.append(label, status);
+  objectives.forEach((item) => {
+    const objective = document.createElement("div");
+    objective.className = "plc-plan-twelve-objective";
+    objective.dataset.stage = String(item.stage);
+    objective.classList.toggle("is-complete", stages[item.stage]);
+    objective.classList.toggle("is-pending", !stages[item.stage]);
+
+    const index = document.createElement("span");
+    index.textContent = String(item.stage).padStart(2, "0");
+    const copy = document.createElement("p");
+    const phrase = document.createElement("strong");
+    phrase.textContent = item.phrase;
+    copy.appendChild(phrase);
+
+    if (stages[item.stage] && item.translation) {
+      const translation = document.createElement("small");
+      translation.textContent = item.translation;
+      copy.appendChild(translation);
+    }
+
+    objective.append(index, copy);
+    section.appendChild(objective);
+  });
+
+  plcDatabaseEntryContent.appendChild(section);
+}
+
+function clearPlcPlanTwelveStageTimers() {
+  plcPlanTwelveStageTimers.forEach((timer) => window.clearTimeout(timer));
+  plcPlanTwelveStageTimers = [];
+}
+
+function resetPlcPlanTwelveOverscroll({ hide = true } = {}) {
+  plcPlanTwelveOverscroll = 0;
+  window.clearTimeout(plcPlanTwelveOverscrollResetTimer);
+  plcPlanTwelveOverscrollResetTimer = null;
+
+  if (!plcPlanTwelveStage || plcPlanTwelveStageActive) {
+    return;
+  }
+
+  plcPlanTwelveStage.style.setProperty("--plc-plan-twelve-pull", "0");
+  plcPlanTwelveStage.classList.remove("is-glowing");
+  if (hide) {
+    plcPlanTwelveStage.classList.remove("is-pulling");
+  }
+}
+
+function isPlcPlanTwelveBottomReached() {
+  const root = document.documentElement;
+  const scrollBottom = window.scrollY + window.innerHeight;
+  return scrollBottom >= root.scrollHeight - 4;
+}
+
+function canStartPlcPlanTwelveStage() {
+  const stages = readPlcPlanTwelveStageState();
+  return Boolean(
+    plcPlanTwelveStage &&
+    readPlcPlanTenDecodedState() &&
+    !stages[1] &&
+    !plcPlanTwelveStageActive &&
+    !document.body.classList.contains("modal-open")
+  );
+}
+
+function finishPlcPlanTwelveStage() {
+  if (!plcPlanTwelveStage || !plcPlanTwelveStageActive) {
+    return;
+  }
+
+  completePlcPlanTwelveStage(plcPlanTwelveActiveStageNumber);
+  showPlcDatabaseDetail("first");
+  const planTwelveIndex = getPlcDatabaseEntryIndexByTitle("first", "PLC计划 #12");
+  if (planTwelveIndex >= 0) {
+    selectPlcDatabaseEntry(planTwelveIndex);
+  }
+
+  plcPlanTwelveStage.classList.add("is-exiting");
+  const cleanupTimer = window.setTimeout(() => {
+    clearPlcPlanTwelveStageTimers();
+    plcPlanTwelveStage.classList.remove(
+      "is-pulling",
+      "is-glowing",
+      "is-open",
+      "is-message-visible",
+      "is-exiting",
+      "is-horizon",
+      "is-hope"
+    );
+    plcPlanTwelveStage.style.setProperty("--plc-plan-twelve-pull", "0");
+    plcPlanTwelveStage.setAttribute("aria-hidden", "true");
+    document.body.classList.remove(
+      "plc-plan-twelve-stage-open",
+      "plc-plan-horizon-stage-open",
+      "plc-plan-hope-stage-open"
+    );
+    plcPlanTwelveOverscroll = 0;
+    plcPlanTwelveStageActive = false;
+    plcPlanTwelveActiveStageNumber = 0;
+  }, 680);
+  plcPlanTwelveStageTimers.push(cleanupTimer);
+}
+
+function startPlcPlanTwelveStage(stageNumber = 1) {
+  const canStart = stageNumber === 3
+    ? canStartPlcPlanHopeStage()
+    : stageNumber === 2
+      ? canStartPlcPlanHorizonStage()
+      : canStartPlcPlanTwelveStage();
+
+  if (!canStart || !plcPlanTwelveStage) {
+    return;
+  }
+
+  const stages = readPlcPlanTwelveStageState();
+  const nextProgress = Object.values(stages).filter(Boolean).length + 1;
+  clearPlcPlanHorizonFocusTimer();
+  if (stageNumber === 3) {
+    closePlcPlanHopeSearch({ restoreFocus: false });
+  }
+  plcPlanTwelveStageActive = true;
+  plcPlanTwelveActiveStageNumber = stageNumber;
+  clearPlcPlanTwelveStageTimers();
+  window.clearTimeout(plcPlanTwelveOverscrollResetTimer);
+  plcPlanTwelveStage.style.setProperty("--plc-plan-twelve-pull", "1");
+  plcPlanTwelveStage.setAttribute("aria-hidden", "false");
+  plcPlanTwelveStage.classList.toggle("is-horizon", stageNumber === 2);
+  plcPlanTwelveStage.classList.toggle("is-hope", stageNumber === 3);
+  plcPlanTwelveStage.classList.add("is-pulling", "is-glowing", "is-open");
+  document.body.classList.add("modal-open", "plc-plan-twelve-stage-open");
+  document.body.classList.toggle("plc-plan-horizon-stage-open", stageNumber === 2);
+  document.body.classList.toggle("plc-plan-hope-stage-open", stageNumber === 3);
+
+  if (plcPlanTwelveStageText) {
+    plcPlanTwelveStageText.replaceChildren(
+      document.createTextNode(stageNumber >= 2 ? "阶段完成 " : "阶段达成 "),
+      Object.assign(document.createElement("strong"), {
+        textContent: `${nextProgress}/3`
+      })
+    );
+  }
+
+  const showMessageTimer = window.setTimeout(() => {
+    plcPlanTwelveStage.classList.add("is-message-visible");
+  }, 1080);
+  const hideMessageTimer = window.setTimeout(() => {
+    plcPlanTwelveStage.classList.remove("is-message-visible");
+  }, 2380);
+  const finishTimer = window.setTimeout(finishPlcPlanTwelveStage, 3050);
+  plcPlanTwelveStageTimers.push(showMessageTimer, hideMessageTimer, finishTimer);
+}
+
+function isPlcPlanZeroCurrentlySelected() {
+  const activeEntry = getPlcDatabaseCategory().entries[plcDatabaseActiveEntryIndex];
+  return Boolean(
+    plcDatabase?.classList.contains("is-open") &&
+    plcDatabaseDetail?.classList.contains("is-active") &&
+    plcDatabaseActiveCategoryKey === "first" &&
+    isPlcPlanZeroEntry(activeEntry)
+  );
+}
+
+function canStartPlcPlanHorizonStage() {
+  const stages = readPlcPlanTwelveStageState();
+  return Boolean(
+    plcPlanTwelveStage &&
+    readPlcPlanTenDecodedState() &&
+    !stages[2] &&
+    !plcPlanTwelveStageActive &&
+    isPlcPlanZeroCurrentlySelected() &&
+    document.getElementById("plcPlanZeroHorizonTarget")
+  );
+}
+
+function getPlcPlanHorizonZoomRatio() {
+  const devicePixelRatio = (window.devicePixelRatio || 1) / plcPlanHorizonInitialDevicePixelRatio;
+  const viewportScale = (window.visualViewport?.scale || 1) / plcPlanHorizonInitialViewportScale;
+  return Math.max(devicePixelRatio, viewportScale);
+}
+
+function isPlcPlanHorizonTargetFocused() {
+  const target = document.getElementById("plcPlanZeroHorizonTarget");
+  if (!target || !canStartPlcPlanHorizonStage()) {
+    return false;
+  }
+
+  const rect = target.getBoundingClientRect();
+  const viewport = window.visualViewport;
+  const viewportLeft = viewport?.offsetLeft || 0;
+  const viewportTop = viewport?.offsetTop || 0;
+  const viewportWidth = viewport?.width || window.innerWidth;
+  const viewportHeight = viewport?.height || window.innerHeight;
+  const viewportRight = viewportLeft + viewportWidth;
+  const viewportBottom = viewportTop + viewportHeight;
+  const targetCenterX = rect.left + rect.width / 2;
+  const targetCenterY = rect.top + rect.height / 2;
+  const viewportCenterX = viewportLeft + viewportWidth / 2;
+  const viewportCenterY = viewportTop + viewportHeight / 2;
+  const isVisible = rect.width > 0 && rect.height > 0 &&
+    rect.right > viewportLeft && rect.left < viewportRight &&
+    rect.bottom > viewportTop && rect.top < viewportBottom;
+  const isCentered = Math.abs(targetCenterX - viewportCenterX) <= viewportWidth * 0.36 &&
+    Math.abs(targetCenterY - viewportCenterY) <= viewportHeight * 0.34;
+
+  return isVisible && isCentered && getPlcPlanHorizonZoomRatio() >= plcPlanHorizonZoomThreshold;
+}
+
+function clearPlcPlanHorizonFocusTimer() {
+  window.clearTimeout(plcPlanHorizonFocusTimer);
+  plcPlanHorizonFocusTimer = null;
+  document.getElementById("plcPlanZeroHorizonTarget")?.classList.remove("is-focusing");
+}
+
+function checkPlcPlanHorizonFocus() {
+  plcPlanHorizonFocusFrame = null;
+
+  if (!isPlcPlanHorizonTargetFocused()) {
+    clearPlcPlanHorizonFocusTimer();
+    return;
+  }
+
+  const target = document.getElementById("plcPlanZeroHorizonTarget");
+  target?.classList.add("is-focusing");
+  if (plcPlanHorizonFocusTimer !== null) {
+    return;
+  }
+
+  plcPlanHorizonFocusTimer = window.setTimeout(() => {
+    plcPlanHorizonFocusTimer = null;
+    if (!isPlcPlanHorizonTargetFocused()) {
+      target?.classList.remove("is-focusing");
+      return;
+    }
+
+    startPlcPlanTwelveStage(2);
+  }, plcPlanHorizonFocusDuration);
+}
+
+function schedulePlcPlanHorizonFocusCheck() {
+  if (plcPlanHorizonFocusFrame !== null) {
+    return;
+  }
+
+  plcPlanHorizonFocusFrame = window.requestAnimationFrame(checkPlcPlanHorizonFocus);
+}
+
+function clearPlcPlanHopeGuideTimers() {
+  plcPlanHopeGuideTimers.forEach((timer) => window.clearTimeout(timer));
+  plcPlanHopeGuideTimers = [];
+}
+
+function clearPlcPlanHopeLock() {
+  window.clearTimeout(plcPlanHopeLockTimer);
+  plcPlanHopeLockTimer = null;
+  plcPlanHopeSearch?.classList.remove("is-locking");
+}
+
+function getPlcPlanHopeDistance(x, y) {
+  const aspect = Math.max(0.7, Math.min(1.8, window.innerWidth / Math.max(1, window.innerHeight)));
+  const dx = (x - plcPlanHopeBeaconPosition.x) * aspect;
+  const dy = y - plcPlanHopeBeaconPosition.y;
+  return Math.hypot(dx, dy);
+}
+
+function finishPlcPlanHopeSearch() {
+  if (!plcPlanHopeSearchActive || plcPlanHopeSearch?.classList.contains("is-found")) {
+    return;
+  }
+
+  clearPlcPlanHopeLock();
+  clearPlcPlanHopeGuideTimers();
+  plcPlanHopeSearch?.classList.add("is-found");
+  if (plcPlanHopeSignal) plcPlanHopeSignal.textContent = "SIGNAL 100%";
+  if (plcPlanHopeStatus) plcPlanHopeStatus.textContent = "远距信号已锁定。";
+
+  const completeTimer = window.setTimeout(() => {
+    startPlcPlanTwelveStage(3);
+  }, 720);
+  plcPlanHopeGuideTimers.push(completeTimer);
+}
+
+function updatePlcPlanHopeLens(x, y) {
+  if (!plcPlanHopeSearchActive || !plcPlanHopeSearch) {
+    return;
+  }
+
+  plcPlanHopeLensX = Math.max(0.06, Math.min(0.94, Number(x) || 0));
+  plcPlanHopeLensY = Math.max(0.08, Math.min(0.92, Number(y) || 0));
+  plcPlanHopeSearch.style.setProperty("--plc-hope-lens-x", `${(plcPlanHopeLensX * 100).toFixed(2)}%`);
+  plcPlanHopeSearch.style.setProperty("--plc-hope-lens-y", `${(plcPlanHopeLensY * 100).toFixed(2)}%`);
+
+  const distance = getPlcPlanHopeDistance(plcPlanHopeLensX, plcPlanHopeLensY);
+  const signal = Math.round(Math.max(0, Math.min(1, 1 - distance / 0.72)) ** 1.7 * 100);
+  const locked = distance <= plcPlanHopeLockRadius;
+  plcPlanHopeSearch.style.setProperty("--plc-hope-signal", (signal / 100).toFixed(3));
+  plcPlanHopeSearch.classList.toggle("is-near", signal >= 62);
+  if (plcPlanHopeSignal) plcPlanHopeSignal.textContent = `SIGNAL ${String(signal).padStart(2, "0")}%`;
+
+  if (!locked) {
+    clearPlcPlanHopeLock();
+    if (plcPlanHopeStatus) {
+      plcPlanHopeStatus.textContent = signal >= 62
+        ? "回波增强，继续保持方向。"
+        : "移动远望镜，寻找远处的微光。";
+    }
+    return;
+  }
+
+  plcPlanHopeSearch.classList.add("is-locking");
+  if (plcPlanHopeStatus) plcPlanHopeStatus.textContent = "信号锁定中，请保持稳定……";
+  if (plcPlanHopeLockTimer !== null) {
+    return;
+  }
+
+  plcPlanHopeLockTimer = window.setTimeout(finishPlcPlanHopeSearch, plcPlanHopeLockDuration);
+}
+
+function openPlcPlanHopeSearch(event) {
+  event?.preventDefault();
+  const stages = readPlcPlanTwelveStageState();
+  if (
+    !plcPlanHopeSearch ||
+    !readPlcPlanTenDecodedState() ||
+    stages[3] ||
+    plcPlanTwelveStageActive
+  ) {
+    return;
+  }
+
+  plcPlanHopeLastFocusedElement = event?.currentTarget || document.activeElement;
+  closePlcDatabase();
+  window.scrollTo({ top: 0, behavior: "auto" });
+  plcPlanHopeSearchActive = true;
+  clearPlcPlanHopeLock();
+  clearPlcPlanHopeGuideTimers();
+  plcPlanHopeSearch.classList.remove("is-found", "is-guiding", "is-beacon-revealed", "is-near");
+  plcPlanHopeSearch.classList.add("is-open");
+  plcPlanHopeSearch.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open", "plc-plan-hope-search-open");
+  updatePlcPlanHopeLens(0.5, 0.68);
+
+  const guideTimer = window.setTimeout(() => {
+    if (!plcPlanHopeSearchActive) return;
+    plcPlanHopeSearch?.classList.add("is-guiding");
+    if (plcPlanHopeStatus) plcPlanHopeStatus.textContent = "微弱回波来自远处的右上方。";
+  }, 12000);
+  const revealTimer = window.setTimeout(() => {
+    if (!plcPlanHopeSearchActive) return;
+    plcPlanHopeSearch?.classList.add("is-beacon-revealed");
+  }, 24000);
+  plcPlanHopeGuideTimers.push(guideTimer, revealTimer);
+
+  window.requestAnimationFrame(() => {
+    plcPlanHopeLens?.focus({ preventScroll: true });
+  });
+}
+
+function closePlcPlanHopeSearch({ restoreFocus = true } = {}) {
+  if (!plcPlanHopeSearch || !plcPlanHopeSearchActive) {
+    return;
+  }
+
+  plcPlanHopeSearchActive = false;
+  clearPlcPlanHopeLock();
+  clearPlcPlanHopeGuideTimers();
+  plcPlanHopeSearch.classList.remove(
+    "is-open",
+    "is-found",
+    "is-guiding",
+    "is-beacon-revealed",
+    "is-near",
+    "is-locking"
+  );
+  plcPlanHopeSearch.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open", "plc-plan-hope-search-open");
+  if (restoreFocus) {
+    showPlcDatabaseDetail("first");
+    const planElevenIndex = getPlcDatabaseEntryIndexByTitle("first", "PLC计划 #11");
+    if (planElevenIndex >= 0) {
+      selectPlcDatabaseEntry(planElevenIndex);
+    }
+    window.requestAnimationFrame(() => {
+      document.querySelector(".plc-plan-eleven-hope-trigger")?.focus?.({ preventScroll: true });
+    });
+  }
+  plcPlanHopeLastFocusedElement = null;
+}
+
+function handlePlcPlanHopePointer(event) {
+  if (!plcPlanHopeSearchActive || !plcPlanHopeSearch) {
+    return;
+  }
+
+  const rect = plcPlanHopeSearch.getBoundingClientRect();
+  updatePlcPlanHopeLens(
+    (event.clientX - rect.left) / Math.max(1, rect.width),
+    (event.clientY - rect.top) / Math.max(1, rect.height)
+  );
+}
+
+function handlePlcPlanHopeKeydown(event) {
+  if (!plcPlanHopeSearchActive) {
+    return;
+  }
+
+  const direction = {
+    ArrowLeft: [-1, 0],
+    ArrowRight: [1, 0],
+    ArrowUp: [0, -1],
+    ArrowDown: [0, 1]
+  }[event.key];
+  if (!direction) {
+    return;
+  }
+
+  event.preventDefault();
+  const step = event.shiftKey ? 0.075 : 0.032;
+  updatePlcPlanHopeLens(
+    plcPlanHopeLensX + direction[0] * step,
+    plcPlanHopeLensY + direction[1] * step
+  );
+}
+
+function canStartPlcPlanHopeStage() {
+  const stages = readPlcPlanTwelveStageState();
+  return Boolean(
+    plcPlanHopeSearchActive &&
+    readPlcPlanTenDecodedState() &&
+    !stages[3] &&
+    !plcPlanTwelveStageActive
+  );
+}
+
+function handlePlcPlanStageStorageSync(event) {
+  if (event.key !== plcPlanTwelveStorageKey) {
+    return;
+  }
+
+  updateDecodedFragmentPrerequisite();
+  if (readPlcPlanTwelveStageState()[3] && plcPlanHopeSearchActive) {
+    closePlcPlanHopeSearch({ restoreFocus: false });
+  }
+  if (!plcDatabase?.classList.contains("is-open") || plcDatabaseActiveCategoryKey !== "first") {
+    return;
+  }
+
+  const activeEntry = getPlcDatabaseCategory().entries[plcDatabaseActiveEntryIndex];
+  if (
+    isPlcPlanZeroEntry(activeEntry) ||
+    isPlcPlanElevenEntry(activeEntry) ||
+    isPlcPlanTwelveEntry(activeEntry)
+  ) {
+    selectPlcDatabaseEntry(plcDatabaseActiveEntryIndex);
+  }
+}
+
+function addPlcPlanTwelveOverscroll(delta) {
+  if (!canStartPlcPlanTwelveStage() || !isPlcPlanTwelveBottomReached() || delta <= 0) {
+    resetPlcPlanTwelveOverscroll();
+    return;
+  }
+
+  plcPlanTwelveOverscroll = Math.min(
+    plcPlanTwelveStageThreshold,
+    plcPlanTwelveOverscroll + Math.min(delta, 88)
+  );
+  const pullProgress = plcPlanTwelveOverscroll / plcPlanTwelveStageThreshold;
+  plcPlanTwelveStage.classList.add("is-pulling");
+  plcPlanTwelveStage.classList.toggle(
+    "is-glowing",
+    plcPlanTwelveOverscroll >= plcPlanTwelveGlowThreshold
+  );
+  plcPlanTwelveStage.style.setProperty("--plc-plan-twelve-pull", pullProgress.toFixed(3));
+
+  window.clearTimeout(plcPlanTwelveOverscrollResetTimer);
+  plcPlanTwelveOverscrollResetTimer = window.setTimeout(() => {
+    resetPlcPlanTwelveOverscroll();
+  }, 950);
+
+  if (plcPlanTwelveOverscroll >= plcPlanTwelveStageThreshold) {
+    startPlcPlanTwelveStage();
+  }
+}
+
+function handlePlcPlanTwelveWheel(event) {
+  if (event.deltaY <= 0) {
+    resetPlcPlanTwelveOverscroll();
+    return;
+  }
+
+  addPlcPlanTwelveOverscroll(event.deltaY);
+}
+
+function handlePlcPlanTwelveTouchStart(event) {
+  plcPlanTwelveTouchY = event.touches[0]?.clientY ?? null;
+}
+
+function handlePlcPlanTwelveTouchMove(event) {
+  const currentY = event.touches[0]?.clientY;
+  if (plcPlanTwelveTouchY === null || currentY === undefined) {
+    return;
+  }
+
+  const delta = plcPlanTwelveTouchY - currentY;
+  plcPlanTwelveTouchY = currentY;
+  if (delta <= 0) {
+    resetPlcPlanTwelveOverscroll();
+    return;
+  }
+
+  addPlcPlanTwelveOverscroll(delta);
+}
+
+function handlePlcPlanTwelveTouchEnd() {
+  plcPlanTwelveTouchY = null;
 }
 
 function clearFragmentAuditTimers() {
@@ -7090,6 +8242,8 @@ function updateDecodedFragmentCountdown() {
 
     if (decodedFragmentActiveNumber === "09" && isFragmentNineReleased()) {
       showFragmentNinePuzzle();
+    } else if (decodedFragmentActiveNumber === "10" && isFragmentTenReleased()) {
+      prepareFragmentTenGame();
     }
   }
 }
@@ -7111,6 +8265,19 @@ function setDecodedFragmentCountdownVisibility(visible) {
   if (!visible && decodedFragmentTimeShift) {
     decodedFragmentTimeShift.hidden = true;
   }
+  if (!visible && decodedFragmentPrerequisite) {
+    decodedFragmentPrerequisite.hidden = true;
+  }
+}
+
+function updateDecodedFragmentPrerequisite(fragmentNumber = decodedFragmentActiveNumber) {
+  if (!decodedFragmentPrerequisite) {
+    return;
+  }
+
+  const visible = fragmentNumber === "11";
+  decodedFragmentPrerequisite.hidden = !visible;
+  decodedFragmentPrerequisite.textContent = `前置条件 阶段达成 ${readPlcPlanTwelveProgress()}/3`;
 }
 
 function normalizeFragmentNineSongTitle(value = "") {
@@ -7215,6 +8382,12 @@ function showFragmentNinePuzzle() {
   decodedFragmentCountdownTimer = null;
   decodedFragmentCountdownDeadline = 0;
   setDecodedFragmentCountdownVisibility(false);
+  clearFragmentTenTaskTimers();
+  clearFragmentTenBreachTimers();
+  fragmentTenRuntime = null;
+  fragmentTenBreachRuntime = null;
+  if (fragmentTenGame) fragmentTenGame.hidden = true;
+  decodedFragmentPlaceholder?.classList.remove("is-fragment-ten", "is-fragment-ten-solved");
   decodedFragmentPlaceholder?.classList.add("is-fragment-nine");
   renderFragmentNinePuzzle();
 }
@@ -7343,6 +8516,987 @@ function handleFragmentNineAnswerSubmit(event) {
   fragmentNineAnswerInput.select();
 }
 
+function isFragmentTenReleased() {
+  const releaseTime = getDecodedFragmentReleaseTime("10");
+
+  return Boolean(releaseTime && Date.now() >= new Date(releaseTime).getTime());
+}
+
+function createFragmentTenRuntime() {
+  return {
+    started: false,
+    failed: false,
+    solved: false,
+    startedAt: 0,
+    progress: 0,
+    resources: { ore: 0, fiber: 0, crystal: 0 },
+    collectionState: { ore: 0, fiber: 0, crystal: 0 },
+    collectionTasks: [],
+    crews: [
+      { state: "idle", label: "待命" },
+      { state: "idle", label: "待命" }
+    ],
+    kits: [false, false, false],
+    processingIndex: null,
+    processingStartedAt: 0,
+    repairState: ["idle", "idle", "idle"],
+    repairStartedAt: [0, 0, 0],
+    repaired: [false, false, false]
+  };
+}
+
+function clearFragmentTenTaskTimers() {
+  fragmentTenTaskTimers.forEach((timer) => window.clearTimeout(timer));
+  fragmentTenTaskTimers = [];
+  if (fragmentTenAnimationFrame !== null) {
+    window.cancelAnimationFrame(fragmentTenAnimationFrame);
+    fragmentTenAnimationFrame = null;
+  }
+}
+
+function clearFragmentTenBreachTimers() {
+  fragmentTenBreachTimers.forEach((timer) => window.clearTimeout(timer));
+  fragmentTenBreachTimers = [];
+  if (fragmentTenBreachAnimationFrame !== null) {
+    window.cancelAnimationFrame(fragmentTenBreachAnimationFrame);
+    fragmentTenBreachAnimationFrame = null;
+  }
+}
+
+function appendFragmentTenLog(message) {
+  if (!fragmentTenLog) {
+    return;
+  }
+
+  const line = document.createElement("p");
+  const timeLabel = fragmentTenRuntime?.startedAt
+    ? Math.min(999, Math.floor((performance.now() - fragmentTenRuntime.startedAt) / 1000))
+    : 0;
+  line.textContent = `[${String(timeLabel).padStart(3, "0")}s] ${message}`;
+  fragmentTenLog.prepend(line);
+  while (fragmentTenLog.children.length > 5) {
+    fragmentTenLog.lastElementChild?.remove();
+  }
+}
+
+function fragmentTenHasResources(cost) {
+  return Object.entries(cost).every(([resource, amount]) => {
+    return (fragmentTenRuntime?.resources[resource] || 0) >= amount;
+  });
+}
+
+function getFragmentTenIdleCrewIndex() {
+  return fragmentTenRuntime?.crews.findIndex((crew) => crew.state === "idle") ?? -1;
+}
+
+function setFragmentTenCrewTask(index, label) {
+  const crew = fragmentTenRuntime?.crews[index];
+  if (!crew) {
+    return;
+  }
+  crew.state = "busy";
+  crew.label = label;
+}
+
+function releaseFragmentTenCrew(index) {
+  const crew = fragmentTenRuntime?.crews[index];
+  if (!crew) {
+    return;
+  }
+  crew.state = "idle";
+  crew.label = "待命";
+}
+
+function updateFragmentTenCartPosition(progress) {
+  if (!fragmentTenTrackPath || !fragmentTenCart) {
+    return;
+  }
+
+  const length = fragmentTenTrackPath.getTotalLength();
+  const currentLength = Math.max(0, Math.min(length, length * progress));
+  const point = fragmentTenTrackPath.getPointAtLength(currentLength);
+  const nextPoint = fragmentTenTrackPath.getPointAtLength(Math.min(length, currentLength + 2));
+  const angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
+  fragmentTenCart.style.left = (point.x / 10) + "%";
+  fragmentTenCart.style.top = (point.y / 5.6) + "%";
+  fragmentTenCart.style.setProperty("--cart-angle", angle + "deg");
+}
+
+function getFragmentTenNextCheckpoint(progress) {
+  const index = fragmentTenCheckpoints.findIndex((checkpoint) => checkpoint > progress);
+  if (index < 0) {
+    return null;
+  }
+
+  return {
+    index,
+    seconds: Math.max(0, (fragmentTenCheckpoints[index] - progress) * fragmentTenDurationMs / 1000)
+  };
+}
+
+function getFragmentTenTimedProgress(startedAt, duration) {
+  if (!startedAt || !duration) {
+    return 0;
+  }
+
+  return Math.min(100, Math.max(0, ((performance.now() - startedAt) / duration) * 100));
+}
+
+function getFragmentTenCollectionProgress(runtime, key) {
+  const progresses = runtime.collectionTasks
+    .filter((task) => task.key === key)
+    .map((task) => getFragmentTenTimedProgress(task.startedAt, task.duration));
+
+  return progresses.length ? Math.min(...progresses) : 0;
+}
+
+function renderFragmentTenRuntime() {
+  const runtime = fragmentTenRuntime;
+  if (!runtime) {
+    return;
+  }
+
+  if (fragmentTenOre) fragmentTenOre.textContent = runtime.resources.ore;
+  if (fragmentTenFiber) fragmentTenFiber.textContent = runtime.resources.fiber;
+  if (fragmentTenCrystal) fragmentTenCrystal.textContent = runtime.resources.crystal;
+  const crewElements = [fragmentTenCrewA, fragmentTenCrewB];
+  crewElements.forEach((element, index) => {
+    const crew = runtime.crews[index];
+    if (!element || !crew) return;
+    element.textContent = `${index === 0 ? "A" : "B"} · ${crew.label}`;
+    element.classList.toggle("is-busy", crew.state === "busy");
+  });
+  const hasIdleCrew = getFragmentTenIdleCrewIndex() >= 0;
+
+  const progressPercent = Math.min(100, Math.max(0, runtime.progress * 100));
+  if (fragmentTenProgressFill) {
+    fragmentTenProgressFill.style.width = progressPercent.toFixed(2) + "%";
+  }
+  if (fragmentTenProgressText && runtime.started && !runtime.solved) {
+    const elapsedSeconds = Math.min(fragmentTenDurationMs / 1000, Math.max(0, (performance.now() - runtime.startedAt) / 1000));
+    fragmentTenProgressText.textContent = `路线 ${progressPercent.toFixed(1)}% · ${elapsedSeconds.toFixed(1)}s / ${fragmentTenDurationMs / 1000}s`;
+  }
+
+  const nextCheckpoint = getFragmentTenNextCheckpoint(runtime.progress);
+  if (fragmentTenNextBreak) {
+    fragmentTenNextBreak.textContent = nextCheckpoint
+      ? `${fragmentTenRepairs[nextCheckpoint.index].label} · ${nextCheckpoint.seconds.toFixed(1)}s`
+      : "终点接近中";
+  }
+
+  fragmentTenCollectButtons.forEach((button) => {
+    const key = button.dataset.fragmentTenCollect;
+    const activeRuns = runtime.collectionState[key];
+    const taskProgress = getFragmentTenCollectionProgress(runtime, key);
+    button.disabled = !runtime.started || runtime.failed || !hasIdleCrew;
+    button.classList.toggle("is-active", activeRuns > 0);
+    button.style.setProperty("--fragment-ten-task-progress", taskProgress.toFixed(2) + "%");
+    const time = button.querySelector("em");
+    if (time) {
+      time.textContent = activeRuns > 0
+        ? `${activeRuns} 队 · ${Math.round(taskProgress)}%`
+        : `${fragmentTenCollections[key].duration / 1000}s`;
+    }
+  });
+
+  fragmentTenProcessButtons.forEach((button) => {
+    const index = Number(button.dataset.fragmentTenProcess);
+    const recipe = fragmentTenRecipes[index];
+    const isProcessing = runtime.processingIndex === index;
+    const complete = runtime.kits[index];
+    const taskProgress = complete
+      ? 100
+      : isProcessing
+        ? getFragmentTenTimedProgress(runtime.processingStartedAt, recipe.duration)
+        : 0;
+    button.disabled = !runtime.started || runtime.failed || complete || runtime.processingIndex !== null || !fragmentTenHasResources(recipe.cost);
+    button.classList.toggle("is-active", isProcessing);
+    button.classList.toggle("is-complete", complete);
+    button.style.setProperty("--fragment-ten-task-progress", taskProgress.toFixed(2) + "%");
+    const label = button.querySelector("b");
+    if (label) label.textContent = complete ? "完成" : isProcessing ? `${Math.round(taskProgress)}%` : "加工";
+  });
+
+  fragmentTenRepairButtons.forEach((button) => {
+    const index = Number(button.dataset.fragmentTenRepair);
+    const state = runtime.repairState[index];
+    const taskProgress = state === "complete"
+      ? 100
+      : state === "moving"
+        ? getFragmentTenTimedProgress(runtime.repairStartedAt[index], fragmentTenRepairs[index].duration)
+        : 0;
+    button.disabled = !runtime.started || runtime.failed || !runtime.kits[index] || state !== "idle" || !hasIdleCrew;
+    button.classList.toggle("is-active", state === "moving");
+    button.classList.toggle("is-complete", state === "complete");
+    button.style.setProperty("--fragment-ten-task-progress", taskProgress.toFixed(2) + "%");
+    const label = button.querySelector("b");
+    if (label) label.textContent = state === "moving" ? `${Math.round(taskProgress)}%` : state === "complete" ? "已修复" : "派遣";
+  });
+
+  fragmentTenBreakSegments.forEach((segment) => {
+    const index = Number(segment.dataset.fragmentTenSegment);
+    segment.classList.toggle("is-repairing", runtime.repairState[index] === "moving");
+    segment.classList.toggle("is-repaired", runtime.repaired[index]);
+  });
+  fragmentTenWorkOrders.forEach((order) => {
+    const index = Number(order.dataset.fragmentTenOrder);
+    order.classList.toggle("is-processing", runtime.processingIndex === index);
+    order.classList.toggle("is-ready", runtime.kits[index] && !runtime.repaired[index]);
+    order.classList.toggle("is-repairing", runtime.repairState[index] === "moving");
+    order.classList.toggle("is-complete", runtime.repaired[index]);
+  });
+  fragmentTenOrderStatusElements.forEach((element) => {
+    const index = Number(element.dataset.fragmentTenOrderStatus);
+    const recipe = fragmentTenRecipes[index];
+    let text = "等待材料";
+    let state = "blocked";
+
+    if (runtime.repaired[index]) {
+      text = "断轨已修复";
+      state = "complete";
+    } else if (runtime.repairState[index] === "moving") {
+      text = "调度组抢修中";
+      state = "ready";
+    } else if (runtime.kits[index]) {
+      text = hasIdleCrew ? "轨组就绪，点击抢修" : "轨组就绪，等待调度组";
+      state = hasIdleCrew ? "ready" : "blocked";
+    } else if (runtime.processingIndex === index) {
+      text = "轨组加工中";
+      state = "ready";
+    } else if (fragmentTenHasResources(recipe.cost)) {
+      text = runtime.processingIndex === null ? "材料齐全，点击加工" : "材料齐全，加工线占用中";
+      state = runtime.processingIndex === null ? "ready" : "blocked";
+    } else {
+      const missing = Object.entries(recipe.cost)
+        .filter(([resource, amount]) => (runtime.resources[resource] || 0) < amount)
+        .map(([resource, amount]) => `${fragmentTenResourceLabels[resource]} ${runtime.resources[resource] || 0}/${amount}`);
+      text = `缺 ${missing.join(" · ")}`;
+    }
+
+    element.textContent = text;
+    element.dataset.state = state;
+  });
+  updateFragmentTenCartPosition(runtime.progress);
+}
+
+function failFragmentTenGame(checkpointIndex) {
+  if (!fragmentTenRuntime || fragmentTenRuntime.failed || fragmentTenRuntime.solved) {
+    return;
+  }
+
+  fragmentTenRuntime.failed = true;
+  clearFragmentTenTaskTimers();
+  renderFragmentTenRuntime();
+  fragmentTenGame?.classList.add("is-failed");
+  if (fragmentTenRunState) fragmentTenRunState.textContent = "ROUTE FAILED";
+  if (fragmentTenFailureText) {
+    fragmentTenFailureText.textContent = `矿车抵达${fragmentTenRepairs[checkpointIndex].label}时轨道仍未修复，运输协议终止。`;
+  }
+  if (fragmentTenFailure) fragmentTenFailure.hidden = false;
+}
+
+function completeFragmentTenGame() {
+  if (!fragmentTenRuntime || fragmentTenRuntime.solved) {
+    return;
+  }
+
+  fragmentTenRuntime.solved = true;
+  fragmentTenRuntime.progress = 1;
+  clearFragmentTenTaskTimers();
+  writeFragmentTenCompletionState();
+  renderFragmentTenRuntime();
+  fragmentTenGame?.classList.remove("is-failed");
+  fragmentTenGame?.classList.add("is-transport-complete");
+  if (fragmentTenRunState) fragmentTenRunState.textContent = "ROUTE COMPLETE";
+  if (fragmentTenProgressText) fragmentTenProgressText.textContent = "矿车已安全抵达高地终站";
+  if (fragmentTenBoard) fragmentTenBoard.hidden = true;
+  if (fragmentTenFailure) fragmentTenFailure.hidden = true;
+  if (fragmentTenResult) fragmentTenResult.hidden = true;
+  startFragmentTenBreachTransition();
+}
+
+function updateFragmentTenGame(timestamp) {
+  const runtime = fragmentTenRuntime;
+  if (!runtime?.started || runtime.failed || runtime.solved) {
+    return;
+  }
+
+  runtime.progress = Math.min(1, Math.max(0, (timestamp - runtime.startedAt) / fragmentTenDurationMs));
+  for (let index = 0; index < fragmentTenCheckpoints.length; index += 1) {
+    if (runtime.progress >= fragmentTenCheckpoints[index] && !runtime.repaired[index]) {
+      failFragmentTenGame(index);
+      return;
+    }
+  }
+
+  renderFragmentTenRuntime();
+  if (runtime.progress >= 1) {
+    completeFragmentTenGame();
+    return;
+  }
+
+  fragmentTenAnimationFrame = window.requestAnimationFrame(updateFragmentTenGame);
+}
+
+function resetFragmentTenGame() {
+  clearFragmentTenTaskTimers();
+  clearFragmentTenBreachTimers();
+  fragmentTenRuntime = createFragmentTenRuntime();
+  fragmentTenBreachRuntime = null;
+  fragmentTenGame?.classList.remove("is-failed", "is-solved", "is-transport-complete");
+  if (fragmentTenIntro) fragmentTenIntro.hidden = false;
+  if (fragmentTenBoard) fragmentTenBoard.hidden = true;
+  if (fragmentTenFailure) fragmentTenFailure.hidden = true;
+  if (fragmentTenBreach) fragmentTenBreach.hidden = true;
+  if (fragmentTenBreachIntro) fragmentTenBreachIntro.hidden = true;
+  if (fragmentTenBreachPanel) fragmentTenBreachPanel.hidden = true;
+  if (fragmentTenBreachFailure) fragmentTenBreachFailure.hidden = true;
+  if (fragmentTenPlanUnlock) fragmentTenPlanUnlock.hidden = true;
+  if (fragmentTenResult) fragmentTenResult.hidden = true;
+  if (fragmentTenRunState) fragmentTenRunState.textContent = "STANDBY";
+  if (fragmentTenProgressText) fragmentTenProgressText.textContent = "矿车尚未发车";
+  if (fragmentTenLog) fragmentTenLog.innerHTML = "<p>运输协议等待启动。</p>";
+  renderFragmentTenRuntime();
+}
+
+function startFragmentTenGame(event) {
+  event?.preventDefault();
+  if (!isFragmentTenReleased() || readFragmentTenSolvedState()) {
+    return;
+  }
+
+  if (readFragmentTenCompletionState().transportComplete) {
+    startFragmentTenBreachTransition();
+    return;
+  }
+
+  resetFragmentTenGame();
+  fragmentTenRuntime.started = true;
+  fragmentTenRuntime.startedAt = performance.now();
+  if (fragmentTenIntro) fragmentTenIntro.hidden = true;
+  if (fragmentTenBoard) fragmentTenBoard.hidden = false;
+  if (fragmentTenFailure) fragmentTenFailure.hidden = true;
+  if (fragmentTenRunState) fragmentTenRunState.textContent = "CART RUNNING";
+  appendFragmentTenLog("矿车发车，恒速运输开始。");
+  renderFragmentTenRuntime();
+  fragmentTenAnimationFrame = window.requestAnimationFrame(updateFragmentTenGame);
+}
+
+function collectFragmentTenResource(event) {
+  const key = event.currentTarget.dataset.fragmentTenCollect;
+  const runtime = fragmentTenRuntime;
+  const config = fragmentTenCollections[key];
+  const crewIndex = getFragmentTenIdleCrewIndex();
+  if (!runtime?.started || runtime.failed || !config || crewIndex < 0) {
+    return;
+  }
+
+  runtime.collectionState[key] += 1;
+  const task = {
+    key,
+    crewIndex,
+    startedAt: performance.now(),
+    duration: config.duration
+  };
+  runtime.collectionTasks.push(task);
+  setFragmentTenCrewTask(crewIndex, config.shortLabel);
+  appendFragmentTenLog(`${crewIndex === 0 ? "A" : "B"} 组已前往${config.label}。`);
+  renderFragmentTenRuntime();
+  const timer = window.setTimeout(() => {
+    if (!fragmentTenRuntime?.started || fragmentTenRuntime.failed) return;
+    Object.entries(config.cargo).forEach(([resource, amount]) => {
+      fragmentTenRuntime.resources[resource] += amount;
+    });
+    fragmentTenRuntime.collectionState[key] = Math.max(0, fragmentTenRuntime.collectionState[key] - 1);
+    fragmentTenRuntime.collectionTasks = fragmentTenRuntime.collectionTasks.filter((activeTask) => activeTask !== task);
+    releaseFragmentTenCrew(crewIndex);
+    appendFragmentTenLog(`${crewIndex === 0 ? "A" : "B"} 组物资已送达基地。`);
+    renderFragmentTenRuntime();
+  }, config.duration);
+  fragmentTenTaskTimers.push(timer);
+}
+
+function processFragmentTenKit(event) {
+  const index = Number(event.currentTarget.dataset.fragmentTenProcess);
+  const runtime = fragmentTenRuntime;
+  const recipe = fragmentTenRecipes[index];
+  if (!runtime?.started || runtime.failed || !recipe || runtime.kits[index] || runtime.processingIndex !== null || !fragmentTenHasResources(recipe.cost)) {
+    return;
+  }
+
+  Object.entries(recipe.cost).forEach(([resource, amount]) => {
+    runtime.resources[resource] -= amount;
+  });
+  runtime.processingIndex = index;
+  runtime.processingStartedAt = performance.now();
+  appendFragmentTenLog(`${recipe.label}进入加工队列。`);
+  renderFragmentTenRuntime();
+  const timer = window.setTimeout(() => {
+    if (!fragmentTenRuntime?.started || fragmentTenRuntime.failed) return;
+    fragmentTenRuntime.processingIndex = null;
+    fragmentTenRuntime.processingStartedAt = 0;
+    fragmentTenRuntime.kits[index] = true;
+    appendFragmentTenLog(`${recipe.label}加工完成。`);
+    renderFragmentTenRuntime();
+  }, recipe.duration);
+  fragmentTenTaskTimers.push(timer);
+}
+
+function repairFragmentTenSegment(event) {
+  const index = Number(event.currentTarget.dataset.fragmentTenRepair);
+  const runtime = fragmentTenRuntime;
+  const repair = fragmentTenRepairs[index];
+  const crewIndex = getFragmentTenIdleCrewIndex();
+  if (!runtime?.started || runtime.failed || !repair || !runtime.kits[index] || runtime.repairState[index] !== "idle" || crewIndex < 0) {
+    return;
+  }
+
+  runtime.repairState[index] = "moving";
+  runtime.repairStartedAt[index] = performance.now();
+  setFragmentTenCrewTask(crewIndex, `${repair.label}抢修`);
+  appendFragmentTenLog(`${crewIndex === 0 ? "A" : "B"} 组已派往${repair.label}。`);
+  renderFragmentTenRuntime();
+  const timer = window.setTimeout(() => {
+    if (!fragmentTenRuntime?.started || fragmentTenRuntime.failed) return;
+    fragmentTenRuntime.repairState[index] = "complete";
+    fragmentTenRuntime.repairStartedAt[index] = 0;
+    fragmentTenRuntime.repaired[index] = true;
+    releaseFragmentTenCrew(crewIndex);
+    appendFragmentTenLog(`${repair.label} 轨道修复完成。`);
+    renderFragmentTenRuntime();
+  }, repair.duration);
+  fragmentTenTaskTimers.push(timer);
+}
+
+function createFragmentTenBreachRuntime() {
+  return {
+    status: "playing",
+    startedAt: performance.now(),
+    buffer: [],
+    coordinates: [],
+    sequenceStates: fragmentTenBreachSequences.map(() => ({ solved: false, progress: 0, interrupted: false, startOffset: 0 }))
+  };
+}
+
+function getFragmentTenBreachSequenceState(buffer, sequence, previousState = {}) {
+  for (let start = 0; start <= buffer.length - sequence.length; start += 1) {
+    if (sequence.every((code, index) => buffer[start + index] === code)) {
+      return { solved: true, progress: sequence.length, interrupted: false, startOffset: start };
+    }
+  }
+
+  let progress = 0;
+  const maxProgress = Math.min(sequence.length - 1, buffer.length);
+  for (let length = maxProgress; length > 0; length -= 1) {
+    const offset = buffer.length - length;
+    if (sequence.slice(0, length).every((code, index) => buffer[offset + index] === code)) {
+      progress = length;
+      break;
+    }
+  }
+
+  return {
+    solved: false,
+    progress,
+    interrupted: previousState.progress > 0 && progress === 0,
+    startOffset: progress > 0
+      ? buffer.length - progress
+      : Math.min(buffer.length, fragmentTenBreachBufferSize - sequence.length)
+  };
+}
+
+function isFragmentTenBreachCoordinateEligible(row, column, runtime = fragmentTenBreachRuntime) {
+  if (!runtime || runtime.status !== "playing") {
+    return false;
+  }
+
+  if (runtime.coordinates.some((coordinate) => coordinate.row === row && coordinate.column === column)) {
+    return false;
+  }
+
+  if (runtime.coordinates.length === 0) {
+    return row === 0;
+  }
+
+  const lastCoordinate = runtime.coordinates[runtime.coordinates.length - 1];
+  return runtime.coordinates.length % 2 === 1
+    ? column === lastCoordinate.column
+    : row === lastCoordinate.row;
+}
+
+function buildFragmentTenBreachInterface() {
+  if (!fragmentTenBufferSlots || !fragmentTenCodeMatrix || !fragmentTenSequenceList) {
+    return;
+  }
+
+  fragmentTenBufferSlots.replaceChildren();
+  for (let index = 0; index < fragmentTenBreachBufferSize; index += 1) {
+    const slot = document.createElement("li");
+    slot.dataset.fragmentTenBufferSlot = String(index);
+    slot.setAttribute("aria-label", `缓冲位 ${index + 1}`);
+    fragmentTenBufferSlots.appendChild(slot);
+  }
+
+  fragmentTenCodeMatrix.replaceChildren();
+  fragmentTenBreachMatrix.forEach((rowCodes, row) => {
+    rowCodes.forEach((code, column) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = code;
+      button.dataset.fragmentTenBreachRow = String(row);
+      button.dataset.fragmentTenBreachColumn = String(column);
+      button.dataset.fragmentTenBreachCode = code;
+      button.setAttribute("role", "gridcell");
+      button.setAttribute("aria-label", `第 ${row + 1} 行第 ${column + 1} 列，代码 ${code}`);
+      button.addEventListener("click", selectFragmentTenBreachCode);
+      fragmentTenCodeMatrix.appendChild(button);
+    });
+  });
+
+  fragmentTenSequenceList.replaceChildren();
+  fragmentTenBreachSequences.forEach((sequence, sequenceIndex) => {
+    const row = document.createElement("article");
+    row.dataset.fragmentTenSequence = String(sequenceIndex);
+    const label = document.createElement("span");
+    label.textContent = `序列 ${String(sequenceIndex + 1).padStart(2, "0")}`;
+    const codes = document.createElement("div");
+    sequence.forEach((code) => {
+      const codeElement = document.createElement("b");
+      codeElement.textContent = code;
+      codes.appendChild(codeElement);
+    });
+    const state = document.createElement("em");
+    state.textContent = "WAIT";
+    row.append(label, codes, state);
+    fragmentTenSequenceList.appendChild(row);
+  });
+}
+
+function renderFragmentTenBreachRuntime() {
+  const runtime = fragmentTenBreachRuntime;
+  if (!runtime) {
+    return;
+  }
+
+  fragmentTenBufferSlots?.querySelectorAll("li").forEach((slot, index) => {
+    const code = runtime.buffer[index] || "";
+    slot.textContent = code;
+    slot.classList.toggle("is-filled", Boolean(code));
+    slot.classList.toggle("is-next", runtime.status === "playing" && index === runtime.buffer.length);
+  });
+
+  fragmentTenCodeMatrix?.querySelectorAll("button").forEach((button) => {
+    const row = Number(button.dataset.fragmentTenBreachRow);
+    const column = Number(button.dataset.fragmentTenBreachColumn);
+    const selectedIndex = runtime.coordinates.findIndex((coordinate) => coordinate.row === row && coordinate.column === column);
+    const eligible = isFragmentTenBreachCoordinateEligible(row, column, runtime);
+    button.disabled = !eligible;
+    button.classList.toggle("is-eligible", eligible);
+    button.classList.toggle("is-selected", selectedIndex >= 0);
+    button.dataset.selectionOrder = selectedIndex >= 0 ? String(selectedIndex + 1) : "";
+  });
+
+  fragmentTenSequenceList?.querySelectorAll("[data-fragment-ten-sequence]").forEach((row, index) => {
+    const state = runtime.sequenceStates[index];
+    const codeElements = row.querySelectorAll("b");
+    const codeTrack = row.querySelector("div");
+    if (codeTrack) {
+      codeTrack.style.setProperty("--fragment-ten-sequence-cursor", String(Math.min(runtime.buffer.length, fragmentTenBreachBufferSize - 1)));
+    }
+    codeElements.forEach((codeElement, codeIndex) => {
+      codeElement.classList.toggle("is-matched", state.solved || codeIndex < state.progress);
+      codeElement.style.gridColumn = String(state.startOffset + codeIndex + 1);
+    });
+    row.classList.toggle("is-active", !state.solved && state.progress > 0);
+    row.classList.toggle("is-complete", state.solved);
+    row.classList.toggle("is-interrupted", state.interrupted);
+    const status = row.querySelector("em");
+    if (status) {
+      status.textContent = state.solved ? "UPLOADED" : state.progress > 0 ? `${state.progress}/${fragmentTenBreachSequences[index].length}` : state.interrupted ? "RETRY" : "WAIT";
+    }
+  });
+
+  if (fragmentTenMoveHint) {
+    if (runtime.coordinates.length === 0) {
+      fragmentTenMoveHint.textContent = "从代码矩阵顶行选择起始代码";
+    } else if (runtime.buffer.length >= fragmentTenBreachBufferSize) {
+      fragmentTenMoveHint.textContent = "缓冲区已满";
+    } else {
+      fragmentTenMoveHint.textContent = runtime.coordinates.length % 2 === 1
+        ? "下一步：沿当前列纵向选择"
+        : "下一步：沿当前行横向选择";
+    }
+  }
+
+  const completeCount = runtime.sequenceStates.filter((state) => state.solved).length;
+  if (fragmentTenBreachStatus && runtime.status === "playing") {
+    fragmentTenBreachStatus.textContent = completeCount
+      ? `已上传 ${completeCount} / ${fragmentTenBreachSequences.length} 条序列。`
+      : "等待接入代码矩阵。";
+  }
+}
+
+function failFragmentTenBreach(reason = "timeout") {
+  const runtime = fragmentTenBreachRuntime;
+  if (!runtime || runtime.status !== "playing") {
+    return;
+  }
+
+  runtime.status = "failed";
+  clearFragmentTenBreachTimers();
+  renderFragmentTenBreachRuntime();
+  if (fragmentTenBreachFailureTitle) {
+    fragmentTenBreachFailureTitle.textContent = reason === "buffer" ? "缓冲区校验失败" : "入侵时间耗尽";
+  }
+  if (fragmentTenBreachFailureText) {
+    fragmentTenBreachFailureText.textContent = reason === "buffer"
+      ? "缓冲区已满，但仍有序列未完成上传。"
+      : "120 秒验证窗口已关闭，代码矩阵已断开。";
+  }
+  if (fragmentTenBreachFailure) fragmentTenBreachFailure.hidden = false;
+}
+
+function showFragmentTenCompletedResult() {
+  if (fragmentTenPlanUnlock) {
+    fragmentTenPlanUnlock.hidden = true;
+    fragmentTenPlanUnlock.classList.remove("is-running");
+  }
+  if (fragmentTenResult) fragmentTenResult.hidden = false;
+}
+
+function runFragmentTenPlanUnlockSequence() {
+  renderPlcDatabaseEntryList();
+  updatePlcDatabaseProgress();
+  if (!fragmentTenPlanUnlock) {
+    showFragmentTenCompletedResult();
+    return;
+  }
+
+  if (fragmentTenResult) fragmentTenResult.hidden = true;
+  fragmentTenPlanUnlock.hidden = false;
+  fragmentTenPlanUnlock.classList.remove("is-running");
+  void fragmentTenPlanUnlock.offsetWidth;
+  fragmentTenPlanUnlock.classList.add("is-running");
+
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  const timer = window.setTimeout(showFragmentTenCompletedResult, reduceMotion ? 500 : 5600);
+  fragmentTenBreachTimers.push(timer);
+}
+
+function completeFragmentTenBreach() {
+  const runtime = fragmentTenBreachRuntime;
+  if (!runtime || runtime.status !== "playing") {
+    return;
+  }
+
+  runtime.status = "solved";
+  clearFragmentTenBreachTimers();
+  writeFragmentTenCompletionState({ solved: true });
+  renderFragmentTenBreachRuntime();
+  fragmentTenGame?.classList.add("is-solved");
+  decodedFragmentPlaceholder?.classList.add("is-fragment-ten-solved");
+  if (fragmentTenRunState) fragmentTenRunState.textContent = "ACCESS GRANTED";
+  if (fragmentTenBreachStatus) fragmentTenBreachStatus.textContent = "全部序列上传完成，加密验证通过。";
+  if (fragmentTenBreachPanel) fragmentTenBreachPanel.hidden = true;
+  if (fragmentTenBreach) fragmentTenBreach.hidden = true;
+  runFragmentTenPlanUnlockSequence();
+}
+
+function updateFragmentTenBreachTimer(timestamp) {
+  const runtime = fragmentTenBreachRuntime;
+  if (!runtime || runtime.status !== "playing") {
+    return;
+  }
+
+  const remainingMs = Math.max(0, fragmentTenBreachDurationMs - (timestamp - runtime.startedAt));
+  if (fragmentTenBreachTimer) {
+    fragmentTenBreachTimer.textContent = (remainingMs / 1000).toFixed(1);
+    fragmentTenBreachTimer.classList.toggle("is-critical", remainingMs <= 20000);
+  }
+  if (remainingMs <= 0) {
+    failFragmentTenBreach("timeout");
+    return;
+  }
+  fragmentTenBreachAnimationFrame = window.requestAnimationFrame(updateFragmentTenBreachTimer);
+}
+
+function selectFragmentTenBreachCode(event) {
+  const runtime = fragmentTenBreachRuntime;
+  const button = event.currentTarget;
+  const row = Number(button.dataset.fragmentTenBreachRow);
+  const column = Number(button.dataset.fragmentTenBreachColumn);
+  if (!runtime || !isFragmentTenBreachCoordinateEligible(row, column, runtime) || runtime.buffer.length >= fragmentTenBreachBufferSize) {
+    return;
+  }
+
+  runtime.buffer.push(button.dataset.fragmentTenBreachCode);
+  runtime.coordinates.push({ row, column });
+  runtime.sequenceStates = fragmentTenBreachSequences.map((sequence, index) => {
+    const previousState = runtime.sequenceStates[index];
+    return previousState.solved
+      ? previousState
+      : getFragmentTenBreachSequenceState(runtime.buffer, sequence, previousState);
+  });
+  renderFragmentTenBreachRuntime();
+  if (fragmentTenSequenceList) {
+    fragmentTenSequenceList.classList.remove("is-shifting");
+    void fragmentTenSequenceList.offsetWidth;
+    fragmentTenSequenceList.classList.add("is-shifting");
+  }
+
+  if (runtime.sequenceStates.every((state) => state.solved)) {
+    completeFragmentTenBreach();
+    return;
+  }
+  if (runtime.buffer.length >= fragmentTenBreachBufferSize) {
+    failFragmentTenBreach("buffer");
+  }
+}
+
+function resetFragmentTenBreachBuffer(event) {
+  event?.preventDefault();
+  const runtime = fragmentTenBreachRuntime;
+  if (!runtime || runtime.status !== "playing") {
+    return;
+  }
+
+  runtime.buffer = [];
+  runtime.coordinates = [];
+  runtime.sequenceStates = fragmentTenBreachSequences.map(() => ({ solved: false, progress: 0, interrupted: false, startOffset: 0 }));
+  if (fragmentTenBreachStatus) fragmentTenBreachStatus.textContent = "缓冲区已清空，计时继续。";
+  renderFragmentTenBreachRuntime();
+}
+
+function startFragmentTenBreachPuzzle(event) {
+  event?.preventDefault();
+  clearFragmentTenBreachTimers();
+  buildFragmentTenBreachInterface();
+  fragmentTenBreachRuntime = createFragmentTenBreachRuntime();
+  if (fragmentTenBreach) fragmentTenBreach.hidden = false;
+  if (fragmentTenBreachIntro) {
+    fragmentTenBreachIntro.hidden = true;
+    fragmentTenBreachIntro.classList.remove("is-running");
+  }
+  if (fragmentTenBreachPanel) fragmentTenBreachPanel.hidden = false;
+  if (fragmentTenBreachFailure) fragmentTenBreachFailure.hidden = true;
+  if (fragmentTenPlanUnlock) fragmentTenPlanUnlock.hidden = true;
+  if (fragmentTenResult) fragmentTenResult.hidden = true;
+  if (fragmentTenBreachTimer) {
+    fragmentTenBreachTimer.textContent = "120.0";
+    fragmentTenBreachTimer.classList.remove("is-critical");
+  }
+  renderFragmentTenBreachRuntime();
+  fragmentTenBreachAnimationFrame = window.requestAnimationFrame(updateFragmentTenBreachTimer);
+}
+
+function startFragmentTenBreachTransition({ skipIntro = false } = {}) {
+  clearFragmentTenTaskTimers();
+  clearFragmentTenBreachTimers();
+  fragmentTenGame?.classList.add("is-transport-complete");
+  if (fragmentTenIntro) fragmentTenIntro.hidden = true;
+  if (fragmentTenBoard) fragmentTenBoard.hidden = true;
+  if (fragmentTenFailure) fragmentTenFailure.hidden = true;
+  if (fragmentTenPlanUnlock) fragmentTenPlanUnlock.hidden = true;
+  if (fragmentTenResult) fragmentTenResult.hidden = true;
+  if (fragmentTenBreach) fragmentTenBreach.hidden = false;
+  if (fragmentTenBreachPanel) fragmentTenBreachPanel.hidden = true;
+  if (fragmentTenBreachFailure) fragmentTenBreachFailure.hidden = true;
+
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  if (skipIntro || reduceMotion) {
+    startFragmentTenBreachPuzzle();
+    return;
+  }
+
+  if (fragmentTenBreachIntro) {
+    fragmentTenBreachIntro.hidden = false;
+    fragmentTenBreachIntro.classList.remove("is-running");
+    void fragmentTenBreachIntro.offsetWidth;
+    fragmentTenBreachIntro.classList.add("is-running");
+  }
+  const timer = window.setTimeout(() => startFragmentTenBreachPuzzle(), 5600);
+  fragmentTenBreachTimers.push(timer);
+}
+
+function showFragmentTenGame() {
+  window.clearInterval(decodedFragmentCountdownTimer);
+  decodedFragmentCountdownTimer = null;
+  decodedFragmentCountdownDeadline = 0;
+  setDecodedFragmentCountdownVisibility(false);
+  decodedFragmentPlaceholder?.classList.remove("is-fragment-nine", "is-fragment-nine-solved");
+  decodedFragmentPlaceholder?.classList.add("is-fragment-ten");
+  if (fragmentNineGame) fragmentNineGame.hidden = true;
+  if (fragmentTenGame) fragmentTenGame.hidden = false;
+
+  const completionState = readFragmentTenCompletionState();
+  if (completionState.solved) {
+    clearFragmentTenTaskTimers();
+    clearFragmentTenBreachTimers();
+    fragmentTenRuntime = createFragmentTenRuntime();
+    fragmentTenRuntime.started = true;
+    fragmentTenRuntime.solved = true;
+    fragmentTenRuntime.progress = 1;
+    fragmentTenGame?.classList.add("is-solved");
+    decodedFragmentPlaceholder?.classList.add("is-fragment-ten-solved");
+    if (fragmentTenIntro) fragmentTenIntro.hidden = true;
+    if (fragmentTenBoard) fragmentTenBoard.hidden = true;
+    if (fragmentTenFailure) fragmentTenFailure.hidden = true;
+    if (fragmentTenBreach) fragmentTenBreach.hidden = true;
+    if (fragmentTenPlanUnlock) fragmentTenPlanUnlock.hidden = true;
+    if (fragmentTenResult) fragmentTenResult.hidden = false;
+    if (fragmentTenRunState) fragmentTenRunState.textContent = "ACCESS GRANTED";
+    if (fragmentTenProgressFill) fragmentTenProgressFill.style.width = "100%";
+    if (fragmentTenProgressText) fragmentTenProgressText.textContent = "矿车已安全抵达高地终站";
+    return;
+  }
+
+  if (completionState.transportComplete) {
+    fragmentTenRuntime = createFragmentTenRuntime();
+    fragmentTenRuntime.started = true;
+    fragmentTenRuntime.solved = true;
+    fragmentTenRuntime.progress = 1;
+    if (fragmentTenRunState) fragmentTenRunState.textContent = "ROUTE COMPLETE";
+    if (fragmentTenProgressFill) fragmentTenProgressFill.style.width = "100%";
+    if (fragmentTenProgressText) fragmentTenProgressText.textContent = "矿车已安全抵达高地终站";
+    startFragmentTenBreachTransition();
+    return;
+  }
+
+  resetFragmentTenGame();
+}
+
+function updateFragmentTenLoaderProgress(completed, total, statusText = "") {
+  const percentage = total > 0 ? Math.round((completed / total) * 100) : 100;
+  if (fragmentTenLoaderFill) {
+    fragmentTenLoaderFill.style.width = percentage + "%";
+  }
+  if (fragmentTenLoaderProgress) {
+    fragmentTenLoaderProgress.textContent = percentage + "%";
+  }
+  if (fragmentTenLoaderStatus && statusText) {
+    fragmentTenLoaderStatus.textContent = statusText;
+  }
+}
+
+function loadFragmentTenMapAsset() {
+  const source = fragmentTenMapArt?.dataset.fragmentTenSrc;
+  if (!source) {
+    return Promise.reject(new Error("Missing Fragment 10 map source"));
+  }
+
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.decoding = "async";
+    image.onload = async () => {
+      try {
+        if (typeof image.decode === "function") {
+          await image.decode();
+        }
+      } catch (error) {
+        if (!image.naturalWidth) {
+          reject(error);
+          return;
+        }
+      }
+      resolve(source);
+    };
+    image.onerror = () => reject(new Error("Failed to load Fragment 10 map"));
+    image.src = source;
+  });
+}
+
+async function loadFragmentTenFontAsset() {
+  if (!document.fonts?.load) {
+    return;
+  }
+
+  await document.fonts.load('24px "PLCFont"');
+  if (!document.fonts.check('24px "PLCFont"')) {
+    throw new Error("Failed to load Fragment 10 font");
+  }
+}
+
+async function prepareFragmentTenGame() {
+  const runId = ++fragmentTenAssetLoadRunId;
+  const loadingStartedAt = performance.now();
+  const tasks = [
+    { label: "等高线地图", load: loadFragmentTenMapAsset },
+    { label: "界面字体", load: loadFragmentTenFontAsset }
+  ];
+
+  window.clearInterval(decodedFragmentCountdownTimer);
+  decodedFragmentCountdownTimer = null;
+  decodedFragmentCountdownDeadline = 0;
+  setDecodedFragmentCountdownVisibility(false);
+  decodedFragmentPlaceholder?.classList.remove("is-fragment-nine", "is-fragment-nine-solved");
+  decodedFragmentPlaceholder?.classList.add("is-fragment-ten");
+  if (fragmentNineGame) fragmentNineGame.hidden = true;
+  if (fragmentTenGame) fragmentTenGame.hidden = true;
+  if (fragmentTenLoader) fragmentTenLoader.hidden = false;
+  if (fragmentTenLoaderRetry) fragmentTenLoaderRetry.hidden = true;
+  updateFragmentTenLoaderProgress(0, tasks.length, "正在核对矿车资源 0 / " + tasks.length);
+
+  if (fragmentTenAssetsReady) {
+    updateFragmentTenLoaderProgress(tasks.length, tasks.length, "资源校验完成，正在进入运输协议……");
+    window.setTimeout(() => {
+      if (runId !== fragmentTenAssetLoadRunId || decodedFragmentActiveNumber !== "10") {
+        return;
+      }
+      if (fragmentTenLoader) fragmentTenLoader.hidden = true;
+      showFragmentTenGame();
+    }, 650);
+    return;
+  }
+
+  let completed = 0;
+  try {
+    for (const task of tasks) {
+      await task.load();
+      if (runId !== fragmentTenAssetLoadRunId || decodedFragmentActiveNumber !== "10") {
+        return;
+      }
+      completed += 1;
+      updateFragmentTenLoaderProgress(
+        completed,
+        tasks.length,
+        `${task.label}已就绪 · ${completed} / ${tasks.length}`
+      );
+    }
+  } catch (error) {
+    if (runId !== fragmentTenAssetLoadRunId) {
+      return;
+    }
+    if (fragmentTenLoaderStatus) {
+      fragmentTenLoaderStatus.textContent = "资源加载失败，运输协议尚未启动。";
+    }
+    if (fragmentTenLoaderRetry) {
+      fragmentTenLoaderRetry.hidden = false;
+    }
+    return;
+  }
+
+  fragmentTenAssetsReady = true;
+  const mapSource = fragmentTenMapArt?.dataset.fragmentTenSrc || "";
+  if (fragmentTenMapArt && mapSource) {
+    fragmentTenMapArt.src = mapSource;
+  }
+  if (fragmentTenGame && mapSource) {
+    fragmentTenGame.style.setProperty("--fragment-ten-map-image", `url("${mapSource}")`);
+  }
+  if (fragmentTenLoaderStatus) {
+    fragmentTenLoaderStatus.textContent = "资源加载完成，正在进入运输协议……";
+  }
+
+  const remainingDisplayTime = Math.max(360, 720 - (performance.now() - loadingStartedAt));
+  window.setTimeout(() => {
+    if (runId !== fragmentTenAssetLoadRunId || decodedFragmentActiveNumber !== "10") {
+      return;
+    }
+    if (fragmentTenLoader) fragmentTenLoader.hidden = true;
+    showFragmentTenGame();
+  }, remainingDisplayTime);
+}
+
 function getDecodedFragmentReleaseTime(fragmentNumber) {
   if (readDecodedFragmentNineTimeShiftState() && decodedFragmentAdjustedReleaseTimes[fragmentNumber]) {
     return decodedFragmentAdjustedReleaseTimes[fragmentNumber];
@@ -7374,10 +9528,22 @@ function startDecodedFragmentCountdown(fragmentNumber) {
   }
 
   setDecodedFragmentCountdownVisibility(true);
+  updateDecodedFragmentPrerequisite(fragmentNumber);
   if (fragmentNineGame) {
     fragmentNineGame.hidden = true;
   }
-  decodedFragmentPlaceholder?.classList.remove("is-fragment-nine", "is-fragment-nine-solved");
+  if (fragmentTenGame) {
+    fragmentTenGame.hidden = true;
+  }
+  clearFragmentTenTaskTimers();
+  clearFragmentTenBreachTimers();
+  fragmentTenBreachRuntime = null;
+  decodedFragmentPlaceholder?.classList.remove(
+    "is-fragment-nine",
+    "is-fragment-nine-solved",
+    "is-fragment-ten",
+    "is-fragment-ten-solved"
+  );
   decodedFragmentCountdownDeadline = new Date(releaseTime).getTime();
   decodedFragmentCountdown?.classList.remove("is-complete");
   updateDecodedFragmentTimeShiftControl(fragmentNumber);
@@ -7469,6 +9635,8 @@ function openDecodedFragmentPlaceholder(event) {
   }
   if (fragmentNumber === "09" && isFragmentNineReleased()) {
     showFragmentNinePuzzle();
+  } else if (fragmentNumber === "10" && isFragmentTenReleased()) {
+    prepareFragmentTenGame();
   } else {
     startDecodedFragmentCountdown(fragmentNumber);
   }
@@ -7484,11 +9652,18 @@ function closeDecodedFragmentPlaceholder() {
 
   decodedFragmentPlaceholder.classList.remove("is-open");
   decodedFragmentPlaceholder.classList.remove("is-time-shifting");
-  decodedFragmentPlaceholder.classList.remove("is-fragment-nine", "is-fragment-nine-solved");
+  decodedFragmentPlaceholder.classList.remove(
+    "is-fragment-nine",
+    "is-fragment-nine-solved",
+    "is-fragment-ten",
+    "is-fragment-ten-solved"
+  );
   decodedFragmentPlaceholder.setAttribute("aria-hidden", "true");
   window.clearInterval(decodedFragmentCountdownTimer);
   decodedFragmentCountdownTimer = null;
   decodedFragmentCountdownDeadline = 0;
+  fragmentTenAssetLoadRunId += 1;
+  if (fragmentTenLoader) fragmentTenLoader.hidden = true;
   if (decodedFragmentTimeShiftAnimation !== null) {
     window.cancelAnimationFrame(decodedFragmentTimeShiftAnimation);
     decodedFragmentTimeShiftAnimation = null;
@@ -7496,6 +9671,12 @@ function closeDecodedFragmentPlaceholder() {
   window.clearTimeout(fragmentNineRenderTimer);
   fragmentNineRenderTimer = null;
   fragmentNineGameBoard?.classList.remove("is-answer-rejected");
+  if (fragmentNineGame) fragmentNineGame.hidden = true;
+  if (fragmentTenGame) fragmentTenGame.hidden = true;
+  clearFragmentTenTaskTimers();
+  clearFragmentTenBreachTimers();
+  fragmentTenRuntime = null;
+  fragmentTenBreachRuntime = null;
   decodedFragmentActiveNumber = "";
   document.body.classList.remove("modal-open");
   decodedFragmentPlaceholderLastFocusedElement?.focus?.({ preventScroll: true });
@@ -8252,17 +10433,34 @@ function selectPlcDatabaseEntry(index = 0) {
     return;
   }
 
-  renderPlcDatabaseEntryContent(entry.body);
+  if (activeCategory.key === "first" && isPlcPlanZeroEntry(entry)) {
+    renderPlcPlanZeroEntry();
+  } else if (activeCategory.key === "first" && isPlcPlanElevenEntry(entry) && !readPlcPlanTenDecodedState()) {
+    renderPlcPlanElevenLockedEntry();
+  } else if (activeCategory.key === "first" && isPlcPlanElevenEntry(entry)) {
+    renderPlcPlanElevenEntry();
+  } else if (activeCategory.key === "first" && isPlcPlanTwelveEntry(entry)) {
+    renderPlcPlanTwelveEntry();
+  } else {
+    renderPlcDatabaseEntryContent(entry.body);
+  }
   if (activeCategory.key === "first" && entry.title === "PLC计划 #8") {
     appendPlcPlanEightAuditEntry();
   }
   if (activeCategory.key === "first" && entry.title === "PLC计划 #9") {
     appendPlcPlanNineHomeButton();
   }
+  if (activeCategory.key === "first" && isPlcPlanTenEntry(entry)) {
+    appendPlcPlanTenMetadataEntry();
+  }
   if (activeCategory.key === "secret" && isPlcSecretFragmentFourEntry(entry)) {
     appendPlcDatabaseStartButton();
   }
-  markPlcDatabaseEntrySeen(index);
+  if (!(activeCategory.key === "first" && isPlcPlanElevenEntry(entry) && !readPlcPlanTenDecodedState())) {
+    markPlcDatabaseEntrySeen(index);
+  } else {
+    updatePlcDatabaseProgress();
+  }
   if (activeCategory.key === "secret" && isPlcSecretFragmentThreeEntry(entry)) {
     preparePlcSecretSignalGate();
   }
@@ -8933,6 +11131,38 @@ if (fragmentNineAnswerForm) {
   fragmentNineAnswerForm.addEventListener("submit", handleFragmentNineAnswerSubmit);
 }
 
+if (fragmentTenStartButton) {
+  fragmentTenStartButton.addEventListener("click", startFragmentTenGame);
+}
+
+if (fragmentTenLoaderRetry) {
+  fragmentTenLoaderRetry.addEventListener("click", prepareFragmentTenGame);
+}
+
+if (fragmentTenRetryButton) {
+  fragmentTenRetryButton.addEventListener("click", startFragmentTenGame);
+}
+
+if (fragmentTenBreachResetButton) {
+  fragmentTenBreachResetButton.addEventListener("click", resetFragmentTenBreachBuffer);
+}
+
+if (fragmentTenBreachRetryButton) {
+  fragmentTenBreachRetryButton.addEventListener("click", startFragmentTenBreachPuzzle);
+}
+
+fragmentTenCollectButtons.forEach((button) => {
+  button.addEventListener("click", collectFragmentTenResource);
+});
+
+fragmentTenProcessButtons.forEach((button) => {
+  button.addEventListener("click", processFragmentTenKit);
+});
+
+fragmentTenRepairButtons.forEach((button) => {
+  button.addEventListener("click", repairFragmentTenSegment);
+});
+
 if (fragmentSevenAnswerForm) {
   fragmentSevenAnswerForm.addEventListener("submit", handleFragmentSevenAnswerSubmit);
 }
@@ -8994,6 +11224,38 @@ if (plcDatabaseBack) {
 plcDatabaseCloseTargets.forEach((target) => {
   target.addEventListener("click", closePlcDatabase);
 });
+
+window.addEventListener("wheel", handlePlcPlanTwelveWheel, { passive: true });
+window.addEventListener("touchstart", handlePlcPlanTwelveTouchStart, { passive: true });
+window.addEventListener("touchmove", handlePlcPlanTwelveTouchMove, { passive: true });
+window.addEventListener("touchend", handlePlcPlanTwelveTouchEnd, { passive: true });
+window.addEventListener("touchcancel", handlePlcPlanTwelveTouchEnd, { passive: true });
+window.addEventListener("scroll", () => {
+  if (!isPlcPlanTwelveBottomReached()) {
+    resetPlcPlanTwelveOverscroll();
+  }
+  schedulePlcPlanHorizonFocusCheck();
+}, { passive: true });
+window.addEventListener("resize", schedulePlcPlanHorizonFocusCheck, { passive: true });
+plcDatabase?.addEventListener("scroll", schedulePlcPlanHorizonFocusCheck, {
+  passive: true,
+  capture: true
+});
+window.visualViewport?.addEventListener("resize", schedulePlcPlanHorizonFocusCheck, { passive: true });
+window.visualViewport?.addEventListener("scroll", schedulePlcPlanHorizonFocusCheck, { passive: true });
+window.addEventListener("storage", handlePlcPlanStageStorageSync);
+
+if (plcPlanHopeSearch) {
+  plcPlanHopeSearch.addEventListener("pointerdown", (event) => {
+    if (event.target === plcPlanHopeClose) return;
+    plcPlanHopeLens?.focus({ preventScroll: true });
+    handlePlcPlanHopePointer(event);
+  });
+  plcPlanHopeSearch.addEventListener("pointermove", handlePlcPlanHopePointer, { passive: true });
+}
+
+plcPlanHopeLens?.addEventListener("keydown", handlePlcPlanHopeKeydown);
+plcPlanHopeClose?.addEventListener("click", closePlcPlanHopeSearch);
 
 if (qualifierRankingForm) {
   qualifierRankingForm.addEventListener("submit", handleQualifierRankingSubmit);
@@ -9248,6 +11510,11 @@ fragmentFiveRiftCloseTargets.forEach((target) => {
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
+    if (plcPlanHopeSearchActive) {
+      closePlcPlanHopeSearch();
+      return;
+    }
+
     if (decodedFragmentPlaceholder?.classList.contains("is-open")) {
       closeDecodedFragmentPlaceholder();
       return;
@@ -9358,6 +11625,7 @@ applyPlcDatabaseReplayState(readPlcDatabaseReplayState(), {
   restoreFirstLayer: false
 });
 applyDecodedFragmentHubState();
+updateDecodedFragmentPrerequisite();
 if (!lockPlcSecretSignalGateSelection({ fromCache: true })) {
   preparePlcSecretSignalGate();
 }
