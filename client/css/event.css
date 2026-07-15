@@ -7346,6 +7346,10 @@ body.fragment-audit-open > .plc-database{
   font-family:"Phi", "PLCFont", "Microsoft YaHei", sans-serif;
   transition:opacity .55s ease, visibility .55s ease;
   touch-action:none;
+  overscroll-behavior:none;
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
 }
 
 .plc-plan-hope-search.is-open{

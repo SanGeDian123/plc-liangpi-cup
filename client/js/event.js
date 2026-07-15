@@ -397,6 +397,8 @@ let plcPlanHopeLensY = 0.68;
 let plcPlanHopeLockTimer = null;
 let plcPlanHopeGuideTimers = [];
 let plcPlanHopeLastFocusedElement = null;
+let plcPlanHopeActivePointerId = null;
+let plcPlanHopeActiveTouchId = null;
 let rankingPreviewMode = "normal";
 let tips = Array.isArray(window.PLC_TIPS) && window.PLC_TIPS.length > 0
   ? window.PLC_TIPS
@@ -7653,6 +7655,14 @@ function closePlcPlanHopeSearch({ restoreFocus = true } = {}) {
   }
 
   plcPlanHopeSearchActive = false;
+  if (
+    plcPlanHopeActivePointerId !== null &&
+    plcPlanHopeSearch.hasPointerCapture?.(plcPlanHopeActivePointerId)
+  ) {
+    plcPlanHopeSearch.releasePointerCapture(plcPlanHopeActivePointerId);
+  }
+  plcPlanHopeActivePointerId = null;
+  plcPlanHopeActiveTouchId = null;
   clearPlcPlanHopeLock();
   clearPlcPlanHopeGuideTimers();
   plcPlanHopeSearch.classList.remove(
@@ -7678,16 +7688,103 @@ function closePlcPlanHopeSearch({ restoreFocus = true } = {}) {
   plcPlanHopeLastFocusedElement = null;
 }
 
-function handlePlcPlanHopePointer(event) {
+function updatePlcPlanHopeLensFromClientPoint(clientX, clientY) {
   if (!plcPlanHopeSearchActive || !plcPlanHopeSearch) {
     return;
   }
 
   const rect = plcPlanHopeSearch.getBoundingClientRect();
   updatePlcPlanHopeLens(
-    (event.clientX - rect.left) / Math.max(1, rect.width),
-    (event.clientY - rect.top) / Math.max(1, rect.height)
+    (clientX - rect.left) / Math.max(1, rect.width),
+    (clientY - rect.top) / Math.max(1, rect.height)
   );
+}
+
+function startPlcPlanHopePointerDrag(event) {
+  if (
+    !plcPlanHopeSearchActive ||
+    event.target?.closest?.("#plcPlanHopeClose") ||
+    (event.pointerType === "mouse" && event.button !== 0)
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+  plcPlanHopeActivePointerId = event.pointerId;
+  plcPlanHopeSearch?.setPointerCapture?.(event.pointerId);
+  plcPlanHopeLens?.focus({ preventScroll: true });
+  updatePlcPlanHopeLensFromClientPoint(event.clientX, event.clientY);
+}
+
+function movePlcPlanHopePointerDrag(event) {
+  if (
+    !plcPlanHopeSearchActive ||
+    plcPlanHopeActivePointerId === null ||
+    event.pointerId !== plcPlanHopeActivePointerId
+  ) {
+    return;
+  }
+
+  event.preventDefault();
+  updatePlcPlanHopeLensFromClientPoint(event.clientX, event.clientY);
+}
+
+function endPlcPlanHopePointerDrag(event) {
+  if (event.pointerId !== plcPlanHopeActivePointerId) {
+    return;
+  }
+
+  if (plcPlanHopeSearch?.hasPointerCapture?.(event.pointerId)) {
+    plcPlanHopeSearch.releasePointerCapture(event.pointerId);
+  }
+  plcPlanHopeActivePointerId = null;
+}
+
+function getPlcPlanHopeTouch(touchList) {
+  return Array.from(touchList || []).find((touch) => touch.identifier === plcPlanHopeActiveTouchId);
+}
+
+function startPlcPlanHopeTouchDrag(event) {
+  if (
+    !plcPlanHopeSearchActive ||
+    event.target?.closest?.("#plcPlanHopeClose") ||
+    plcPlanHopeActiveTouchId !== null
+  ) {
+    return;
+  }
+
+  const touch = event.changedTouches?.[0];
+  if (!touch) {
+    return;
+  }
+
+  event.preventDefault();
+  plcPlanHopeActiveTouchId = touch.identifier;
+  plcPlanHopeLens?.focus({ preventScroll: true });
+  updatePlcPlanHopeLensFromClientPoint(touch.clientX, touch.clientY);
+}
+
+function movePlcPlanHopeTouchDrag(event) {
+  if (!plcPlanHopeSearchActive || plcPlanHopeActiveTouchId === null) {
+    return;
+  }
+
+  const touch = getPlcPlanHopeTouch(event.touches);
+  if (!touch) {
+    return;
+  }
+
+  event.preventDefault();
+  updatePlcPlanHopeLensFromClientPoint(touch.clientX, touch.clientY);
+}
+
+function endPlcPlanHopeTouchDrag(event) {
+  if (
+    plcPlanHopeActiveTouchId !== null &&
+    getPlcPlanHopeTouch(event.changedTouches)
+  ) {
+    plcPlanHopeActiveTouchId = null;
+  }
 }
 
 function handlePlcPlanHopeKeydown(event) {
@@ -11226,12 +11323,15 @@ window.visualViewport?.addEventListener("scroll", schedulePlcPlanHorizonFocusChe
 window.addEventListener("storage", handlePlcPlanStageStorageSync);
 
 if (plcPlanHopeSearch) {
-  plcPlanHopeSearch.addEventListener("pointerdown", (event) => {
-    if (event.target === plcPlanHopeClose) return;
-    plcPlanHopeLens?.focus({ preventScroll: true });
-    handlePlcPlanHopePointer(event);
-  });
-  plcPlanHopeSearch.addEventListener("pointermove", handlePlcPlanHopePointer, { passive: true });
+  plcPlanHopeSearch.addEventListener("pointerdown", startPlcPlanHopePointerDrag);
+  plcPlanHopeSearch.addEventListener("pointermove", movePlcPlanHopePointerDrag);
+  plcPlanHopeSearch.addEventListener("pointerup", endPlcPlanHopePointerDrag);
+  plcPlanHopeSearch.addEventListener("pointercancel", endPlcPlanHopePointerDrag);
+  plcPlanHopeSearch.addEventListener("lostpointercapture", endPlcPlanHopePointerDrag);
+  plcPlanHopeSearch.addEventListener("touchstart", startPlcPlanHopeTouchDrag, { passive: false });
+  plcPlanHopeSearch.addEventListener("touchmove", movePlcPlanHopeTouchDrag, { passive: false });
+  plcPlanHopeSearch.addEventListener("touchend", endPlcPlanHopeTouchDrag, { passive: true });
+  plcPlanHopeSearch.addEventListener("touchcancel", endPlcPlanHopeTouchDrag, { passive: true });
 }
 
 plcPlanHopeLens?.addEventListener("keydown", handlePlcPlanHopeKeydown);
