@@ -504,7 +504,7 @@ const fragmentAuditQuestions = [
 ];
 const decodedFragmentReleaseTimes = Object.freeze({
   "09": "2026-07-15T20:00:00+08:00",
-  "10": "2026-07-16T20:00:00+08:00",
+  "10": "2026-07-15T20:00:00+08:00",
   "11": "2026-07-17T20:00:00+08:00"
 });
 const decodedFragmentAdjustedReleaseTimes = Object.freeze({
