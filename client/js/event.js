@@ -493,11 +493,11 @@ const fragmentSevenDialogueTexts = [
   "前方是毁灭亦是重生。"
 ];
 const fragmentAuditQuestions = [
-  { source: "./assets/image/scan-a7c2.webp", answer: "normal" },
+  { source: "./assets/image/scan-a7c2.webp", answer: "abnormal" },
   { source: "./assets/image/scan-f14b.webp", answer: "abnormal" },
   { source: "./assets/image/scan-c83e.webp", answer: "abnormal" },
   { source: "./assets/image/scan-91ad.webp", answer: "abnormal" },
-  { source: "./assets/image/scan-b260.webp", answer: "normal" },
+  { source: "./assets/image/scan-b260.webp", answer: "abnormal" },
   { source: "./assets/image/scan-e57c.webp", answer: "abnormal" },
   { source: "./assets/image/scan-4d39.webp", answer: "normal" },
   { source: "./assets/image/scan-d806.webp", answer: "abnormal" },
