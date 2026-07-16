@@ -41,11 +41,18 @@ const PLAYERS_SEED_SNAPSHOT_PATH = path.join(
 const PLAYERS_RUNTIME_SNAPSHOT_PATH =
   process.env.PLAYERS_SNAPSHOT_PATH ||
   path.join(os.tmpdir(), "plc-liangpi-cup-players.json");
-const PHI_BACKEND_URL = (
-  process.env.PHI_BACKEND_URL || "http://127.0.0.1:8080"
+const NEXT_PHI_BACKEND_URL = (
+  process.env.NEXT_PHI_BACKEND_URL ||
+  "https://api.plc-liangpi-cup.xyz"
 ).replace(/\/+$/, "");
-const PHI_BACKEND_TIMEOUT_MS =
-  Number(process.env.PHI_BACKEND_TIMEOUT_MS) || 15000;
+const NEXT_PHI_API_PREFIX = (
+  process.env.NEXT_PHI_API_PREFIX || "/api/v2"
+).replace(/\/+$/, "");
+const NEXT_PHI_BACKEND_TIMEOUT_MS =
+  Number(
+    process.env.NEXT_PHI_BACKEND_TIMEOUT_MS ||
+      process.env.PHI_BACKEND_TIMEOUT_MS
+  ) || 60000;
 const RUNTIME_DATA_DIR =
   process.env.RUNTIME_DATA_DIR || path.join(__dirname, "data");
 const DISPLAY_SETTINGS_PATH =
@@ -2521,37 +2528,55 @@ function sendSongPoolTableMissing(res) {
 }
 
 function normalizePhiBody(body = {}) {
-  const normalized = { ...body };
+  const token = String(
+    body.sessionToken || body.session_token || body.token || ""
+  ).trim();
+  const taptapVersion = String(
+    body.taptapVersion || body.taptap_version || ""
+  ).trim();
 
-  if (normalized.source && !normalized.data_source) {
-    normalized.data_source = normalized.source;
+  if (token) {
+    return {
+      sessionToken: token,
+      ...(taptapVersion ? { taptapVersion } : {})
+    };
   }
 
-  if (!normalized.data_source) {
-    normalized.data_source = "internal";
-  }
+  const platform = String(body.platform || "").trim();
+  const platformId = String(
+    body.platformId || body.platform_id || body.qq || ""
+  ).trim();
+  const sessiontoken = String(body.sessiontoken || "").trim();
+  const apiUserId = String(body.apiUserId || body.api_user_id || "").trim();
+  const apiToken = String(body.apiToken || body.api_token || "").trim();
+  const externalCredentials = {};
 
-  if (
-    !normalized.qq &&
-    String(normalized.platform || "").toLowerCase() === "qq" &&
-    normalized.platform_id
-  ) {
-    normalized.qq = normalized.platform_id;
-  }
-
-  delete normalized.source;
-
-  Object.keys(normalized).forEach((key) => {
-    if (normalized[key] === "") {
-      delete normalized[key];
+  if (platform && platformId) {
+    externalCredentials.platform = platform;
+    externalCredentials.platformId = platformId;
+  } else if (sessiontoken) {
+    externalCredentials.sessiontoken = sessiontoken;
+  } else if (apiUserId) {
+    externalCredentials.apiUserId = apiUserId;
+    if (apiToken) {
+      externalCredentials.apiToken = apiToken;
     }
-  });
+  }
 
-  return normalized;
+  return {
+    ...(Object.keys(externalCredentials).length > 0
+      ? { externalCredentials }
+      : {}),
+    ...(taptapVersion ? { taptapVersion } : {})
+  };
 }
 
 function buildPhiUrl(pathname, query = {}) {
-  const url = new URL(pathname, `${PHI_BACKEND_URL}/`);
+  const isRootEndpoint = pathname === "/health";
+  const prefixedPath = isRootEndpoint
+    ? pathname
+    : `${NEXT_PHI_API_PREFIX}/${String(pathname).replace(/^\/+/, "")}`;
+  const url = new URL(prefixedPath, `${NEXT_PHI_BACKEND_URL}/`);
 
   Object.entries(query).forEach(([key, value]) => {
     if (value === undefined || value === null || value === "") {
@@ -2574,7 +2599,10 @@ async function fetchPhi(pathname, options = {}) {
   }
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), PHI_BACKEND_TIMEOUT_MS);
+  const timer = setTimeout(
+    () => controller.abort(),
+    NEXT_PHI_BACKEND_TIMEOUT_MS
+  );
 
   try {
     return await fetch(buildPhiUrl(pathname, options.query), {
@@ -2593,8 +2621,8 @@ function sendPhiError(res, error) {
 
   res.status(timedOut ? 504 : 502).json({
     message: timedOut
-      ? "Phi-Backend 请求超时"
-      : "Phi-Backend 暂时不可用",
+      ? "Next-Phi-Backend 请求超时"
+      : "Next-Phi-Backend 暂时不可用",
     detail: error.message
   });
 }
@@ -2635,7 +2663,7 @@ async function proxyPhiBinary(req, res, pathname, options = {}) {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(normalizePhiBody(req.body))
+      body: JSON.stringify(options.body || normalizePhiBody(req.body))
     });
     const buffer = Buffer.from(await response.arrayBuffer());
     const contentType = response.headers.get("content-type") || "application/octet-stream";
@@ -2649,6 +2677,149 @@ async function proxyPhiBinary(req, res, pathname, options = {}) {
   }
 }
 
+function readNextPhiField(value, ...keys) {
+  for (const key of keys) {
+    if (value && Object.prototype.hasOwnProperty.call(value, key)) {
+      return value[key];
+    }
+  }
+
+  return undefined;
+}
+
+function getNextPhiSave(payload) {
+  return readNextPhiField(payload, "save", "data") || {};
+}
+
+function getNextPhiGameRecord(payload) {
+  const save = getNextPhiSave(payload);
+  return readNextPhiField(save, "gameRecord", "game_record") || {};
+}
+
+function getNextPhiRks(payload) {
+  return readNextPhiField(payload, "rks") || {};
+}
+
+function buildNextPhiRecordIndex(payload) {
+  const gameRecord = getNextPhiGameRecord(payload);
+  const index = new Map();
+
+  Object.entries(gameRecord).forEach(([songId, records]) => {
+    (Array.isArray(records) ? records : []).forEach((record) => {
+      const difficulty = String(
+        readNextPhiField(record, "difficulty") || ""
+      ).toUpperCase();
+
+      if (difficulty) {
+        index.set(`${songId}\u0000${difficulty}`, record);
+      }
+    });
+  });
+
+  return index;
+}
+
+function countNextPhiApRecords(payload) {
+  return Array.from(buildNextPhiRecordIndex(payload).values()).filter(
+    (record) =>
+      Number(readNextPhiField(record, "accuracy", "acc")) >= 100 &&
+      Number.isFinite(
+        Number(readNextPhiField(record, "chartConstant", "chart_constant"))
+      )
+  ).length;
+}
+
+function normalizeNextPhiChart(chart, recordIndex) {
+  const songId = String(readNextPhiField(chart, "songId", "song_id") || "");
+  const difficulty = String(
+    readNextPhiField(chart, "difficulty") || ""
+  ).toUpperCase();
+  const record = recordIndex.get(`${songId}\u0000${difficulty}`) || {};
+  const acc = Number(readNextPhiField(record, "accuracy", "acc"));
+  const score = Number(readNextPhiField(record, "score"));
+  const isFullCombo = Boolean(
+    readNextPhiField(record, "isFullCombo", "is_full_combo")
+  );
+
+  return {
+    song_id: songId,
+    song_name: songId,
+    difficulty,
+    score: Number.isFinite(score) ? score : null,
+    acc: Number.isFinite(acc) ? acc : null,
+    rks: Number(readNextPhiField(chart, "rks")) || 0,
+    is_fc: isFullCombo,
+    is_ap: Number.isFinite(acc) && acc >= 100
+  };
+}
+
+function adaptNextPhiSave(payload) {
+  const rks = getNextPhiRks(payload);
+  const charts = readNextPhiField(rks, "b30Charts", "b30_charts");
+  const recordIndex = buildNextPhiRecordIndex(payload);
+  const records = (Array.isArray(charts) ? charts : []).map((chart) =>
+    normalizeNextPhiChart(chart, recordIndex)
+  );
+  const apCount = Math.min(3, countNextPhiApRecords(payload), records.length);
+  const bestCount = Math.max(0, records.length - apCount);
+
+  return {
+    overall_rks:
+      Number(readNextPhiField(rks, "totalRks", "total_rks")) || 0,
+    top_27: records.slice(0, bestCount),
+    top_3_ap: records.slice(bestCount),
+    records
+  };
+}
+
+async function fetchNextPhiSave(req) {
+  const response = await fetchPhi("/save", {
+    method: "POST",
+    query: {
+      calculate_rks: "true"
+    },
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(normalizePhiBody(req.body))
+  });
+  const text = await response.text();
+  let payload = null;
+
+  try {
+    payload = text ? JSON.parse(text) : null;
+  } catch (error) {
+    payload = {
+      detail: text || error.message
+    };
+  }
+
+  return {
+    response,
+    payload
+  };
+}
+
+function sendNextPhiJsonResponse(res, response, payload) {
+  res.status(response.status);
+  res.set("Cache-Control", "no-store");
+  res.json(payload);
+}
+
+async function proxyNextPhiSave(req, res, transform) {
+  try {
+    const { response, payload } = await fetchNextPhiSave(req);
+
+    if (!response.ok) {
+      return sendNextPhiJsonResponse(res, response, payload);
+    }
+
+    return sendNextPhiJsonResponse(res, response, transform(payload));
+  } catch (error) {
+    return sendPhiError(res, error);
+  }
+}
+
 app.get("/", (req, res) => {
   res.send("PLC凉皮杯后端运行中");
 });
@@ -2658,43 +2829,94 @@ app.get("/phigros/proxy/status", (req, res) => {
   res.json({
     status: "ok",
     proxy: "phigros",
-    backendUrl: PHI_BACKEND_URL
+    engine: "next-phi-backend",
+    backendUrl: NEXT_PHI_BACKEND_URL,
+    apiPrefix: NEXT_PHI_API_PREFIX
   });
 });
 
 app.get("/phigros/status", async (req, res) => {
-  await proxyPhiJson(req, res, "/status", {
+  await proxyPhiJson(req, res, "/health", {
     method: "GET"
   });
 });
 
 app.get("/phigros/auth/qrcode", async (req, res) => {
-  await proxyPhiJson(req, res, "/auth/qrcode", {
-    method: "GET"
-  });
+  try {
+    const response = await fetchPhi("/auth/qrcode", {
+      method: "POST",
+      query: req.query
+    });
+    const payload = await response.json();
+
+    sendNextPhiJsonResponse(
+      res,
+      response,
+      response.ok
+        ? {
+            qrId: payload.qrId,
+            qrCodeImage: payload.qrcodeBase64,
+            verificationUrl: payload.verificationUrl
+          }
+        : payload
+    );
+  } catch (error) {
+    sendPhiError(res, error);
+  }
 });
 
 app.get("/phigros/auth/qrcode/:qrId/status", async (req, res) => {
-  await proxyPhiJson(
-    req,
-    res,
-    `/auth/qrcode/${encodeURIComponent(req.params.qrId)}/status`,
-    {
-      method: "GET"
-    }
-  );
+  try {
+    const response = await fetchPhi(
+      `/auth/qrcode/${encodeURIComponent(req.params.qrId)}/status`,
+      {
+        method: "GET"
+      }
+    );
+    const payload = await response.json();
+    const status = String(payload.status || "").toLowerCase();
+
+    sendNextPhiJsonResponse(
+      res,
+      response,
+      response.ok
+        ? {
+            ...payload,
+            status: status === "confirmed" ? "success" : status,
+            sessionToken: payload.sessionToken
+          }
+        : payload
+    );
+  } catch (error) {
+    sendPhiError(res, error);
+  }
 });
 
 app.post("/phigros/bind", async (req, res) => {
-  await proxyPhiJson(req, res, "/bind");
+  await proxyPhiJson(req, res, "/auth/session/exchange");
 });
 
 app.post("/phigros/rks", async (req, res) => {
-  await proxyPhiJson(req, res, "/rks");
+  await proxyNextPhiSave(req, res, (payload) => {
+    const adapted = adaptNextPhiSave(payload);
+
+    return {
+      overall_rks: adapted.overall_rks,
+      records: adapted.records
+    };
+  });
 });
 
 app.post("/phigros/b30", async (req, res) => {
-  await proxyPhiJson(req, res, "/b30");
+  await proxyNextPhiSave(req, res, (payload) => {
+    const adapted = adaptNextPhiSave(payload);
+
+    return {
+      overall_rks: adapted.overall_rks,
+      top_27: adapted.top_27,
+      top_3_ap: adapted.top_3_ap
+    };
+  });
 });
 
 app.post("/phigros/bn/:n", async (req, res) => {
@@ -2706,17 +2928,65 @@ app.post("/phigros/bn/:n", async (req, res) => {
     });
   }
 
-  await proxyPhiJson(req, res, `/bn/${n}`);
+  await proxyNextPhiSave(req, res, (payload) =>
+    adaptNextPhiSave(payload).records.slice(0, n)
+  );
 });
 
 app.get("/phigros/song/search", async (req, res) => {
-  await proxyPhiJson(req, res, "/song/search", {
+  await proxyPhiJson(req, res, "/songs/search", {
     method: "GET"
   });
 });
 
 app.post("/phigros/song/record", async (req, res) => {
-  await proxyPhiJson(req, res, "/song/search/record");
+  await proxyNextPhiSave(req, res, (payload) => {
+    const gameRecord = getNextPhiGameRecord(payload);
+    const query = String(req.query.q || "").trim().toLowerCase();
+    const requestedDifficulty = String(req.query.difficulty || "").toUpperCase();
+    const songId = Object.keys(gameRecord).find((candidate) => {
+      const normalized = candidate.toLowerCase();
+      return normalized === query || normalized.includes(query);
+    });
+
+    if (!songId) {
+      return {};
+    }
+
+    return (Array.isArray(gameRecord[songId]) ? gameRecord[songId] : []).reduce(
+      (records, record) => {
+        const difficulty = String(record.difficulty || "").toUpperCase();
+
+        if (requestedDifficulty && difficulty !== requestedDifficulty) {
+          return records;
+        }
+
+        const acc = Number(readNextPhiField(record, "accuracy", "acc"));
+        const constant = Number(
+          readNextPhiField(record, "chartConstant", "chart_constant")
+        );
+        const rks =
+          Number.isFinite(acc) && Number.isFinite(constant) && acc >= 70
+            ? Math.pow((acc - 55) / 45, 2) * constant
+            : 0;
+
+        records[difficulty] = {
+          song_id: songId,
+          song_name: songId,
+          difficulty,
+          score: Number(record.score),
+          acc,
+          rks,
+          is_fc: Boolean(
+            readNextPhiField(record, "isFullCombo", "is_full_combo")
+          ),
+          is_ap: acc >= 100
+        };
+        return records;
+      },
+      {}
+    );
+  });
 });
 
 app.post("/phigros/image/bn/:n", async (req, res) => {
@@ -2728,11 +2998,24 @@ app.post("/phigros/image/bn/:n", async (req, res) => {
     });
   }
 
-  await proxyPhiBinary(req, res, `/image/bn/${n}`);
+  await proxyPhiBinary(req, res, "/image/bn", {
+    body: {
+      ...normalizePhiBody(req.body),
+      n,
+      theme: String(req.query.theme || "black").toLowerCase(),
+      embedImages: true
+    }
+  });
 });
 
 app.post("/phigros/image/song", async (req, res) => {
-  await proxyPhiBinary(req, res, "/image/song");
+  await proxyPhiBinary(req, res, "/image/song", {
+    body: {
+      ...normalizePhiBody(req.body),
+      song: String(req.query.q || req.body.song || ""),
+      embedImages: true
+    }
+  });
 });
 
 app.post("/admin/login", (req, res) => {

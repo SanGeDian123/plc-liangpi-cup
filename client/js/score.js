@@ -85,7 +85,10 @@ async function isScoreProxyAvailable(apiBase) {
     }
 
     const payload = await response.json();
-    return payload?.proxy === "phigros";
+    return (
+      payload?.proxy === "phigros" &&
+      payload?.engine === "next-phi-backend"
+    );
   } catch (error) {
     return false;
   }
@@ -183,8 +186,8 @@ function getIdentityPayload() {
 
   const token = sessionTokenInput.value.trim();
 
-  if (!/^[A-Za-z0-9]{25}$/.test(token)) {
-    throw new Error("请输入 25 位 SessionToken");
+  if (!token) {
+    throw new Error("请输入 SessionToken");
   }
 
   return {
@@ -217,7 +220,9 @@ async function readJsonResponse(response) {
 
 function getResponseData(payload) {
   if (payload && Number(payload.code) >= 400) {
-    throw new Error(payload.message || "Phi-Backend 返回错误");
+    throw new Error(
+      payload.detail || payload.message || "Next-Phi-Backend 返回错误"
+    );
   }
 
   return payload && Object.prototype.hasOwnProperty.call(payload, "data")
@@ -239,7 +244,9 @@ async function requestJson(path, options = {}) {
   const payload = await readJsonResponse(response);
 
   if (!response.ok) {
-    throw new Error(payload?.message || payload?.error || "请求失败");
+    throw new Error(
+      payload?.detail || payload?.message || payload?.error || "请求失败"
+    );
   }
 
   return getResponseData(payload);
@@ -257,7 +264,9 @@ async function requestImage(path, body) {
 
   if (!response.ok) {
     const payload = await readJsonResponse(response);
-    throw new Error(payload?.message || payload?.error || "图片生成失败");
+    throw new Error(
+      payload?.detail || payload?.message || payload?.error || "图片生成失败"
+    );
   }
 
   return response.blob();
