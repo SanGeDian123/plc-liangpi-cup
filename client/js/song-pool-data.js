@@ -707,7 +707,7 @@ window.PLC_SONG_POOL_DATA = {
       "sourceUrl": "https://phigros.fandom.com/zh/wiki/%E6%9B%B4%E6%96%B0%E6%97%A5%E5%BF%97",
       "stages": {
         "round16": "IN",
-        "top8": "IN"
+        "top8": null
       }
     },
     {
@@ -722,7 +722,7 @@ window.PLC_SONG_POOL_DATA = {
       "sourceUrl": "https://phigros.fandom.com/zh/wiki/%E6%9B%B4%E6%96%B0%E6%97%A5%E5%BF%97",
       "stages": {
         "round16": "IN",
-        "top8": "IN"
+        "top8": null
       }
     },
     {
