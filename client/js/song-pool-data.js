@@ -2732,7 +2732,7 @@ window.PLC_SONG_POOL_DATA = {
       "sourceUrl": "https://phigros.fandom.com/wiki/Shadow",
       "stages": {
         "round16": "IN AT",
-        "top8": "IN AT"
+        "top8": null
       }
     }
   ]
