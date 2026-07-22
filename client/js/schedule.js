@@ -1646,6 +1646,7 @@
       records.find((record) => record.selected) ||
       records.find((record) => record.difficulty === data?.selectedDifficulty) ||
       null;
+    const personalScoreAvailable = Boolean(data?.personalScoreAvailable);
     const illustrationPath = String(song.illustrationUrl || "");
 
     els.bpSongDialogTitle.textContent = song.name || "曲目详情";
@@ -1661,23 +1662,32 @@
     selectedHeading.appendChild(
       createElement("strong", "", selectedRecord?.difficulty || data?.selectedDifficulty || "-")
     );
-    selectedHeading.appendChild(
-      createElement("b", "", getSongRecordBadge(selectedRecord))
-    );
+    if (personalScoreAvailable) {
+      selectedHeading.appendChild(
+        createElement("b", "", getSongRecordBadge(selectedRecord))
+      );
+    }
     els.bpSelectedRecord.appendChild(selectedHeading);
 
     const selectedMetrics = createElement("div", "bp-selected-record-metrics");
-    [
+    const metrics = [
       [
         "定数",
         selectedRecord?.chartConstant === null || selectedRecord?.chartConstant === undefined
           ? "-"
           : formatSongDecimal(selectedRecord.chartConstant, 1)
-      ],
-      ["得分", selectedRecord?.hasRecord ? formatSongScore(selectedRecord.score) : "暂无成绩"],
-      ["ACC", selectedRecord?.hasRecord ? formatSongAcc(selectedRecord.acc) : "-"],
-      ["单曲 RKS", selectedRecord?.hasRecord ? formatSongDecimal(selectedRecord.rks) : "-"]
-    ].forEach(([label, value]) => {
+      ]
+    ];
+
+    if (personalScoreAvailable) {
+      metrics.push(
+        ["得分", selectedRecord?.hasRecord ? formatSongScore(selectedRecord.score) : "暂无成绩"],
+        ["ACC", selectedRecord?.hasRecord ? formatSongAcc(selectedRecord.acc) : "-"],
+        ["单曲 RKS", selectedRecord?.hasRecord ? formatSongDecimal(selectedRecord.rks) : "-"]
+      );
+    }
+
+    metrics.forEach(([label, value]) => {
       const metric = createElement("div", "");
       metric.appendChild(createElement("span", "", label));
       metric.appendChild(createElement("strong", "", value));
@@ -1727,6 +1737,7 @@
     try {
       const data = await fetchJson("/phigros/saved/song-detail", {
         method: "POST",
+        refreshSession: Boolean(getAccessToken()),
         timeoutMs: 70000,
         body: JSON.stringify({
           title: selection.title,

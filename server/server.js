@@ -3277,7 +3277,7 @@ app.delete("/phigros/credential", requireUser, async (req, res) => {
   }
 });
 
-app.post("/phigros/saved/song-detail", requireUser, async (req, res) => {
+app.post("/phigros/saved/song-detail", optionalUser, async (req, res) => {
   const query = normalizeTextValue(
     req.body?.title || req.body?.song || req.body?.q,
     180
@@ -3291,19 +3291,7 @@ app.post("/phigros/saved/song-detail", requireUser, async (req, res) => {
   }
 
   try {
-    const sessionToken = await getSavedPhigrosSessionToken(req.authUser.id);
-
-    if (!sessionToken) {
-      return res.status(412).json({
-        code: "PHIGROS_CREDENTIAL_REQUIRED",
-        message: "当前账号尚未绑定 SessionToken"
-      });
-    }
-
-    const [savePayload, song] = await Promise.all([
-      getCachedNextPhiSaveForUser(req.authUser.id, sessionToken),
-      fetchNextPhiSong(query)
-    ]);
+    const song = await fetchNextPhiSong(query);
 
     if (!song?.id) {
       return res.status(404).json({
@@ -3311,11 +3299,29 @@ app.post("/phigros/saved/song-detail", requireUser, async (req, res) => {
       });
     }
 
-    const record = buildSavedSongRecords(
-      savePayload,
+    let record = buildSavedSongRecords(
+      {},
       song,
       selectedDifficulty
     ).find((item) => item.selected) || null;
+    let personalScoreAvailable = false;
+
+    if (req.authUser?.id) {
+      const sessionToken = await getSavedPhigrosSessionToken(req.authUser.id);
+
+      if (sessionToken) {
+        const savePayload = await getCachedNextPhiSaveForUser(
+          req.authUser.id,
+          sessionToken
+        );
+        record = buildSavedSongRecords(
+          savePayload,
+          song,
+          selectedDifficulty
+        ).find((item) => item.selected) || record;
+        personalScoreAvailable = true;
+      }
+    }
 
     res.set("Cache-Control", "no-store");
     return res.json({
@@ -3325,6 +3331,7 @@ app.post("/phigros/saved/song-detail", requireUser, async (req, res) => {
         illustrationUrl: `/phigros/song/illustration/${encodeURIComponent(song.id)}`
       },
       selectedDifficulty,
+      personalScoreAvailable,
       record
     });
   } catch (error) {
