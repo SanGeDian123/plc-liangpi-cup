@@ -3,6 +3,7 @@ const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
 const crypto = require("crypto");
 const vm = require("vm");
+const fsSync = require("fs");
 const fs = require("fs/promises");
 const os = require("os");
 const path = require("path");
@@ -67,6 +68,12 @@ const USER_MESSAGES_PATH =
 const SCHEDULE_DATA_PATH =
   process.env.SCHEDULE_DATA_PATH ||
   path.join(RUNTIME_DATA_DIR, "schedule.json");
+const PHIGROS_CREDENTIALS_PATH =
+  process.env.PHIGROS_CREDENTIALS_PATH ||
+  path.join(RUNTIME_DATA_DIR, "phigros-credentials.json");
+const PHIGROS_CREDENTIALS_LOCAL_KEY_PATH =
+  process.env.PHIGROS_CREDENTIALS_LOCAL_KEY_PATH ||
+  path.join(RUNTIME_DATA_DIR, ".phigros-credentials.key");
 const SUPABASE_RUNTIME_BUCKET =
   process.env.SUPABASE_RUNTIME_BUCKET ||
   process.env.SUPABASE_STORAGE_BUCKET ||
@@ -75,7 +82,8 @@ const RUNTIME_STORAGE_KEYS = Object.freeze({
   displaySettings: "runtime/display-settings.json",
   userBindings: "runtime/user-bindings.json",
   userMessages: "runtime/user-messages.json",
-  schedule: "runtime/schedule.json"
+  schedule: "runtime/schedule.json",
+  phigrosCredentials: "runtime/phigros-credentials.json"
 });
 const SONG_POOL_DATA_PATH = path.join(
   __dirname,
@@ -102,6 +110,10 @@ const DEFAULT_USER_MESSAGES = Object.freeze({
 const DEFAULT_SCHEDULE_DATA = Object.freeze({
   matches: [],
   selectListAdjustments: []
+});
+const DEFAULT_PHIGROS_CREDENTIALS = Object.freeze({
+  version: 1,
+  users: {}
 });
 
 const playersCache = {
@@ -139,6 +151,17 @@ const scheduleCache = {
     selectListAdjustments: []
   }
 };
+const phigrosCredentialsCache = {
+  loaded: false,
+  data: {
+    version: 1,
+    users: {}
+  }
+};
+const phigrosSaveCache = new Map();
+const PHIGROS_SAVE_CACHE_TTL_MS = 2 * 60 * 1000;
+let phigrosCredentialMutationQueue = Promise.resolve();
+let localPhigrosCredentialSecret = "";
 let songPoolDataPromise = null;
 let songPoolDataMtimeMs = 0;
 const runtimeStorageState = {
@@ -780,6 +803,214 @@ async function persistUserBindings(data) {
   userBindingsCache.data = normalized;
 
   return normalized;
+}
+
+function normalizeEncryptedPhigrosCredential(value = {}) {
+  const algorithm = normalizeTextValue(value.algorithm, 32);
+  const iv = normalizeTextValue(value.iv, 64);
+  const tag = normalizeTextValue(value.tag, 64);
+  const ciphertext = normalizeTextValue(value.ciphertext, 2048);
+
+  if (algorithm !== "aes-256-gcm" || !iv || !tag || !ciphertext) {
+    return null;
+  }
+
+  return {
+    algorithm,
+    iv,
+    tag,
+    ciphertext,
+    updatedAt: normalizeIsoDate(value.updatedAt)
+  };
+}
+
+function normalizePhigrosCredentials(value = {}) {
+  const users = {};
+
+  if (value.users && typeof value.users === "object") {
+    Object.entries(value.users).forEach(([key, credential]) => {
+      const userId = normalizeTextValue(key, 128);
+      const normalized = normalizeEncryptedPhigrosCredential(credential);
+
+      if (userId && normalized) {
+        users[userId] = normalized;
+      }
+    });
+  }
+
+  return {
+    version: 1,
+    users
+  };
+}
+
+async function loadPhigrosCredentials() {
+  if (phigrosCredentialsCache.loaded) {
+    return phigrosCredentialsCache.data;
+  }
+
+  phigrosCredentialsCache.data = await loadRuntimeJson({
+    label: "Phigros credentials",
+    storageKey: RUNTIME_STORAGE_KEYS.phigrosCredentials,
+    localPath: PHIGROS_CREDENTIALS_PATH,
+    defaults: DEFAULT_PHIGROS_CREDENTIALS,
+    normalize: normalizePhigrosCredentials
+  });
+  phigrosCredentialsCache.loaded = true;
+  return phigrosCredentialsCache.data;
+}
+
+async function persistPhigrosCredentials(data) {
+  const normalized = await persistRuntimeJson({
+    label: "Phigros credentials",
+    storageKey: RUNTIME_STORAGE_KEYS.phigrosCredentials,
+    localPath: PHIGROS_CREDENTIALS_PATH,
+    data,
+    normalize: normalizePhigrosCredentials
+  });
+
+  phigrosCredentialsCache.loaded = true;
+  phigrosCredentialsCache.data = normalized;
+  return normalized;
+}
+
+function mutatePhigrosCredentials(mutator) {
+  const mutation = phigrosCredentialMutationQueue.then(async () => {
+    const current = await loadPhigrosCredentials();
+    const draft = {
+      version: 1,
+      users: {
+        ...current.users
+      }
+    };
+
+    await mutator(draft);
+    return persistPhigrosCredentials(draft);
+  });
+
+  phigrosCredentialMutationQueue = mutation.catch(() => undefined);
+  return mutation;
+}
+
+function getPhigrosCredentialKey() {
+  let secret =
+    process.env.PHIGROS_CREDENTIALS_KEY || SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!secret) {
+    const isProductionRuntime =
+      process.env.NODE_ENV === "production" || Boolean(process.env.RENDER);
+
+    if (isProductionRuntime) {
+      const error = new Error("服务端尚未配置查分凭据加密密钥");
+      error.statusCode = 503;
+      throw error;
+    }
+
+    if (!localPhigrosCredentialSecret) {
+      try {
+        localPhigrosCredentialSecret = fsSync
+          .readFileSync(PHIGROS_CREDENTIALS_LOCAL_KEY_PATH, "utf8")
+          .trim();
+      } catch (error) {
+        if (error.code !== "ENOENT") {
+          throw error;
+        }
+
+        fsSync.mkdirSync(path.dirname(PHIGROS_CREDENTIALS_LOCAL_KEY_PATH), {
+          recursive: true
+        });
+        const generatedSecret = crypto.randomBytes(32).toString("base64url");
+
+        try {
+          fsSync.writeFileSync(
+            PHIGROS_CREDENTIALS_LOCAL_KEY_PATH,
+            generatedSecret,
+            {
+              encoding: "utf8",
+              mode: 0o600,
+              flag: "wx"
+            }
+          );
+          localPhigrosCredentialSecret = generatedSecret;
+        } catch (writeError) {
+          if (writeError.code !== "EEXIST") {
+            throw writeError;
+          }
+
+          localPhigrosCredentialSecret = fsSync
+            .readFileSync(PHIGROS_CREDENTIALS_LOCAL_KEY_PATH, "utf8")
+            .trim();
+        }
+      }
+    }
+
+    secret = localPhigrosCredentialSecret;
+  }
+
+  if (!secret) {
+    const error = new Error("查分凭据加密密钥无效");
+    error.statusCode = 503;
+    throw error;
+  }
+
+  return crypto
+    .createHash("sha256")
+    .update(`plc-phigros-credentials\u0000${secret}`, "utf8")
+    .digest();
+}
+
+if (process.env.NODE_ENV !== "production" && !process.env.RENDER) {
+  getPhigrosCredentialKey();
+}
+
+function encryptPhigrosSessionToken(userId, sessionToken) {
+  const iv = crypto.randomBytes(12);
+  const cipher = crypto.createCipheriv("aes-256-gcm", getPhigrosCredentialKey(), iv);
+  cipher.setAAD(Buffer.from(String(userId), "utf8"));
+  const ciphertext = Buffer.concat([
+    cipher.update(String(sessionToken), "utf8"),
+    cipher.final()
+  ]);
+
+  return {
+    algorithm: "aes-256-gcm",
+    iv: iv.toString("base64"),
+    tag: cipher.getAuthTag().toString("base64"),
+    ciphertext: ciphertext.toString("base64"),
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function decryptPhigrosSessionToken(userId, credential) {
+  const decipher = crypto.createDecipheriv(
+    "aes-256-gcm",
+    getPhigrosCredentialKey(),
+    Buffer.from(credential.iv, "base64")
+  );
+  decipher.setAAD(Buffer.from(String(userId), "utf8"));
+  decipher.setAuthTag(Buffer.from(credential.tag, "base64"));
+
+  return Buffer.concat([
+    decipher.update(Buffer.from(credential.ciphertext, "base64")),
+    decipher.final()
+  ]).toString("utf8");
+}
+
+async function getSavedPhigrosSessionToken(userId) {
+  const data = await loadPhigrosCredentials();
+  const credential = data.users[userId];
+
+  if (!credential) {
+    return "";
+  }
+
+  try {
+    return decryptPhigrosSessionToken(userId, credential);
+  } catch (error) {
+    const decryptError = new Error("已保存的查分凭据无法读取，请在赛程主页重新绑定");
+    decryptError.statusCode = 409;
+    throw decryptError;
+  }
 }
 
 function getBearerToken(req) {
@@ -2820,8 +3051,325 @@ async function proxyNextPhiSave(req, res, transform) {
   }
 }
 
+function normalizePhiSongLookup(value) {
+  return String(value || "")
+    .normalize("NFKC")
+    .toLocaleLowerCase()
+    .replace(/[\p{P}\p{S}\s]+/gu, "");
+}
+
+function selectNextPhiSong(items, query) {
+  const candidates = Array.isArray(items) ? items : [];
+  const normalizedQuery = normalizePhiSongLookup(query);
+
+  return (
+    candidates.find(
+      (song) => normalizePhiSongLookup(song?.name) === normalizedQuery
+    ) ||
+    candidates.find(
+      (song) => normalizePhiSongLookup(song?.id) === normalizedQuery
+    ) ||
+    candidates[0] ||
+    null
+  );
+}
+
+function readFiniteNumber(value) {
+  if (value === null || value === undefined || value === "") {
+    return null;
+  }
+
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+}
+
+function buildSavedSongRecords(payload, song, selectedDifficulty) {
+  const gameRecord = getNextPhiGameRecord(payload);
+  const songRecords = Array.isArray(gameRecord[song.id])
+    ? gameRecord[song.id]
+    : [];
+  const recordsByDifficulty = new Map(
+    songRecords.map((record) => [
+      String(readNextPhiField(record, "difficulty") || "").toUpperCase(),
+      record
+    ])
+  );
+  const constants =
+    song.chartConstants && typeof song.chartConstants === "object"
+      ? song.chartConstants
+      : {};
+
+  return ["EZ", "HD", "IN", "AT"]
+    .filter((difficulty) => {
+      const constant = readFiniteNumber(constants[difficulty.toLowerCase()]);
+      return (
+        constant !== null ||
+        recordsByDifficulty.has(difficulty) ||
+        difficulty === selectedDifficulty
+      );
+    })
+    .map((difficulty) => {
+      const record = recordsByDifficulty.get(difficulty) || null;
+      const acc = readFiniteNumber(
+        readNextPhiField(record, "accuracy", "acc")
+      );
+      const chartConstant = readFiniteNumber(
+        readNextPhiField(record, "chartConstant", "chart_constant") ??
+          constants[difficulty.toLowerCase()]
+      );
+      const providedRks = readFiniteNumber(readNextPhiField(record, "rks"));
+      const calculatedRks =
+        acc !== null && chartConstant !== null && acc >= 70
+          ? Math.pow((acc - 55) / 45, 2) * chartConstant
+          : 0;
+
+      return {
+        difficulty,
+        selected: difficulty === selectedDifficulty,
+        chartConstant,
+        hasRecord: Boolean(record),
+        score: record ? readFiniteNumber(readNextPhiField(record, "score")) : null,
+        acc,
+        rks: record ? providedRks ?? calculatedRks : null,
+        isFc: Boolean(readNextPhiField(record, "isFullCombo", "is_full_combo")),
+        isAp: acc !== null && acc >= 100
+      };
+    });
+}
+
+async function getCachedNextPhiSaveForUser(userId, sessionToken) {
+  const cached = phigrosSaveCache.get(userId);
+
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.payload;
+  }
+
+  const { response, payload } = await fetchNextPhiSave({
+    body: {
+      sessionToken
+    }
+  });
+
+  if (!response.ok) {
+    const error = new Error(
+      payload?.detail || payload?.message || "Next-Phi-Backend 查分失败"
+    );
+    error.statusCode = response.status;
+    throw error;
+  }
+
+  phigrosSaveCache.set(userId, {
+    payload,
+    expiresAt: Date.now() + PHIGROS_SAVE_CACHE_TTL_MS
+  });
+  return payload;
+}
+
+async function fetchNextPhiSong(query) {
+  const response = await fetchPhi("/songs/search", {
+    method: "GET",
+    query: {
+      q: query,
+      limit: 8
+    }
+  });
+  const payload = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    const error = new Error(
+      payload?.detail || payload?.message || "Next-Phi-Backend 曲目查询失败"
+    );
+    error.statusCode = response.status;
+    throw error;
+  }
+
+  return selectNextPhiSong(payload?.items || payload?.data?.items, query);
+}
+
 app.get("/", (req, res) => {
   res.send("PLC凉皮杯后端运行中");
+});
+
+app.get("/phigros/credential", requireUser, async (req, res) => {
+  try {
+    const data = await loadPhigrosCredentials();
+    const credential = data.users[req.authUser.id];
+
+    res.set("Cache-Control", "no-store");
+    res.json({
+      saved: Boolean(credential),
+      updatedAt: credential?.updatedAt || null
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "读取查分凭据状态失败"
+    });
+  }
+});
+
+app.put("/phigros/credential", requireUser, async (req, res) => {
+  const sessionToken = String(
+    req.body?.sessionToken || req.body?.session_token || req.body?.token || ""
+  ).trim();
+
+  if (!sessionToken || sessionToken.length > 512) {
+    return res.status(400).json({
+      message: "请输入有效的 SessionToken"
+    });
+  }
+
+  try {
+    const { response, payload } = await fetchNextPhiSave({
+      body: {
+        sessionToken
+      }
+    });
+
+    if (!response.ok) {
+      return sendNextPhiJsonResponse(res, response, {
+        message:
+          payload?.detail ||
+          payload?.message ||
+          "SessionToken 校验失败，请确认后重试"
+      });
+    }
+
+    const credential = encryptPhigrosSessionToken(
+      req.authUser.id,
+      sessionToken
+    );
+    await mutatePhigrosCredentials((draft) => {
+      draft.users[req.authUser.id] = credential;
+    });
+    phigrosSaveCache.set(req.authUser.id, {
+      payload,
+      expiresAt: Date.now() + PHIGROS_SAVE_CACHE_TTL_MS
+    });
+
+    res.set("Cache-Control", "no-store");
+    return res.json({
+      saved: true,
+      updatedAt: credential.updatedAt
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "保存查分凭据失败"
+    });
+  }
+});
+
+app.delete("/phigros/credential", requireUser, async (req, res) => {
+  try {
+    await mutatePhigrosCredentials((draft) => {
+      delete draft.users[req.authUser.id];
+    });
+    phigrosSaveCache.delete(req.authUser.id);
+
+    res.set("Cache-Control", "no-store");
+    res.json({
+      saved: false,
+      updatedAt: null
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "清除查分凭据失败"
+    });
+  }
+});
+
+app.post("/phigros/saved/song-detail", requireUser, async (req, res) => {
+  const query = normalizeTextValue(
+    req.body?.title || req.body?.song || req.body?.q,
+    180
+  );
+  const selectedDifficulty = normalizeSongDifficulty(req.body?.difficulty);
+
+  if (!query || !selectedDifficulty) {
+    return res.status(400).json({
+      message: "曲目和已选谱面难度不能为空"
+    });
+  }
+
+  try {
+    const sessionToken = await getSavedPhigrosSessionToken(req.authUser.id);
+
+    if (!sessionToken) {
+      return res.status(412).json({
+        code: "PHIGROS_CREDENTIAL_REQUIRED",
+        message: "当前账号尚未绑定 SessionToken"
+      });
+    }
+
+    const [savePayload, song] = await Promise.all([
+      getCachedNextPhiSaveForUser(req.authUser.id, sessionToken),
+      fetchNextPhiSong(query)
+    ]);
+
+    if (!song?.id) {
+      return res.status(404).json({
+        message: `Next-Phi-Backend 中未找到曲目“${query}”`
+      });
+    }
+
+    const record = buildSavedSongRecords(
+      savePayload,
+      song,
+      selectedDifficulty
+    ).find((item) => item.selected) || null;
+
+    res.set("Cache-Control", "no-store");
+    return res.json({
+      song: {
+        id: song.id,
+        name: song.name || query,
+        illustrationUrl: `/phigros/song/illustration/${encodeURIComponent(song.id)}`
+      },
+      selectedDifficulty,
+      record
+    });
+  } catch (error) {
+    return res.status(error.statusCode || 502).json({
+      message: error.message || "曲目成绩查询失败"
+    });
+  }
+});
+
+app.get("/phigros/song/illustration/:songId", async (req, res) => {
+  const songId = normalizeTextValue(req.params.songId, 240);
+
+  if (!songId || /[\\/]/.test(songId)) {
+    return res.status(400).json({
+      message: "曲目 ID 无效"
+    });
+  }
+
+  try {
+    let response = null;
+
+    for (const variant of ["illLow", "ill"]) {
+      response = await fetch(
+        new URL(
+          `/_ill/${variant}/${encodeURIComponent(songId)}.png`,
+          `${NEXT_PHI_BACKEND_URL}/`
+        )
+      );
+
+      if (response.ok) {
+        break;
+      }
+    }
+
+    if (!response?.ok) {
+      return res.status(404).end();
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+    res.set("Content-Type", response.headers.get("content-type") || "image/png");
+    res.set("Cache-Control", "public, max-age=86400");
+    return res.send(buffer);
+  } catch (error) {
+    return res.status(502).end();
+  }
 });
 
 app.get("/phigros/proxy/status", (req, res) => {

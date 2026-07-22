@@ -12,7 +12,7 @@
   <link rel="preload" href="./assets/bp-background.jpg" as="image" />
   <link rel="icon" type="image/png" href="./assets/favicon-96.png" />
   <link rel="stylesheet" href="./css/account-link.css?v=20260701b" />
-  <link rel="stylesheet" href="./css/schedule.css?v=20260711b" />
+  <link rel="stylesheet" href="./css/schedule.css?v=20260722c" />
   <link rel="stylesheet" href="./css/site-announcement.css" />
 </head>
 <body>
@@ -63,6 +63,21 @@
         <small id="practiceRandomMeta">优先抽取 IN / AT 谱面</small>
       </div>
     </section>
+
+    <div class="bp-token-bind" id="bpTokenBind">
+      <input
+        id="bpSessionToken"
+        type="password"
+        inputmode="latin"
+        autocomplete="new-password"
+        maxlength="512"
+        placeholder="SessionToken"
+        aria-label="SessionToken"
+      />
+      <button class="primary-action" id="bpSaveTokenButton" type="button">绑定</button>
+      <button class="ghost-action" id="bpRemoveTokenButton" type="button" hidden>清除</button>
+      <span id="bpTokenStatus" aria-live="polite">未绑定</span>
+    </div>
 
     <section class="schedule-layout">
       <div class="match-list-panel" aria-labelledby="matchListTitle">
@@ -278,10 +293,33 @@
     </section>
   </div>
 
+  <div class="bp-song-dialog" id="bpSongDialog" aria-hidden="true">
+    <div class="bp-song-dialog-backdrop" data-bp-song-close></div>
+    <section
+      class="bp-song-dialog-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="bpSongDialogTitle"
+      aria-describedby="bpSongDialogStatus"
+    >
+      <div class="bp-song-dialog-heading">
+        <h2 id="bpSongDialogTitle">曲目详情</h2>
+        <button class="icon-button" type="button" data-bp-song-close aria-label="关闭曲目详情">×</button>
+      </div>
+      <div class="bp-song-dialog-status" id="bpSongDialogStatus" aria-live="polite">加载中...</div>
+      <div class="bp-song-detail" id="bpSongDetail" hidden>
+        <figure class="bp-song-artwork">
+          <img id="bpSongArtwork" alt="" />
+        </figure>
+        <section class="bp-selected-record" id="bpSelectedRecord" aria-label="已选择谱面成绩"></section>
+      </div>
+    </section>
+  </div>
+
   <script src="./js/api.js"></script>
   <script src="./js/account-link.js?v=20260705b"></script>
   <script src="./js/song-alias-data.js?v=20260710b"></script>
-  <script src="./js/schedule.js?v=20260714b"></script>
+  <script src="./js/schedule.js?v=20260722c"></script>
   <script src="./js/site-announcement.js"></script>
 </body>
 </html>

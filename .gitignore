@@ -1,6 +1,7 @@
 source-assets/
 .chrome-pac-preview/
 server/data/*.json
+server/data/*.key
 server/*.log
 mobile-*.png
 pac-promo-preview.png

@@ -86,6 +86,11 @@
       matchId: "",
       banKeys: new Set(),
       pickKeys: new Set()
+    },
+    songDetail: {
+      cache: new Map(),
+      requestId: 0,
+      lastTrigger: null
     }
   };
 
@@ -102,6 +107,7 @@
     practiceRandomTitleResult: document.getElementById("practiceRandomTitleResult"),
     practiceRandomMeta: document.getElementById("practiceRandomMeta"),
     practicePoolButtons: Array.from(document.querySelectorAll("[data-practice-pool]")),
+    bpTokenBind: document.getElementById("bpTokenBind"),
     bpPanel: document.getElementById("bpPanel"),
     bpEmpty: document.getElementById("bpEmpty"),
     bpWorkbench: document.getElementById("bpWorkbench"),
@@ -159,7 +165,17 @@
     bpSubmitCancelButton: document.getElementById("bpSubmitCancelButton"),
     bpLibraryDialog: document.getElementById("bpLibraryDialog"),
     bpLibraryList: document.getElementById("bpLibraryList"),
-    bpLibraryHint: document.getElementById("bpLibraryHint")
+    bpLibraryHint: document.getElementById("bpLibraryHint"),
+    bpSessionToken: document.getElementById("bpSessionToken"),
+    bpSaveTokenButton: document.getElementById("bpSaveTokenButton"),
+    bpRemoveTokenButton: document.getElementById("bpRemoveTokenButton"),
+    bpTokenStatus: document.getElementById("bpTokenStatus"),
+    bpSongDialog: document.getElementById("bpSongDialog"),
+    bpSongDialogTitle: document.getElementById("bpSongDialogTitle"),
+    bpSongDialogStatus: document.getElementById("bpSongDialogStatus"),
+    bpSongDetail: document.getElementById("bpSongDetail"),
+    bpSongArtwork: document.getElementById("bpSongArtwork"),
+    bpSelectedRecord: document.getElementById("bpSelectedRecord")
   };
 
   function createElement(tag, className, text) {
@@ -1395,6 +1411,18 @@
     }
   }
 
+  function createSummarySongItem(selection, className) {
+    const item = createElement("button", `summary-item ${className} is-inspectable`);
+    item.type = "button";
+    item.dataset.songTitle = selection.title || "";
+    item.dataset.songDifficulty = selection.difficulty || "";
+    item.setAttribute(
+      "aria-label",
+      `查看 ${selection.title || "曲目"} ${selection.difficulty || ""} 难度的个人成绩`
+    );
+    return item;
+  }
+
   function renderSummary(match) {
     const picks = match.bp?.picks || [];
     const randomPicks = getRandomPicks(match);
@@ -1407,7 +1435,7 @@
     els.confirmProgress.textContent = `${confirmed}/${total} 已确认`;
 
     picks.forEach((selection) => {
-      const item = createElement("div", "summary-item is-pick");
+      const item = createSummarySongItem(selection, "is-pick");
       item.appendChild(createElement("strong", "", `${selection.title} [${selection.difficulty}]`));
       item.appendChild(
         createElement("div", "summary-meta", `${selection.nickname || "选手"} 选择 · ${selection.pack || "曲包未知"}`)
@@ -1435,7 +1463,7 @@
       }
 
       randomPicks.forEach((randomPick, index) => {
-        const item = createElement("div", "summary-item is-random");
+        const item = createSummarySongItem(randomPick, "is-random");
         const title = createElement("strong", "random-roll-title", "");
 
         if (state.randomReveal.done) {
@@ -1443,6 +1471,7 @@
         } else {
           title.textContent = "系统抽取中...";
           item.classList.add("is-rolling");
+          item.disabled = true;
         }
 
         state.randomReveal.targets.push({
@@ -1465,6 +1494,263 @@
       startRandomPickReveal(match, randomPicks);
     } else if (progress.allPicksDone && !isRandomPickReady(match, progress)) {
       els.summaryList.appendChild(createElement("p", "empty-line", "系统抽取曲目生成中..."));
+    }
+  }
+
+  function formatSongScore(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.round(number).toLocaleString("zh-CN") : "-";
+  }
+
+  function formatSongDecimal(value, digits = 4) {
+    const number = Number(value);
+    return Number.isFinite(number) ? number.toFixed(digits) : "-";
+  }
+
+  function formatSongAcc(value) {
+    const number = Number(value);
+    return Number.isFinite(number) ? `${number.toFixed(4)}%` : "-";
+  }
+
+  function getSongRecordBadge(record) {
+    if (!record?.hasRecord) {
+      return "暂无成绩";
+    }
+
+    if (record.isAp) {
+      return "AP";
+    }
+
+    if (record.isFc) {
+      return "FC";
+    }
+
+    return "CLEAR";
+  }
+
+  function setBpTokenStatus(message, tone = "idle") {
+    if (!els.bpTokenStatus) {
+      return;
+    }
+
+    els.bpTokenStatus.textContent = message;
+    els.bpTokenStatus.dataset.tone = tone;
+  }
+
+  async function refreshBpTokenStatus() {
+    if (!getAccessToken()) {
+      els.bpSessionToken.disabled = true;
+      els.bpSaveTokenButton.disabled = true;
+      els.bpRemoveTokenButton.hidden = true;
+      setBpTokenStatus("请先登录");
+      return;
+    }
+
+    els.bpSessionToken.disabled = false;
+    els.bpSaveTokenButton.disabled = false;
+
+    try {
+      const data = await fetchJson("/phigros/credential", {
+        method: "GET"
+      });
+      els.bpRemoveTokenButton.hidden = !data?.saved;
+      setBpTokenStatus(data?.saved ? "已绑定" : "未绑定", data?.saved ? "saved" : "idle");
+    } catch (error) {
+      els.bpRemoveTokenButton.hidden = true;
+      setBpTokenStatus(error.message || "读取失败", "error");
+    }
+  }
+
+  async function saveBpToken() {
+    const sessionToken = els.bpSessionToken.value.trim();
+
+    if (!sessionToken) {
+      setBpTokenStatus("请输入 Token", "error");
+      els.bpSessionToken.focus();
+      return;
+    }
+
+    els.bpSaveTokenButton.disabled = true;
+    els.bpRemoveTokenButton.disabled = true;
+    setBpTokenStatus("绑定中...");
+
+    try {
+      await fetchJson("/phigros/credential", {
+        method: "PUT",
+        timeoutMs: 70000,
+        body: JSON.stringify({
+          sessionToken
+        })
+      });
+      els.bpSessionToken.value = "";
+      els.bpRemoveTokenButton.hidden = false;
+      state.songDetail.cache.clear();
+      setBpTokenStatus("已绑定", "saved");
+    } catch (error) {
+      setBpTokenStatus(error.message || "绑定失败", "error");
+    } finally {
+      els.bpSaveTokenButton.disabled = false;
+      els.bpRemoveTokenButton.disabled = false;
+    }
+  }
+
+  async function removeBpToken() {
+    els.bpSaveTokenButton.disabled = true;
+    els.bpRemoveTokenButton.disabled = true;
+
+    try {
+      await fetchJson("/phigros/credential", {
+        method: "DELETE"
+      });
+      els.bpRemoveTokenButton.hidden = true;
+      state.songDetail.cache.clear();
+      setBpTokenStatus("未绑定");
+    } catch (error) {
+      setBpTokenStatus(error.message || "清除失败", "error");
+    } finally {
+      els.bpSaveTokenButton.disabled = false;
+      els.bpRemoveTokenButton.disabled = false;
+    }
+  }
+
+  function setSongDialogStatus(message, options = {}) {
+    if (!els.bpSongDialogStatus) {
+      return;
+    }
+
+    els.bpSongDialogStatus.classList.toggle("is-error", Boolean(options.error));
+    els.bpSongDialogStatus.innerHTML = "";
+    els.bpSongDialogStatus.appendChild(createElement("span", "", message));
+
+    if (options.accountRequired) {
+      const link = createElement("a", "", "登录");
+      link.href = "./user";
+      els.bpSongDialogStatus.appendChild(link);
+    } else if (options.credentialRequired) {
+      const button = createElement("button", "ghost-action", "绑定 Token");
+      button.type = "button";
+      button.addEventListener("click", () => {
+        closeSongDetailDialog();
+        goBackToMatches();
+        window.setTimeout(() => els.bpSessionToken.focus(), 0);
+      });
+      els.bpSongDialogStatus.appendChild(button);
+    }
+  }
+
+  function renderSongDetail(data) {
+    const song = data?.song || {};
+    const records = Array.isArray(data?.records) ? data.records : [];
+    const selectedRecord =
+      data?.record ||
+      records.find((record) => record.selected) ||
+      records.find((record) => record.difficulty === data?.selectedDifficulty) ||
+      null;
+    const illustrationPath = String(song.illustrationUrl || "");
+
+    els.bpSongDialogTitle.textContent = song.name || "曲目详情";
+    els.bpSongArtwork.alt = `${song.name || "曲目"} 曲绘`;
+    els.bpSongArtwork.src = illustrationPath
+      ? /^https?:\/\//i.test(illustrationPath)
+        ? illustrationPath
+        : `${API_URL}${illustrationPath}`
+      : "";
+
+    els.bpSelectedRecord.innerHTML = "";
+    const selectedHeading = createElement("div", "bp-selected-record-heading");
+    selectedHeading.appendChild(
+      createElement("strong", "", selectedRecord?.difficulty || data?.selectedDifficulty || "-")
+    );
+    selectedHeading.appendChild(
+      createElement("b", "", getSongRecordBadge(selectedRecord))
+    );
+    els.bpSelectedRecord.appendChild(selectedHeading);
+
+    const selectedMetrics = createElement("div", "bp-selected-record-metrics");
+    [
+      [
+        "定数",
+        selectedRecord?.chartConstant === null || selectedRecord?.chartConstant === undefined
+          ? "-"
+          : formatSongDecimal(selectedRecord.chartConstant, 1)
+      ],
+      ["得分", selectedRecord?.hasRecord ? formatSongScore(selectedRecord.score) : "暂无成绩"],
+      ["ACC", selectedRecord?.hasRecord ? formatSongAcc(selectedRecord.acc) : "-"],
+      ["单曲 RKS", selectedRecord?.hasRecord ? formatSongDecimal(selectedRecord.rks) : "-"]
+    ].forEach(([label, value]) => {
+      const metric = createElement("div", "");
+      metric.appendChild(createElement("span", "", label));
+      metric.appendChild(createElement("strong", "", value));
+      selectedMetrics.appendChild(metric);
+    });
+    els.bpSelectedRecord.appendChild(selectedMetrics);
+    els.bpSongDetail.hidden = false;
+    els.bpSongDialogStatus.hidden = true;
+  }
+
+  function closeSongDetailDialog() {
+    if (!els.bpSongDialog?.classList.contains("is-open")) {
+      return;
+    }
+
+    state.songDetail.requestId += 1;
+    els.bpSongDialog.classList.remove("is-open");
+    els.bpSongDialog.setAttribute("aria-hidden", "true");
+    state.songDetail.lastTrigger?.focus?.();
+    state.songDetail.lastTrigger = null;
+  }
+
+  async function openSongDetailDialog(selection, trigger) {
+    if (!els.bpSongDialog || !selection?.title || !selection?.difficulty) {
+      return;
+    }
+
+    state.songDetail.lastTrigger = trigger || null;
+    els.bpSongDialog.classList.add("is-open");
+    els.bpSongDialog.setAttribute("aria-hidden", "false");
+    els.bpSongDialogTitle.textContent = selection.title;
+    els.bpSongDetail.hidden = true;
+    els.bpSongDialogStatus.hidden = false;
+    setSongDialogStatus("加载中...");
+    els.bpSongDialog.querySelector("[data-bp-song-close]")?.focus();
+
+    const cacheKey = `${selection.title}\u0000${selection.difficulty}`;
+    const cached = state.songDetail.cache.get(cacheKey);
+
+    if (cached) {
+      renderSongDetail(cached);
+      return;
+    }
+
+    const requestId = ++state.songDetail.requestId;
+
+    try {
+      const data = await fetchJson("/phigros/saved/song-detail", {
+        method: "POST",
+        timeoutMs: 70000,
+        body: JSON.stringify({
+          title: selection.title,
+          difficulty: selection.difficulty
+        })
+      });
+
+      if (requestId !== state.songDetail.requestId) {
+        return;
+      }
+
+      state.songDetail.cache.set(cacheKey, data);
+      renderSongDetail(data);
+    } catch (error) {
+      if (requestId !== state.songDetail.requestId) {
+        return;
+      }
+
+      const message = error.message || "曲目成绩读取失败";
+      setSongDialogStatus(message, {
+        error: true,
+        credentialRequired: /尚未绑定|重新绑定|SessionToken/i.test(message),
+        accountRequired: /请先登录|登录状态/i.test(message)
+      });
     }
   }
 
@@ -1516,7 +1802,12 @@
       if (step >= totalSteps) {
         targets.forEach(({ element, randomPick, index }) => {
           element.textContent = `${randomPick.title} [${randomPick.difficulty}]`;
-          element.closest(".summary-item")?.classList.remove("is-rolling");
+          const item = element.closest(".summary-item");
+          item?.classList.remove("is-rolling");
+
+          if (item) {
+            item.disabled = false;
+          }
 
           const label = element.parentElement?.querySelector(".random-roll-label");
 
@@ -2253,6 +2544,7 @@
     if (!match) {
       stopBpCountdown();
       els.practiceRandomPanel.hidden = false;
+      els.bpTokenBind.hidden = false;
       els.layout.classList.remove("is-detail");
       els.matchListPanel.hidden = false;
       els.bpPanel.hidden = true;
@@ -2264,6 +2556,7 @@
     const progress = match.bp?.progress || {};
 
     els.practiceRandomPanel.hidden = true;
+    els.bpTokenBind.hidden = true;
     els.layout.classList.add("is-detail");
     els.matchListPanel.hidden = true;
     els.bpPanel.hidden = false;
@@ -2496,6 +2789,7 @@
     state.playerConfirmationMessageIsError = false;
     closeBpLibrary();
     closeBpConfirmDialog();
+    closeSongDetailDialog();
     window.clearTimeout(state.randomReveal.timer);
     state.randomReveal = {
       key: "",
@@ -2514,6 +2808,7 @@
 
   async function selectMatch(matchId) {
     closeBpLibrary();
+    closeSongDetailDialog();
     state.activeMatchId = matchId;
     state.activeMatch = state.matches.find((match) => match.id === matchId) || null;
     state.trackSearch = "";
@@ -2746,6 +3041,14 @@
     els.practicePoolButtons.forEach((button) => {
       button.addEventListener("click", () => selectPracticePool(button.dataset.practicePool));
     });
+    els.bpSaveTokenButton?.addEventListener("click", saveBpToken);
+    els.bpRemoveTokenButton?.addEventListener("click", removeBpToken);
+    els.bpSessionToken?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        saveBpToken();
+      }
+    });
 
     els.refresh.addEventListener("click", () => {
       loadMatches();
@@ -2762,6 +3065,30 @@
     });
     document.querySelectorAll("[data-bp-library-close]").forEach((element) => {
       element.addEventListener("click", () => closeBpLibrary());
+    });
+    document.querySelectorAll("[data-bp-song-close]").forEach((element) => {
+      element.addEventListener("click", closeSongDetailDialog);
+    });
+    els.summaryList?.addEventListener("click", (event) => {
+      const item = event.target.closest?.("[data-song-title][data-song-difficulty]");
+
+      if (!item || item.disabled) {
+        return;
+      }
+
+      openSongDetailDialog(
+        {
+          title: item.dataset.songTitle,
+          difficulty: item.dataset.songDifficulty
+        },
+        item
+      );
+    });
+    els.bpSongArtwork?.addEventListener("error", () => {
+      els.bpSongArtwork.closest(".bp-song-artwork")?.classList.add("is-missing");
+    });
+    els.bpSongArtwork?.addEventListener("load", () => {
+      els.bpSongArtwork.closest(".bp-song-artwork")?.classList.remove("is-missing");
     });
     els.openBpLibrary?.addEventListener("click", openBpLibrary);
     els.bpLibraryList?.addEventListener("click", (event) => {
@@ -2807,6 +3134,11 @@
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") {
+        if (els.bpSongDialog?.classList.contains("is-open")) {
+          closeSongDetailDialog();
+          return;
+        }
+
         if (isBpLibraryOpen()) {
           closeBpLibrary();
           return;
@@ -2826,6 +3158,8 @@
 
     let didSkipInitialAccountChange = false;
     window.PLCAccount?.onChange?.(() => {
+      state.songDetail.cache.clear();
+      refreshBpTokenStatus();
       if (!didSkipInitialAccountChange) {
         didSkipInitialAccountChange = true;
         return;
@@ -2846,4 +3180,5 @@
     authMode: "omit"
   });
   refreshMatchesAfterAccountReady();
+  waitForPromise(window.PLCAccount?.ready, 2500).then(refreshBpTokenStatus);
 })();
