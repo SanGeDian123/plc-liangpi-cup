@@ -2506,6 +2506,35 @@ function serializeScheduleMatch(match, options = {}) {
   };
 }
 
+function serializeScheduleMatchSummary(match) {
+  return {
+    id: match.id,
+    title: match.title,
+    sortOrder: match.sortOrder,
+    startsAt: match.startsAt,
+    bpStartsAt: match.bpStartsAt,
+    content: match.content,
+    status: match.status,
+    visibility: match.visibility,
+    bpCategory: match.bpCategory,
+    participantCount: match.participantCount,
+    poolMode: match.poolMode,
+    randomPickEnabled: match.randomPickEnabled,
+    randomPickCount: match.randomPickCount,
+    participants: match.participants.map((participant) =>
+      serializeParticipant(participant)
+    ),
+    playerConfirmation: {
+      enabled: Boolean(match.playerConfirmation?.enabled)
+    },
+    bpOpen: isMatchBpOpen(match),
+    viewer: {
+      isParticipant: false,
+      participant: null
+    }
+  };
+}
+
 function upsertKnownAccount(map, value = {}) {
   const userId = normalizeTextValue(value.userId || value.id, 128);
 
@@ -3966,6 +3995,22 @@ app.get("/schedule/matches", optionalUser, async (req, res) => {
   });
 });
 
+app.get("/schedule/public-matches", async (req, res) => {
+  const data = await loadScheduleDataWithAutoBp();
+  const matches = data.matches
+    .filter((match) => match.visibility === "public")
+    .map(serializeScheduleMatchSummary);
+
+  res.set(
+    "Cache-Control",
+    "public, max-age=15, s-maxage=30, stale-while-revalidate=60"
+  );
+  res.json({
+    matches,
+    serverNow: new Date().toISOString()
+  });
+});
+
 app.get("/schedule/selectlist", async (req, res) => {
   const data = await loadScheduleDataWithAutoBp();
   const selectList = await buildScheduleSelectList(data);
@@ -4042,7 +4087,10 @@ app.get("/schedule/song-pool", async (req, res) => {
   try {
     const data = await loadSongPoolData();
 
-    res.set("Cache-Control", "no-store");
+    res.set(
+      "Cache-Control",
+      "public, max-age=60, s-maxage=60, stale-while-revalidate=300"
+    );
     res.json(data);
   } catch (error) {
     console.error("[schedule] Failed to load song pool:", error);

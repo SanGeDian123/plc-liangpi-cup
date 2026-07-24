@@ -1,8 +1,6 @@
 @font-face{
   font-family:"PLCFont";
-  src:
-    url("../assets/fonts/Phi.woff2") format("woff2"),
-    url("../assets/fonts/Phi.ttf") format("truetype");
+  src:url("../assets/fonts/Phi-schedule.woff2?v=20260724a") format("woff2");
   font-weight:normal;
   font-style:normal;
   font-display:swap;

@@ -18,11 +18,19 @@
   };
 
   const SONG_POOL_API_PATH = "/schedule/song-pool";
+  const SONG_ALIAS_SCRIPT_URL = "./js/song-alias-data.js?v=20260710b";
   const SONG_POOL_RETRY_COOLDOWN_MS = 3000;
   const SCHEDULE_LOAD_TIMEOUT_MS = 8000;
   const SESSION_REFRESH_TIMEOUT_MS = 1200;
   const SCHEDULE_RETRY_DELAY_MS = 3500;
+  const PUBLIC_SCHEDULE_CACHE_KEY = "plc-public-schedule-v1";
+  const PUBLIC_SCHEDULE_CACHE_MAX_AGE_MS = 6 * 60 * 60 * 1000;
   const BP_PHASE_INTRO_DURATION_MS = 2200;
+  const SCHEDULE_API_URL =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+      ? API_URL
+      : `${window.location.origin}/api`;
 
   const state = {
     matches: [],
@@ -58,6 +66,7 @@
     songPoolLoadPromise: null,
     songPoolLastAttemptAt: 0,
     songPoolRetryTimer: 0,
+    songAliasLoadPromise: null,
     scheduleLoadRetryTimers: {
       omit: 0,
       auto: 0
@@ -251,7 +260,7 @@
       : 0;
 
     try {
-      const response = await fetch(`${API_URL}${path}`, {
+      const response = await fetch(`${SCHEDULE_API_URL}${path}`, {
         ...fetchOptions,
         headers,
         signal: fetchOptions.signal || controller?.signal
@@ -308,6 +317,30 @@
     };
   }
 
+  function loadSongAliases() {
+    if (window.PLC_SONG_ALIASES) {
+      return Promise.resolve(window.PLC_SONG_ALIASES);
+    }
+
+    if (state.songAliasLoadPromise) {
+      return state.songAliasLoadPromise;
+    }
+
+    state.songAliasLoadPromise = new Promise((resolve, reject) => {
+      const script = document.createElement("script");
+      script.src = SONG_ALIAS_SCRIPT_URL;
+      script.async = true;
+      script.onload = () => resolve(window.PLC_SONG_ALIASES || {});
+      script.onerror = () => {
+        state.songAliasLoadPromise = null;
+        reject(new Error("song-alias-data-unavailable"));
+      };
+      document.head.appendChild(script);
+    });
+
+    return state.songAliasLoadPromise;
+  }
+
   function loadSongPoolData(options = {}) {
     const forceFresh = Boolean(options.forceFresh || state.songPoolLoadFailed);
 
@@ -326,7 +359,6 @@
     state.songPoolLoadPromise = fetchJson(SONG_POOL_API_PATH, {
       authMode: "omit",
       refreshSession: false,
-      cache: "no-store",
       timeoutMs: SCHEDULE_LOAD_TIMEOUT_MS
     })
       .then((data) => {
@@ -2612,6 +2644,80 @@
     state.scheduleLoadRetryTimers[retryKey] = 0;
   }
 
+  function readCachedPublicSchedule() {
+    try {
+      const cached = JSON.parse(localStorage.getItem(PUBLIC_SCHEDULE_CACHE_KEY));
+      const savedAt = Number(cached?.savedAt);
+
+      if (
+        !Number.isFinite(savedAt) ||
+        Date.now() - savedAt > PUBLIC_SCHEDULE_CACHE_MAX_AGE_MS ||
+        !Array.isArray(cached?.payload?.matches)
+      ) {
+        return null;
+      }
+
+      return cached.payload;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function writeCachedPublicSchedule(payload) {
+    try {
+      localStorage.setItem(
+        PUBLIC_SCHEDULE_CACHE_KEY,
+        JSON.stringify({
+          savedAt: Date.now(),
+          payload
+        })
+      );
+    } catch (error) {
+      // Storage can be unavailable in private browsing; the network path still works.
+    }
+  }
+
+  function applySchedulePayload(payload, options = {}) {
+    if (options.syncServerTime !== false) {
+      syncServerTime(payload.serverNow);
+    }
+
+    state.matches = Array.isArray(payload.matches) ? payload.matches : [];
+    els.summary.textContent = state.matches.length
+      ? options.cached
+        ? `已显示上次赛程（${state.matches.length} 场），正在刷新...`
+        : `当前有 ${state.matches.length} 场可见比赛。`
+      : "暂无可见比赛；公开赛事会直接显示，定向赛事需要登录对应账号。";
+
+    if (state.activeMatchId) {
+      const active = state.matches.find((match) => match.id === state.activeMatchId);
+
+      if (active) {
+        queueRandomPickReveal(state.activeMatch, active);
+        state.activeMatch = active;
+      } else {
+        goBackToMatches();
+      }
+    }
+
+    renderMatchList();
+    renderActiveMatch();
+  }
+
+  function hydrateCachedPublicSchedule() {
+    const payload = readCachedPublicSchedule();
+
+    if (!payload) {
+      return false;
+    }
+
+    applySchedulePayload(payload, {
+      cached: true,
+      syncServerTime: false
+    });
+    return true;
+  }
+
   function refreshMatchesAfterAccountReady() {
     if (state.hasRequestedAccountRefresh) {
       return;
@@ -2619,6 +2725,10 @@
 
     state.hasRequestedAccountRefresh = true;
     waitForPromise(window.PLCAccount?.ready, 2500).then(() => {
+      if (!getAccessToken()) {
+        return;
+      }
+
       loadMatches(false, {
         authMode: "auto",
         allowConcurrent: true
@@ -2654,11 +2764,14 @@
     }
 
     try {
-      const payload = await fetchJson("/schedule/matches", {
-        authMode,
-        refreshSession: authMode !== "omit",
-        timeoutMs: options.timeoutMs || SCHEDULE_LOAD_TIMEOUT_MS
-      });
+      const payload = await fetchJson(
+        authMode === "omit" ? "/schedule/public-matches" : "/schedule/matches",
+        {
+          authMode,
+          refreshSession: authMode !== "omit",
+          timeoutMs: options.timeoutMs || SCHEDULE_LOAD_TIMEOUT_MS
+        }
+      );
       clearScheduleMatchesRetry(authMode);
 
       if (!shouldApplyScheduleResponse(requestId, authPriority)) {
@@ -2668,24 +2781,13 @@
       state.lastAppliedScheduleRequestId = requestId;
       state.lastAppliedScheduleAuthPriority = authPriority;
 
-      syncServerTime(payload.serverNow);
-      state.matches = Array.isArray(payload.matches) ? payload.matches : [];
-      els.summary.textContent = state.matches.length
-        ? `当前有 ${state.matches.length} 场可见比赛。`
-        : "暂无可见比赛；公开赛事会直接显示，定向赛事需要登录对应账号。";
-      if (state.activeMatchId) {
-        const active = state.matches.find((match) => match.id === state.activeMatchId);
-
-        if (active) {
-          queueRandomPickReveal(state.activeMatch, active);
-          state.activeMatch = active;
-        } else {
-          goBackToMatches();
-        }
+      if (authMode === "omit") {
+        writeCachedPublicSchedule(payload);
       }
 
-      renderMatchList();
-      renderActiveMatch();
+      applySchedulePayload(payload, {
+        syncServerTime: authMode !== "omit"
+      });
     } catch (error) {
       if (!shouldApplyScheduleResponse(requestId, authPriority)) {
         return;
@@ -3062,7 +3164,9 @@
     });
 
     els.refresh.addEventListener("click", () => {
-      loadMatches();
+      loadMatches(true, {
+        authMode: getAccessToken() ? "auto" : "omit"
+      });
       fetchActiveMatch();
     });
 
@@ -3115,10 +3219,21 @@
     els.trackSearch.addEventListener("input", (event) => {
       state.trackSearch = event.target.value.trim();
       renderTrackOptions();
+      loadSongAliases()
+        .then(() => {
+          if (state.trackSearch) {
+            renderTrackOptions();
+            renderBpLibrary();
+          }
+        })
+        .catch(() => {});
       sendPresence(getCurrentAction());
     });
 
-    els.trackSearch.addEventListener("focus", () => sendPresence(getCurrentAction()));
+    els.trackSearch.addEventListener("focus", () => {
+      loadSongAliases().catch(() => {});
+      sendPresence(getCurrentAction());
+    });
     els.trackSelect.addEventListener("focus", () => sendPresence(getCurrentAction()));
     els.trackSelect.addEventListener("change", () => {
       state.selectedTrackId = els.trackSelect.value;
@@ -3184,10 +3299,8 @@
   }
 
   bindEvents();
-  loadSongPoolData().catch(() => {
-    // The active-match renderer will show the retry state if the preload fails.
-  });
-  loadMatches(true, {
+  const hasCachedPublicSchedule = hydrateCachedPublicSchedule();
+  loadMatches(!hasCachedPublicSchedule, {
     authMode: "omit"
   });
   refreshMatchesAfterAccountReady();
