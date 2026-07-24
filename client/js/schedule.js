@@ -260,11 +260,21 @@
       : 0;
 
     try {
-      const response = await fetch(`${SCHEDULE_API_URL}${path}`, {
+      const requestOptions = {
         ...fetchOptions,
         headers,
         signal: fetchOptions.signal || controller?.signal
-      });
+      };
+      let response = await fetch(`${SCHEDULE_API_URL}${path}`, requestOptions);
+
+      if (
+        SCHEDULE_API_URL !== API_URL &&
+        response.status === 404 &&
+        String(response.headers.get("server") || "").toLowerCase().includes("vercel")
+      ) {
+        response = await fetch(`${API_URL}${path}`, requestOptions);
+      }
+
       const payload = await response.json().catch(() => ({}));
 
       if (!response.ok) {
